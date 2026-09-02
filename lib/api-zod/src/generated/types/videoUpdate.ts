@@ -5,7 +5,6 @@
  * OpenShelf digital library API
  * OpenAPI spec version: 0.1.0
  */
+import type { VideoInput } from './videoInput';
 
-export interface HealthStatus {
-  status: string;
-}
+export type VideoUpdate = VideoInput;

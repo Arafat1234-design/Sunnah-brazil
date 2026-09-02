@@ -3,13 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: OpenShelf digital library API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: library
+    description: Public library discovery
+  - name: books
+    description: Book catalog
+  - name: videos
+    description: Video catalog
+  - name: categories
+    description: Content categories
+  - name: admin
+    description: Protected administration
+  - name: storage
+    description: App Storage uploads
 paths:
   /healthz:
     get:
@@ -24,7 +36,306 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /library/summary:
+    get:
+      operationId: getLibrarySummary
+      tags: [library]
+      summary: Get the public library summary
+      responses:
+        "200":
+          description: Featured and recently added content
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LibrarySummary"
+  /books:
+    get:
+      operationId: listBooks
+      tags: [books]
+      summary: Search and filter books
+      parameters:
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Category"
+      responses:
+        "200":
+          description: Matching books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Book"
+    post:
+      operationId: createBook
+      tags: [admin]
+      summary: Add a book
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookInput"
+      responses:
+        "201":
+          description: Created book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /books/{id}:
+    get:
+      operationId: getBook
+      tags: [books]
+      summary: Get book details
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Book details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateBook
+      tags: [admin]
+      summary: Update a book
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BookUpdate"
+      responses:
+        "200":
+          description: Updated book
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Book"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteBook
+      tags: [admin]
+      summary: Remove a book
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Book removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /books/{id}/download:
+    get:
+      operationId: getBookDownload
+      tags: [books]
+      summary: Get a book download URL and record the download
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Download URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownloadResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /videos:
+    get:
+      operationId: listVideos
+      tags: [videos]
+      summary: Search and filter videos
+      parameters:
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Category"
+      responses:
+        "200":
+          description: Matching videos
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Video"
+    post:
+      operationId: createVideo
+      tags: [admin]
+      summary: Add a video
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoInput"
+      responses:
+        "201":
+          description: Created video
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /videos/{id}:
+    get:
+      operationId: getVideo
+      tags: [videos]
+      summary: Get video details
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Video details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateVideo
+      tags: [admin]
+      summary: Update a video
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VideoUpdate"
+      responses:
+        "200":
+          description: Updated video
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteVideo
+      tags: [admin]
+      summary: Remove a video
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Video removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /videos/{id}/download:
+    get:
+      operationId: getVideoDownload
+      tags: [videos]
+      summary: Get a permitted video download URL and record the download
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Download URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DownloadResponse"
+        "403":
+          description: Downloads are disabled
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /categories:
+    get:
+      operationId: listCategories
+      tags: [categories]
+      summary: List content categories
+      responses:
+        "200":
+          description: Categories with content counts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get catalog and engagement statistics
+      responses:
+        "200":
+          description: Dashboard statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+  /storage/uploads/request-url:
+    post:
+      operationId: requestUploadUrl
+      tags: [storage]
+      summary: Request a presigned upload URL
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UploadRequest"
+      responses:
+        "200":
+          description: Presigned upload URL and object path
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadResponse"
+        "400":
+          description: Invalid or unsupported file
+        "401":
+          $ref: "#/components/responses/Unauthorized"
 components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+    Search:
+      name: search
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 100
+    Category:
+      name: category
+      in: query
+      required: false
+      schema:
+        type: string
+        maxLength: 80
+  responses:
+    Unauthorized:
+      description: Authentication required
+    NotFound:
+      description: Resource not found
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +344,123 @@ components:
           type: string
       required:
         - status
+    Book:
+      type: object
+      required: [id, title, author, description, category, coverUrl, fileUrl, fileType, fileSize, createdAt, downloadCount]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        author: { type: string }
+        description: { type: string }
+        category: { type: string }
+        coverUrl: { type: ["string", "null"] }
+        fileUrl: { type: ["string", "null"] }
+        fileType: { type: string }
+        fileSize: { type: integer }
+        createdAt: { type: string, format: date-time }
+        downloadCount: { type: integer }
+        featured: { type: boolean }
+    BookInput:
+      type: object
+      required: [title, author, description, category, fileType]
+      properties:
+        title: { type: string, minLength: 1 }
+        author: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        category: { type: string, minLength: 1 }
+        coverUrl: { type: ["string", "null"] }
+        fileUrl: { type: ["string", "null"] }
+        fileType: { type: string, enum: [PDF, EPUB, MOBI, TXT] }
+        fileSize: { type: integer, minimum: 0 }
+        featured: { type: boolean }
+    BookUpdate:
+      allOf:
+        - $ref: "#/components/schemas/BookInput"
+      required: []
+    Video:
+      type: object
+      required: [id, title, description, category, thumbnailUrl, videoUrl, duration, createdAt, downloadEnabled, viewCount, downloadCount]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        description: { type: string }
+        category: { type: string }
+        thumbnailUrl: { type: ["string", "null"] }
+        videoUrl: { type: ["string", "null"] }
+        duration: { type: string }
+        createdAt: { type: string, format: date-time }
+        downloadEnabled: { type: boolean }
+        viewCount: { type: integer }
+        downloadCount: { type: integer }
+        featured: { type: boolean }
+    VideoInput:
+      type: object
+      required: [title, description, category, duration]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        category: { type: string, minLength: 1 }
+        thumbnailUrl: { type: ["string", "null"] }
+        videoUrl: { type: ["string", "null"] }
+        duration: { type: string, minLength: 1 }
+        downloadEnabled: { type: boolean }
+        featured: { type: boolean }
+    VideoUpdate:
+      allOf:
+        - $ref: "#/components/schemas/VideoInput"
+      required: []
+    Category:
+      type: object
+      required: [name, bookCount, videoCount]
+      properties:
+        name: { type: string }
+        bookCount: { type: integer }
+        videoCount: { type: integer }
+    DownloadResponse:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
+    LibrarySummary:
+      type: object
+      required: [bookCount, videoCount, featuredBooks, featuredVideos, recentlyAdded]
+      properties:
+        bookCount: { type: integer }
+        videoCount: { type: integer }
+        featuredBooks:
+          type: array
+          items: { $ref: "#/components/schemas/Book" }
+        featuredVideos:
+          type: array
+          items: { $ref: "#/components/schemas/Video" }
+        recentlyAdded:
+          type: array
+          items:
+            oneOf:
+              - $ref: "#/components/schemas/Book"
+              - $ref: "#/components/schemas/Video"
+    AdminStats:
+      type: object
+      required: [bookCount, videoCount, totalDownloads, totalViews, categoryBreakdown]
+      properties:
+        bookCount: { type: integer }
+        videoCount: { type: integer }
+        totalDownloads: { type: integer }
+        totalViews: { type: integer }
+        categoryBreakdown:
+          type: array
+          items: { $ref: "#/components/schemas/Category" }
+    UploadRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name: { type: string, minLength: 1 }
+        size: { type: integer, minimum: 1 }
+        contentType: { type: string, minLength: 1 }
+    UploadResponse:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL: { type: string, format: uri }
+        objectPath: { type: string }
 

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "OpenShelf Digital Library"
+description = "A mobile-first digital library for discovering, reading, watching, and legally downloading openly available books and videos, with protected administration tools for managing the catalog."
+version = "1.0.0"
+id = "artifacts/openshelf"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18102
+
+[services.development]
+run = "pnpm --filter @workspace/openshelf run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/openshelf", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/openshelf/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18102"
+BASE_PATH = "/"

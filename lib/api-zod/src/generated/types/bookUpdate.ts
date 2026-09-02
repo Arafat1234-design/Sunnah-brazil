@@ -5,7 +5,6 @@
  * OpenShelf digital library API
  * OpenAPI spec version: 0.1.0
  */
+import type { BookInput } from './bookInput';
 
-export interface HealthStatus {
-  status: string;
-}
+export type BookUpdate = BookInput;
