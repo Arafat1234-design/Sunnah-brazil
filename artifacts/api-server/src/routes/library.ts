@@ -442,9 +442,38 @@ router.get("/videos/:id/download", async (req, res) => {
     res.status(403).json({ error: "Downloads are disabled" });
     return;
   }
-  await db.update(videosTable).set({ downloadCount: sql`${videosTable.downloadCount} + 1` }).where(eq(videosTable.id, video.id));
-  await db.insert(downloadEventsTable).values({ contentType: "video", contentId: video.id });
-  res.json({ url: contentUrl(video.videoUrl, req) });
+  res.json({ url: `/api/videos/${video.id}/download/file` });
+});
+
+router.get("/videos/:id/download/file", async (req, res) => {
+  await ensureSeedData();
+  const parsed = GetVideoDownloadParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid video id" });
+    return;
+  }
+  const [video] = await db.select().from(videosTable).where(eq(videosTable.id, parsed.data.id));
+  if (!video) {
+    res.status(404).json({ error: "Video not found" });
+    return;
+  }
+  if (!video.downloadEnabled || !video.videoUrl) {
+    res.status(403).json({ error: "Downloads are disabled" });
+    return;
+  }
+
+  try {
+    const mp4 = await readContent(video.videoUrl);
+    await db.update(videosTable).set({ downloadCount: sql`${videosTable.downloadCount} + 1` }).where(eq(videosTable.id, video.id));
+    await db.insert(downloadEventsTable).values({ contentType: "video", contentId: video.id });
+    res.setHeader("Content-Type", "video/mp4");
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(video.title, "mp4")}"`);
+    res.setHeader("Content-Length", mp4.length);
+    res.send(mp4);
+  } catch (error) {
+    req.log.error({ err: error, videoId: video.id }, "Error preparing video download");
+    res.status(502).json({ error: "Could not prepare the MP4 download" });
+  }
 });
 
 router.post("/videos", async (req, res) => {

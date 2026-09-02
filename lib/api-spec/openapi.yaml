@@ -263,7 +263,7 @@ paths:
     get:
       operationId: getVideoDownload
       tags: [videos]
-      summary: Get a permitted video download URL and record the download
+      summary: Get a permitted MP4 download URL
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
@@ -275,6 +275,27 @@ paths:
                 $ref: "#/components/schemas/DownloadResponse"
         "403":
           description: Downloads are disabled
+  /videos/{id}/download/file:
+    get:
+      operationId: downloadVideoFile
+      tags: [videos]
+      summary: Download a video as an MP4 attachment
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: MP4 video file
+          content:
+            video/mp4:
+              schema:
+                type: string
+                format: binary
+        "403":
+          description: Downloads are disabled
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          description: The source video could not be prepared
         "404":
           $ref: "#/components/responses/NotFound"
   /categories:
