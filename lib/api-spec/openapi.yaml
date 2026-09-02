@@ -140,7 +140,7 @@ paths:
     get:
       operationId: getBookDownload
       tags: [books]
-      summary: Get a book download URL and record the download
+      summary: Get a book PDF download URL
       parameters:
         - $ref: "#/components/parameters/Id"
       responses:
@@ -152,6 +152,25 @@ paths:
                 $ref: "#/components/schemas/DownloadResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+  /books/{id}/download/file:
+    get:
+      operationId: downloadBookFile
+      tags: [books]
+      summary: Download a book as a PDF attachment
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: PDF file
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          description: The source file could not be prepared
   /videos:
     get:
       operationId: listVideos

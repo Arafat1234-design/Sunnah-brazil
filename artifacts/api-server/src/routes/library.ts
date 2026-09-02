@@ -1,6 +1,7 @@
 import { getAuth } from "@clerk/express";
 import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
+import { ObjectStorageService } from "../lib/objectStorage";
 import {
   CreateBookBody,
   CreateVideoBody,
@@ -24,6 +25,7 @@ import {
 } from "@workspace/db";
 
 const router: IRouter = Router();
+const objectStorageService = new ObjectStorageService();
 const DEFAULT_CATEGORIES = [
   "Fiction",
   "Education",
@@ -81,6 +83,108 @@ function toVideo(row: typeof videosTable.$inferSelect, req: Request) {
 function parseId(value: unknown): number | null {
   const id = Number(value);
   return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+const MAX_DOWNLOAD_BYTES = 80 * 1024 * 1024;
+
+async function readContent(value: string): Promise<Buffer> {
+  if (value.startsWith("/objects/")) {
+    const file = await objectStorageService.getObjectEntityFile(value);
+    const chunks: Buffer[] = [];
+    let total = 0;
+    for await (const chunk of file.createReadStream()) {
+      const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+      total += buffer.length;
+      if (total > MAX_DOWNLOAD_BYTES) throw new Error("Download is too large");
+      chunks.push(buffer);
+    }
+    return Buffer.concat(chunks);
+  }
+
+  const url = new URL(value);
+  if (!["http:", "https:"].includes(url.protocol)) {
+    throw new Error("Unsupported download URL");
+  }
+  const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
+  if (!response.ok) throw new Error(`Source returned ${response.status}`);
+  const contentLength = Number(response.headers.get("content-length") ?? 0);
+  if (contentLength > MAX_DOWNLOAD_BYTES) throw new Error("Download is too large");
+  const content = Buffer.from(await response.arrayBuffer());
+  if (content.length > MAX_DOWNLOAD_BYTES) throw new Error("Download is too large");
+  return content;
+}
+
+function pdfEscape(value: string): string {
+  return value.replace(/[^\x20-\x7e]/g, "?").replace(/([\\()])/g, "\\$1");
+}
+
+function textToPdf(text: string): Buffer {
+  const lines = text.replace(/\r\n?/g, "\n").split("\n").flatMap((line) => {
+    if (!line) return [""];
+    const wrapped: string[] = [];
+    let remaining = line;
+    while (remaining.length > 96) {
+      const breakAt = remaining.lastIndexOf(" ", 96);
+      const splitAt = breakAt > 20 ? breakAt : 96;
+      wrapped.push(remaining.slice(0, splitAt));
+      remaining = remaining.slice(splitAt).trimStart();
+    }
+    wrapped.push(remaining);
+    return wrapped;
+  });
+  const pageLines = 52;
+  const pages = Array.from({ length: Math.max(1, Math.ceil(lines.length / pageLines)) }, (_, index) =>
+    lines.slice(index * pageLines, (index + 1) * pageLines),
+  );
+  const objects: string[] = [];
+  const addObject = (body: string) => {
+    objects.push(body);
+    return objects.length;
+  };
+  const catalogId = addObject("");
+  const pagesId = addObject("");
+  const fontId = addObject("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
+  const pageIds: number[] = [];
+
+  for (const page of pages) {
+    const pageId = addObject("");
+    const content = [
+      "BT",
+      "/F1 10 Tf",
+      "54 760 Td",
+      "12 TL",
+      ...page.map((line, index) => `(${pdfEscape(line)}) Tj${index === page.length - 1 ? "" : " T*"}`),
+      "ET",
+    ].join("\n");
+    const contentId = addObject(`<< /Length ${Buffer.byteLength(content, "ascii")} >>\nstream\n${content}\nendstream`);
+    objects[pageId - 1] = `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`;
+    pageIds.push(pageId);
+  }
+
+  objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
+  objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
+
+  const chunks = ["%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"];
+  const offsets = [0];
+  let length = Buffer.byteLength(chunks[0], "binary");
+  objects.forEach((object, index) => {
+    offsets.push(length);
+    const chunk = `${index + 1} 0 obj\n${object}\nendobj\n`;
+    chunks.push(chunk);
+    length += Buffer.byteLength(chunk, "binary");
+  });
+  const xrefOffset = length;
+  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  for (let index = 1; index < offsets.length; index++) {
+    xref += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
+  }
+  chunks.push(`${xref}trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
+  return Buffer.from(chunks.join(""), "binary");
+}
+
+function downloadFilename(title: string, extension: string): string {
+  const safeTitle = title.normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").slice(0, 100);
+  return `${safeTitle || "livro"}.${extension}`;
 }
 
 async function ensureSeedData() {
@@ -216,9 +320,37 @@ router.get("/books/:id/download", async (req, res) => {
     res.status(404).json({ error: "Download not available" });
     return;
   }
-  await db.update(booksTable).set({ downloadCount: sql`${booksTable.downloadCount} + 1` }).where(eq(booksTable.id, book.id));
-  await db.insert(downloadEventsTable).values({ contentType: "book", contentId: book.id });
-  res.json({ url: contentUrl(book.fileUrl, req) });
+  res.json({ url: `/api/books/${book.id}/download/file` });
+});
+
+router.get("/books/:id/download/file", async (req, res) => {
+  await ensureSeedData();
+  const parsed = GetBookDownloadParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid book id" });
+    return;
+  }
+  const [book] = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.id));
+  if (!book?.fileUrl) {
+    res.status(404).json({ error: "Download not available" });
+    return;
+  }
+
+  try {
+    const source = await readContent(book.fileUrl);
+    const isPdf = book.fileType === "PDF" || book.fileType === "TXT";
+    const output = book.fileType === "TXT" ? textToPdf(source.toString("utf8")) : source;
+    const extension = isPdf ? "pdf" : book.fileType.toLowerCase();
+    await db.update(booksTable).set({ downloadCount: sql`${booksTable.downloadCount} + 1` }).where(eq(booksTable.id, book.id));
+    await db.insert(downloadEventsTable).values({ contentType: "book", contentId: book.id });
+    res.setHeader("Content-Type", isPdf ? "application/pdf" : "application/octet-stream");
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(book.title, extension)}"`);
+    res.setHeader("Content-Length", output.length);
+    res.send(output);
+  } catch (error) {
+    req.log.error({ err: error, bookId: book.id }, "Error preparing book download");
+    res.status(502).json({ error: "Could not prepare the book download" });
+  }
 });
 
 router.post("/books", async (req, res) => {

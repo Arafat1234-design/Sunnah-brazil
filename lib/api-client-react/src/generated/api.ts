@@ -605,7 +605,7 @@ export const getGetBookDownloadUrl = (id: number,) => {
 }
 
 /**
- * @summary Get a book download URL and record the download
+ * @summary Get a book PDF download URL
  */
 export const getBookDownload = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DownloadResponse> => {
 
@@ -652,7 +652,7 @@ export type GetBookDownloadQueryError = ErrorType<NotFoundResponse>
 
 
 /**
- * @summary Get a book download URL and record the download
+ * @summary Get a book PDF download URL
  */
 
 export function useGetBookDownload<TData = Awaited<ReturnType<typeof getBookDownload>>, TError = ErrorType<NotFoundResponse>>(
@@ -661,6 +661,83 @@ export function useGetBookDownload<TData = Awaited<ReturnType<typeof getBookDown
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetBookDownloadQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDownloadBookFileUrl = (id: number,) => {
+
+
+
+
+  return `/api/books/${id}/download/file`
+}
+
+/**
+ * @summary Download a book as a PDF attachment
+ */
+export const downloadBookFile = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadBookFileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadBookFileQueryKey = (id: number,) => {
+    return [
+    `/api/books/${id}/download/file`
+    ] as const;
+    }
+
+
+export const getDownloadBookFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadBookFile>>, TError = ErrorType<NotFoundResponse | void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadBookFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadBookFileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadBookFile>>> = ({ signal }) => downloadBookFile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadBookFile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadBookFileQueryResult = NonNullable<Awaited<ReturnType<typeof downloadBookFile>>>
+export type DownloadBookFileQueryError = ErrorType<NotFoundResponse | void>
+
+
+/**
+ * @summary Download a book as a PDF attachment
+ */
+
+export function useDownloadBookFile<TData = Awaited<ReturnType<typeof downloadBookFile>>, TError = ErrorType<NotFoundResponse | void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadBookFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadBookFileQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

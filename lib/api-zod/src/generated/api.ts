@@ -237,7 +237,7 @@ export const DeleteBookResponse = zod.void()
 
 
 /**
- * @summary Get a book download URL and record the download
+ * @summary Get a book PDF download URL
  */
 
 
@@ -249,6 +249,19 @@ export const GetBookDownloadParams = zod.object({
 export const GetBookDownloadResponse = zod.object({
   "url": zod.string()
 })
+
+
+/**
+ * @summary Download a book as a PDF attachment
+ */
+
+
+
+export const DownloadBookFileParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const DownloadBookFileResponse = zod.unknown()
 
 
 /**
