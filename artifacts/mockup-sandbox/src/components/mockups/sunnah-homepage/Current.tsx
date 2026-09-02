@@ -1,0 +1,46 @@
+import './_group.css';
+import { ArrowRight, BookOpen, Film, Heart, LibraryBig, Menu, Play, Sparkles, X, Youtube } from 'lucide-react';
+import { useState } from 'react';
+
+const books = [
+  { id: 1, title: 'The Secret Garden', author: 'Frances Hodgson Burnett', category: 'Fiction', coverUrl: 'https://covers.openlibrary.org/b/id/8231856-L.jpg' },
+  { id: 2, title: 'The Art of War', author: 'Sun Tzu', category: 'Business', coverUrl: 'https://covers.openlibrary.org/b/id/8231851-L.jpg' },
+  { id: 3, title: 'Their Eyes Were Watching God', author: 'Zora Neale Hurston', category: 'Fiction', coverUrl: 'https://covers.openlibrary.org/b/id/8228691-L.jpg' },
+];
+
+const videos = [
+  { id: 1, title: 'A Walk Through the Archive', category: 'Education', duration: '08:42' },
+  { id: 2, title: 'The Long Way Home', category: 'Documentary', duration: '38 min' },
+  { id: 3, title: 'Ideas Worth Keeping', category: 'Talks', duration: '22 min' },
+];
+
+function Logo() {
+  return <div className="flex items-center gap-3"><span className="grid h-9 w-9 place-items-center rounded-[11px] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]"><LibraryBig size={19} /></span><span className="serif text-[23px] font-semibold tracking-[-.03em]">OpenShelf</span></div>;
+}
+
+function Button({ children, dark = true }: { children: React.ReactNode; dark?: boolean }) {
+  return <button className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold ${dark ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'border border-[hsl(var(--border))] bg-[hsl(var(--card))]'}`}>{children}</button>;
+}
+
+function Cover({ book }: { book: typeof books[number] }) {
+  return <div className="book-cover aspect-[3/4] overflow-hidden rounded-[14px] shadow-sm"><img src={book.coverUrl} alt={book.title} className="relative z-[1] h-full w-full object-cover" /></div>;
+}
+
+function VideoThumb({ video }: { video: typeof videos[number] }) {
+  return <div className="relative aspect-video overflow-hidden rounded-[14px] bg-[hsl(190_27%_22%)]"><div className="flex h-full flex-col justify-between bg-[radial-gradient(circle_at_78%_18%,hsl(10_57%_62%/.8),transparent_32%),linear-gradient(135deg,hsl(190_27%_22%),hsl(174_37%_31%))] p-4 text-[hsl(var(--primary-foreground))]"><Youtube className="opacity-80" size={24} /><span className="serif text-xl leading-tight">{video.title}</span></div><span className="absolute bottom-3 right-3 rounded bg-[hsl(193_25%_19%/.78)] px-2 py-1 mono text-[10px] text-white">{video.duration}</span><span className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[hsl(var(--accent))] text-white"><Play size={17} fill="currentColor" /></span></div>;
+}
+
+export function Current() {
+  const [open, setOpen] = useState(false);
+  return <div className="site-grain min-h-screen bg-[hsl(var(--background))]">
+    <header className="sticky top-0 z-30 border-b border-[hsl(var(--border)/.85)] bg-[hsl(var(--background)/.92)] px-5 py-4 backdrop-blur-md"><div className="mx-auto flex max-w-[1240px] items-center justify-between"><Logo /><nav className="hidden items-center gap-1 text-sm text-[hsl(var(--muted-foreground))] md:flex"><span className="rounded-full bg-[hsl(var(--secondary))] px-4 py-2">Books</span><span className="px-4 py-2">Videos</span><span className="px-4 py-2">Categories</span><span className="px-4 py-2">About</span></nav><div className="hidden items-center gap-2 md:flex"><Button dark={false}>Suggest a title</Button><Button>Admin <ArrowRight size={15} /></Button></div><button onClick={() => setOpen(!open)} className="rounded-full p-2 md:hidden">{open ? <X size={22} /> : <Menu size={22} />}</button></div>{open && <div className="mx-auto mt-3 max-w-[1240px] border-t border-[hsl(var(--border))] pt-3 text-sm"><p className="border-b border-[hsl(var(--border)/.55)] py-3">Books</p><p className="border-b border-[hsl(var(--border)/.55)] py-3">Videos</p><p className="py-3">Categories</p></div>}</header>
+    <main>
+      <section className="mx-auto grid max-w-[1240px] gap-10 px-5 pb-20 pt-16 md:grid-cols-[1fr_1.05fr] md:items-center"><div><p className="mono mb-5 text-[10px] uppercase tracking-[.24em] text-[hsl(var(--accent))]">A public digital library</p><h1 className="serif max-w-[610px] text-[clamp(3.5rem,7vw,6.5rem)] leading-[.92] tracking-[-.055em]">Good things<br /><em>stay with you.</em></h1><p className="mt-7 max-w-[470px] text-lg leading-8 text-[hsl(var(--muted-foreground))]">OpenShelf is a trusted place to find legally available books, independent films, and the ideas that reward your attention.</p><div className="mt-8 flex flex-wrap gap-3"><Button>Browse the collection <ArrowRight size={16} /></Button><Button dark={false}>How it works</Button></div></div><div className="relative mx-auto w-full max-w-[520px]"><div className="relative grid grid-cols-[.78fr_1fr] items-end gap-3"><div className="rotate-[-6deg]"><div className="book-cover aspect-[3/4] rounded-2xl p-5 text-[hsl(var(--primary-foreground))]"><span className="mono text-[10px] uppercase tracking-[.15em] opacity-75">OpenShelf edition</span><div className="mt-28"><h3 className="serif text-3xl leading-[1.02]">The Quiet Architecture of Attention</h3><p className="mt-2 text-xs opacity-75">Mira Sol</p></div></div></div><div className="rotate-[4deg] pt-14"><div className="overflow-hidden rounded-2xl bg-[hsl(var(--primary))] p-5 text-[hsl(var(--primary-foreground))]"><div className="flex items-center justify-between"><span className="mono text-[10px] uppercase tracking-[.15em] opacity-75">Now showing</span><Film size={17} /></div><div className="mt-24"><p className="serif text-3xl leading-none">The long way<br />home</p><p className="mt-3 text-xs opacity-70">A film by Jun Park · 38 min</p></div></div></div></div><div className="absolute -bottom-5 left-1/3 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-2 text-xs shadow-sm"><Sparkles className="mr-2 inline text-[hsl(var(--accent))]" size={13} /> Curated, not crowded</div></div></section>
+      <section className="border-y border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.38)]"><div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-6 px-5 py-8 md:grid-cols-4"><div><span className="serif text-3xl">3</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">books to browse</p></div><div><span className="serif text-3xl">3</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">films and talks</p></div><div><span className="serif text-3xl">04</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">ways to wander</p></div><div><span className="serif text-3xl">01</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">open invitation</p></div></div></section>
+      <section className="mx-auto max-w-[1240px] px-5 pt-20"><div className="mb-7"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">The short list</p><h2 className="serif mt-2 text-4xl">Worth your next hour</h2></div><div className="grid grid-cols-2 gap-5 md:grid-cols-3">{books.map(book => <article key={book.id}><Cover book={book} /><p className="mono mt-3 text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{book.category}</p><h3 className="mt-1 text-[15px] font-semibold">{book.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{book.author}</p></article>)}</div></section>
+      <section className="mx-auto max-w-[1240px] px-5 pt-20"><div className="mb-7"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Watch closely</p><h2 className="serif mt-2 text-4xl">Films with something to say</h2></div><div className="grid gap-6 md:grid-cols-3">{videos.map(video => <article key={video.id}><VideoThumb video={video} /><p className="mono mt-3 text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{video.category}</p><h3 className="mt-1 text-[15px] font-semibold">{video.title}</h3></article>)}</div></section>
+      <section className="mx-5 mt-24 rounded-3xl bg-[hsl(var(--primary))] p-8 text-[hsl(var(--primary-foreground))] md:mx-auto md:max-w-[1240px] md:p-14"><p className="mono text-[10px] uppercase tracking-[.22em] opacity-65">The OpenShelf promise</p><h2 className="serif mt-4 max-w-2xl text-4xl leading-tight md:text-5xl">A library should feel like a place, not a database.</h2><p className="mt-5 max-w-lg text-sm leading-7 opacity-75">We keep the collection human-sized, the provenance clear, and the door open.</p><Button dark={false}>Read our content policy <ArrowRight size={15} /></Button></section>
+    </main>
+    <footer className="mx-auto mt-20 max-w-[1240px] border-t border-[hsl(var(--border))] px-5 py-10 text-sm text-[hsl(var(--muted-foreground))]"><Logo /><p className="mt-4">A small, careful library for books and films worth returning to.</p></footer>
+  </div>;
+}

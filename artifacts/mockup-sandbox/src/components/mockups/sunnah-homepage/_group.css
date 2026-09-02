@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap');
+
+:root {
+  --background: 37 38% 95%;
+  --foreground: 193 25% 19%;
+  --border: 35 24% 84%;
+  --input: 35 24% 84%;
+  --ring: 175 38% 36%;
+  --card: 39 42% 98%;
+  --card-foreground: 193 25% 19%;
+  --primary: 174 37% 31%;
+  --primary-foreground: 38 42% 97%;
+  --secondary: 36 27% 89%;
+  --secondary-foreground: 193 25% 19%;
+  --muted: 36 24% 91%;
+  --muted-foreground: 193 10% 47%;
+  --accent: 10 57% 62%;
+  --accent-foreground: 36 42% 97%;
+  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-serif: 'Playfair Display', serif;
+  --app-font-mono: 'DM Mono', monospace;
+  --radius: 0.75rem;
+}
+
+body { font-family: var(--app-font-sans); background: hsl(var(--background)); color: hsl(var(--foreground)); }
+.serif { font-family: var(--app-font-serif); }
+.mono { font-family: var(--app-font-mono); }
+.site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
+.book-cover { position: relative; overflow: hidden; background: linear-gradient(145deg, hsl(174 37% 31%), hsl(190 27% 22%)); }
+.book-cover::after { content: ''; position: absolute; inset: 0; opacity: .18; background: repeating-linear-gradient(117deg, transparent 0 17px, hsl(38 42% 97% / .2) 18px 19px); mix-blend-mode: screen; }
+.skeleton { background: hsl(var(--muted)); }
