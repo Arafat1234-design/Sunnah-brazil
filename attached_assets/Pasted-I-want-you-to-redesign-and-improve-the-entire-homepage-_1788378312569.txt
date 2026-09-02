@@ -1,0 +1,302 @@
+I want you to redesign and improve the entire homepage of my website.
+
+IMPORTANT:
+- The website is called "Sunnah Brasil".
+- It is a free digital library for Portuguese-speaking users in Brazil.
+- Users can browse and download books and watch/download videos for free.
+- No subscription.
+- No payment.
+- No account or registration should be required for users.
+- The website should feel trustworthy, professional, safe, modern and legitimate.
+- Keep all existing backend functionality and routes working. Do NOT break existing book/video downloads, categories, admin functionality, or database functionality.
+- Do not remove features that already work.
+- Only improve the UI/UX unless a small frontend change is necessary.
+
+BRANDING:
+Use the existing Sunnah Brasil logo already in the project.
+Main colors:
+- Dark navy: #071B2C
+- Deep green: #075C45
+- White: #FFFFFF
+- Very light gray/off-white backgrounds
+Use the logo's colors consistently throughout the website.
+
+HOMEPAGE STRUCTURE:
+
+1. HEADER / NAVBAR
+Create a clean professional header.
+
+Left:
+- Sunnah Brasil logo
+- Brand name
+
+Center navigation:
+- Livros
+- Vídeos
+- Categorias
+- Sobre
+- Como funciona
+
+Right:
+- Search bar: "Buscar livros, vídeos..."
+- Button: "Explorar Biblioteca"
+
+Make the navbar sticky when scrolling.
+On mobile, make it responsive with a hamburger menu.
+
+2. HERO SECTION
+
+Replace the current "Good things stay with you" style messaging.
+
+Use Portuguese copy:
+
+Small label:
+"BIBLIOTECA DIGITAL PÚBLICA"
+
+Main headline:
+"Conhecimento que transforma vidas."
+
+Subheadline:
+"Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos."
+
+Add two main buttons:
+"Explorar Livros"
+"Assistir Vídeos"
+
+Add a small trust row underneath:
+"100% Gratuito"
+"Sem cadastro necessário"
+"Conteúdo cuidadosamente selecionado"
+
+On the right side, show attractive book and video cards using the actual content from the website if available.
+
+The hero should immediately communicate:
+FREE + BOOKS + VIDEOS + TRUST.
+
+3. TRUST SECTION
+
+Immediately below the hero, add a dark navy horizontal trust section with 4 items:
+
+"Conteúdo Confiável"
+"Materiais organizados e cuidadosamente selecionados."
+
+"Acesso Livre"
+"Disponível gratuitamente para todos."
+
+"Privacidade Respeitada"
+"Não exigimos cadastro para navegar."
+
+"Feito para Você"
+"Uma biblioteca simples, acessível e fácil de usar."
+
+Use clean icons.
+
+IMPORTANT:
+Do not make fake claims such as "10,000 users", "verified", "100% legal", "secure", or other statistics unless those facts actually exist in the database/project.
+
+4. FEATURED CONTENT
+
+Create a section:
+
+"Conteúdos em destaque"
+
+Subtitle:
+"Descubra alguns dos conteúdos disponíveis na nossa biblioteca."
+
+Show real books and videos from the database.
+
+Each card should contain:
+- Cover/thumbnail
+- Title
+- Author/speaker if available
+- Category
+- Type (Livro or Vídeo)
+- Short description
+- Button: "Ver conteúdo"
+
+Make the cards modern with subtle borders, rounded corners and hover animations.
+
+5. CATEGORIES
+
+Create:
+
+"Explore por categoria"
+
+Display the real categories that exist in the project.
+
+Examples if they exist:
+- Islam
+- Educação
+- História
+- Desenvolvimento Pessoal
+- Família
+- Ciências
+
+Do NOT create fake categories if they don't exist.
+
+Each category should have:
+- Icon
+- Category name
+- Number of available items if this information is available
+- "Ver coleção →"
+
+6. HOW IT WORKS
+
+Create a simple 3-step section:
+
+01 — Encontre
+"Pesquise livros e vídeos na nossa biblioteca."
+
+02 — Escolha
+"Abra o conteúdo que deseja conhecer."
+
+03 — Acesse gratuitamente
+"Leia ou assista sem assinatura e sem cadastro."
+
+Make this section extremely simple and easy to understand.
+
+7. ABOUT / MISSION
+
+Add a professional section explaining Sunnah Brasil.
+
+Heading:
+"Conhecimento que atravessa fronteiras."
+
+Text:
+"A Sunnah Brasil foi criada para facilitar o acesso ao conhecimento através de uma biblioteca digital simples, gratuita e acessível."
+
+Keep the wording professional and don't make exaggerated claims.
+
+8. CALL TO ACTION
+
+Create a final CTA section:
+
+"Comece a explorar."
+
+"Encontre livros e vídeos que podem ampliar seus conhecimentos."
+
+Button:
+"Explorar Biblioteca →"
+
+9. FOOTER
+
+Create a professional footer containing:
+
+Sunnah Brasil
+"Conhecimento que atravessa fronteiras."
+
+Links:
+- Livros
+- Vídeos
+- Categorias
+- Sobre
+- Como funciona
+- Contato
+- Política de Privacidade
+- Termos de Uso
+
+Add copyright.
+
+IMPORTANT LEGAL/TRUST REQUIREMENT:
+
+Because this website provides free books and videos, make the website transparent about content rights.
+
+Add a small section/page explaining:
+"Se você acredita que algum conteúdo foi disponibilizado de forma inadequada ou viola seus direitos autorais, entre em contato conosco para análise."
+
+Do NOT claim that every piece of content is legally available unless the project actually verifies this.
+
+DESIGN:
+
+The design should look like a serious modern digital library, NOT like a generic template.
+
+Use:
+- Plenty of whitespace
+- Navy + green branding
+- Professional typography
+- Subtle shadows
+- Rounded cards
+- Clean icons
+- Smooth hover animations
+- Consistent spacing
+- Strong visual hierarchy
+
+Avoid:
+- Excessive animations
+- Bright random colors
+- Huge gradients
+- Fake reviews
+- Fake user counts
+- Fake testimonials
+- Fake security badges
+- Fake statistics
+- "100% legal" claims unless verified
+- Popups immediately appearing
+- Anything that makes the website look like a scam or pirated-content website
+
+RESPONSIVENESS:
+
+The entire homepage must work perfectly on:
+- Desktop
+- Laptop
+- Tablet
+- Mobile
+
+Pay special attention to:
+- Navbar
+- Hero
+- Book/video cards
+- Search
+- Buttons
+- Footer
+
+MOBILE:
+The mobile version should NOT simply shrink the desktop version.
+Create a proper mobile layout with:
+- Hamburger menu
+- Full-width search
+- Stacked hero content
+- Horizontal/vertical content cards where appropriate
+- Large touch-friendly buttons
+
+PERFORMANCE:
+
+- Optimize images
+- Lazy-load book/video thumbnails where appropriate
+- Avoid unnecessary JavaScript
+- Keep the page fast
+- Do not add large libraries just for simple animations
+
+ACCESSIBILITY:
+
+- Good color contrast
+- Proper heading hierarchy
+- Alt text for images
+- Keyboard-friendly buttons and links
+- Clear focus states
+
+MOST IMPORTANT:
+
+Before changing anything, inspect my existing project and understand how the current homepage, database, books, videos, categories, search, downloads and admin system work.
+
+Do NOT rebuild the backend.
+
+Do NOT delete existing functionality.
+
+Do NOT use fake content where real database content is available.
+
+Use the existing data dynamically.
+
+After making the changes, test:
+1. Homepage loads correctly
+2. Navigation works
+3. Search works
+4. Book pages still work
+5. Video pages still work
+6. Downloads still work
+7. Categories still work
+8. Admin still works
+9. Mobile layout works
+10. No existing functionality was broken
+
+The final result should feel like a professional Brazilian digital library that users can trust.
