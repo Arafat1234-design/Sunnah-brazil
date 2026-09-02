@@ -6,9 +6,10 @@ import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound,
-  Download, FileText, Film, Headphones, Heart, Info, LayoutGrid, LibraryBig, Menu,
-  Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal, Sparkles,
-  Trash2, UploadCloud, X, Youtube,
+  Download, FileText, Film, Headphones, Heart, Info, LayoutGrid, LockKeyhole,
+  Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
+  Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2, HeartHandshake,
+  BookMarked, Compass, UsersRound, PlayCircle, ArrowUpRight,
 } from 'lucide-react';
 import {
   getGetAdminStatsQueryKey, getGetBookDownloadQueryKey, getGetBookQueryKey,
@@ -39,7 +40,7 @@ const clerkAppearance = {
   options: {
     logoPlacement: 'inside' as const,
     logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    logoImageUrl: `${window.location.origin}${basePath}/sunnah-brasil-logo.png`,
   },
   variables: {
     colorPrimary: 'hsl(174 37% 31%)',
@@ -98,37 +99,50 @@ function Button({ children, onClick, href, variant = 'primary', className = '', 
     <button type={type} onClick={onClick} disabled={disabled} className={cls} data-testid="button-action">{children}</button>;
 }
 
-function Logo() {
-  return <Link href="/" className="flex items-center gap-3" data-testid="link-home">
-    <span className="grid h-9 w-9 place-items-center rounded-[11px] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] shadow-sm"><LibraryBig size={19} /></span>
-    <span className="serif text-[23px] font-semibold tracking-[-.03em]">OpenShelf</span>
+function Logo({ onDark = false }: { onDark?: boolean }) {
+  return <Link href="/" className="flex items-center gap-2.5" data-testid="link-home">
+    <img src={`${basePath}/sunnah-brasil-logo.png`} alt="Sunnah Brasil" className={`h-14 w-[125px] object-contain object-left ${onDark ? 'rounded-lg bg-white p-1 mix-blend-normal' : 'mix-blend-multiply'}`} />
   </Link>;
 }
 
 function Header() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
-  const items = [['Books', '/books'], ['Videos', '/videos'], ['Categories', '/categories'], ['About', '/about']];
-  return <header className="sticky top-0 z-30 border-b border-[hsl(var(--border)/.85)] bg-[hsl(var(--background)/.92)] backdrop-blur-md">
-    <div className="mx-auto flex h-[72px] max-w-[1240px] items-center justify-between px-5 lg:px-8">
+  const [search, setSearch] = useState('');
+  const items = [['Livros', '/books'], ['Vídeos', '/videos'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
+  const submitSearch = (event: FormEvent) => {
+    event.preventDefault();
+    window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
+  };
+  return <header className="sticky top-0 z-30 border-b border-[#e3e9e7] bg-white/95 backdrop-blur-md">
+    <div className="mx-auto flex min-h-[72px] max-w-[1240px] items-center justify-between gap-5 px-5 lg:px-8">
       <Logo />
-      <nav className="hidden items-center gap-1 md:flex">{items.map(([label, href]) =>
-        <Link key={href} href={href} data-testid={`link-nav-${label.toLowerCase()}`} className={`rounded-full px-4 py-2 text-sm transition-colors ${location === href ? 'bg-[hsl(var(--secondary))] font-semibold text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'}`}>{label}</Link>)}</nav>
-      <div className="hidden items-center gap-2 md:flex"><Button href="/contact" variant="ghost">Suggest a title</Button><Button href="/admin/login" variant="outline">Admin <ArrowRight size={15} /></Button></div>
-      <button onClick={() => setOpen(!open)} className="rounded-full p-2 md:hidden" data-testid="button-mobile-menu">{open ? <X size={22} /> : <Menu size={22} />}</button>
+      <nav className="hidden items-center gap-0.5 lg:flex">{items.map(([label, href]) =>
+        <Link key={href} href={href} data-testid={`link-nav-${label.toLowerCase().replace(/\s/g, '-')}`} className={`rounded-full px-3 py-2 text-[13px] transition-colors ${location === href ? 'bg-[hsl(var(--secondary))] font-semibold text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'}`}>{label}</Link>)}</nav>
+      <div className="hidden items-center gap-2 md:flex">
+        <form onSubmit={submitSearch} className="relative hidden xl:block">
+          <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
+          <input aria-label="Buscar livros e vídeos" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar livros, vídeos..." className="h-10 w-[190px] rounded-full border border-[hsl(var(--border))] bg-white pl-9 pr-3 text-xs outline-none transition focus:border-[#075C45]" />
+        </form>
+        <Button href="/books" className="bg-[#075C45] px-4">Explorar biblioteca</Button>
+      </div>
+      <button onClick={() => setOpen(!open)} className="rounded-full p-2 lg:hidden" data-testid="button-mobile-menu" aria-label={open ? 'Fechar menu' : 'Abrir menu'}>{open ? <X size={22} /> : <Menu size={22} />}</button>
     </div>
-    {open && <div className="border-t border-[hsl(var(--border))] px-5 pb-5 pt-3 md:hidden">{items.map(([label, href]) => <Link onClick={() => setOpen(false)} key={href} href={href} className="block border-b border-[hsl(var(--border)/.55)] py-3 text-sm" data-testid={`link-mobile-${label.toLowerCase()}`}>{label}</Link>)}<Button href="/contact" className="mt-4 w-full">Suggest a title</Button></div>}
+    {open && <div className="border-t border-[hsl(var(--border))] px-5 pb-5 pt-4 lg:hidden">
+      <form onSubmit={submitSearch} className="relative mb-3"><Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" /><input aria-label="Buscar livros e vídeos" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar livros, vídeos..." className="h-12 w-full rounded-full border border-[hsl(var(--border))] bg-white pl-10 pr-4 text-sm outline-none focus:border-[#075C45]" /></form>
+      {items.map(([label, href]) => <Link onClick={() => setOpen(false)} key={href} href={href} className="block border-b border-[hsl(var(--border)/.55)] py-3 text-sm" data-testid={`link-mobile-${label.toLowerCase().replace(/\s/g, '-')}`}>{label}</Link>)}<Button href="/books" className="mt-4 w-full bg-[#075C45]">Explorar biblioteca</Button>
+    </div>}
   </header>;
 }
 
 function Footer() {
-  return <footer className="mt-24 border-t border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.35)]">
-    <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr] lg:px-8">
-      <div><Logo /><p className="mt-4 max-w-[250px] text-sm leading-6 text-[hsl(var(--muted-foreground))]">A small, careful library for books and films worth returning to.</p></div>
-      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">Explore</p><div className="grid gap-2 text-sm"><Link href="/books" data-testid="link-footer-books">Books</Link><Link href="/videos" data-testid="link-footer-videos">Videos</Link><Link href="/categories" data-testid="link-footer-categories">Categories</Link></div></div>
-      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">OpenShelf</p><div className="grid gap-2 text-sm"><Link href="/about" data-testid="link-footer-about">Our principles</Link><Link href="/contact" data-testid="link-footer-contact">Contact & reports</Link><Link href="/terms" data-testid="link-footer-terms">Terms</Link></div></div>
-      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[hsl(var(--muted-foreground))]">A quiet note</p><p className="text-sm leading-6 text-[hsl(var(--muted-foreground))]">No algorithmic feed. No noisy ads. Just a useful shelf.</p></div>
-    </div><div className="mx-auto max-w-[1240px] border-t border-[hsl(var(--border))] px-5 py-5 text-xs text-[hsl(var(--muted-foreground))] lg:px-8">© 2024 OpenShelf · Legally available materials only</div>
+  return <footer className="mt-24 border-t border-[#dbe4e2] bg-[#f5f8f7]">
+    <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
+      <div><Logo /><p className="mt-4 max-w-[290px] text-sm leading-6 text-[#607274]">Conhecimento que atravessa fronteiras. Uma biblioteca digital pública, simples e acessível.</p></div>
+      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/categories">Categorias</Link><Link href="/#como-funciona">Como funciona</Link></div></div>
+      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Sunnah Brasil</p><div className="grid gap-2 text-sm"><Link href="/about">Sobre</Link><Link href="/contact">Contato e direitos</Link><Link href="/content-policy">Política de privacidade</Link><Link href="/terms">Termos de uso</Link></div></div>
+      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Transparência</p><p className="text-sm leading-6 text-[#607274]">Se você acredita que algum conteúdo viola seus direitos autorais, entre em contato conosco para análise.</p><Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#075C45]">Falar com a equipe <ArrowUpRight size={14} /></Link></div>
+    </div><div className="mx-auto max-w-[1240px] border-t border-[#dbe4e2] px-5 py-5 text-xs text-[#607274] lg:px-8">© 2026 Sunnah Brasil · Acesso gratuito ao conhecimento</div>
   </footer>;
 }
 
@@ -167,17 +181,69 @@ function SectionHeading({ eyebrow, title, href, action = 'See the shelf' }: { ey
 }
 
 function Home() {
-  const { data, isLoading, isError, refetch } = useGetLibrarySummary();
-  const summary = data;
-  return <Shell><main>
-    <section className="mx-auto grid max-w-[1240px] gap-10 px-5 pb-20 pt-16 md:grid-cols-[1fr_1.05fr] md:items-center md:pb-28 md:pt-24 lg:px-8">
-      <div className="rise-in"><p className="mono mb-5 text-[10px] uppercase tracking-[.24em] text-[hsl(var(--accent))]">A public digital library</p><h1 className="serif max-w-[610px] text-[clamp(3.5rem,7vw,6.5rem)] leading-[.92] tracking-[-.055em]">Good things<br /><em>stay with you.</em></h1><p className="mt-7 max-w-[470px] text-lg leading-8 text-[hsl(var(--muted-foreground))]">OpenShelf is a trusted place to find legally available books, independent films, and the ideas that reward your attention.</p><div className="mt-8 flex flex-wrap gap-3"><Button href="/books">Browse the collection <ArrowRight size={16} /></Button><Button href="/about" variant="outline">How it works</Button></div></div>
-      <div className="rise-in delay-2 relative mx-auto w-full max-w-[520px]"><div className="absolute -right-3 -top-6 h-32 w-32 rounded-full bg-[hsl(var(--accent)/.18)] blur-2xl" /><div className="relative grid grid-cols-[.78fr_1fr] items-end gap-3"><div className="rotate-[-6deg]"><Cover large book={{ id: 0, title: 'The Quiet Architecture of Attention', author: 'Mira Sol', description: '', category: 'Essays', coverUrl: null, fileUrl: null, fileType: 'PDF', fileSize: 0, createdAt: '', downloadCount: 0 }} /></div><div className="rotate-[4deg] pt-14"><div className="overflow-hidden rounded-2xl bg-[hsl(var(--primary))] p-5 text-[hsl(var(--primary-foreground))] shadow-lg"><div className="flex items-center justify-between"><span className="mono text-[10px] uppercase tracking-[.15em] opacity-75">Now showing</span><Film size={17} /></div><div className="mt-24"><p className="serif text-3xl leading-none">The long way<br />home</p><p className="mt-3 text-xs opacity-70">A film by Jun Park · 38 min</p></div></div></div></div><div className="absolute -bottom-5 left-1/3 rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-2 text-xs shadow-sm"><Sparkles className="mr-2 inline text-[hsl(var(--accent))]" size={13} /> Curated, not crowded</div></div>
+  const { data: summary, isLoading, isError, refetch } = useGetLibrarySummary();
+  const categories = useListCategories();
+  const featuredBooks = summary?.featuredBooks ?? [];
+  const featuredVideos = summary?.featuredVideos ?? [];
+  const heroBook = featuredBooks[0];
+  const heroVideo = featuredVideos[0];
+  const categoryIcon = (name: string) => {
+    const normalized = name.toLowerCase();
+    if (normalized.includes('educ')) return <GraduationCap size={24} />;
+    if (normalized.includes('fam')) return <UsersRound size={24} />;
+    if (normalized.includes('hist')) return <BookMarked size={24} />;
+    if (normalized.includes('desenv')) return <Compass size={24} />;
+    return <BookOpen size={24} />;
+  };
+  return <Shell><main className="overflow-hidden">
+    <section className="relative border-b border-[#dbe4e2] bg-white">
+      <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
+      <div className="relative mx-auto grid max-w-[1240px] gap-12 px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:grid-cols-[.96fr_1.04fr] lg:items-center lg:px-8 lg:pt-20">
+        <div className="max-w-[600px]">
+          <div className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
+          <h1 className="max-w-[650px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
+          <p className="mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button href="/books" className="bg-[#075C45] px-5">Explorar livros <BookOpen size={16} /></Button>
+            <Button href="/videos" variant="primary" className="!bg-[#071B2C] !text-white hover:!bg-[#102d43]">Assistir vídeos <PlayCircle size={17} /></Button>
+          </div>
+          <div className="mt-9 grid max-w-[560px] gap-4 border-t border-[#e2e9e7] pt-5 text-xs text-[#53666b] sm:grid-cols-3">
+            <div className="flex items-center gap-2"><HeartHandshake className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">100% gratuito</strong>Sem cadastro necessário</span></div>
+            <div className="flex items-center gap-2"><ShieldCheck className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Acesso aberto</strong>Para todos, sempre</span></div>
+            <div className="flex items-center gap-2"><BookMarked className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Bem selecionado</strong>Conteúdo organizado</span></div>
+          </div>
+        </div>
+        <div className="relative mx-auto min-h-[340px] w-full max-w-[570px] sm:min-h-[405px]">
+          <div className="absolute right-0 top-3 h-[82%] w-[55%] rotate-[5deg] overflow-hidden rounded-2xl bg-[#075C45] p-6 text-white shadow-[0_22px_45px_rgba(7,27,44,.16)] sm:p-8">
+            <div className="flex items-center justify-between text-[10px] uppercase tracking-[.16em] text-white/70"><span>Vídeo em destaque</span><Film size={17} /></div>
+            <div className="absolute inset-x-7 bottom-8 sm:inset-x-8 sm:bottom-10"><div className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-white/15"><Play size={19} fill="currentColor" /></div><p className="serif text-3xl leading-[1.04] sm:text-4xl">{heroVideo?.title ?? 'Conhecimento em movimento'}</p><p className="mt-3 text-xs text-white/70">{heroVideo?.category ?? 'Vídeos'} {heroVideo?.duration ? `· ${heroVideo.duration}` : ''}</p></div>
+          </div>
+          <div className="absolute left-[8%] top-0 h-[88%] w-[54%] -rotate-[7deg] overflow-hidden rounded-2xl border-[7px] border-white bg-[#071B2C] shadow-[0_22px_45px_rgba(7,27,44,.2)] sm:left-[9%]">
+            {heroBook ? <Cover book={heroBook} large /> : <div className="flex h-full flex-col justify-between p-6 text-white"><span className="text-[10px] uppercase tracking-[.16em] text-white/65">Livro em destaque</span><p className="serif text-3xl">Uma nova forma de aprender.</p></div>}
+            <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-[10px] font-semibold text-white"><span>Livro em destaque</span><span className="rounded bg-white/15 px-2 py-1">PDF</span></div>
+          </div>
+          <div className="absolute bottom-2 left-[32%] rounded-xl border border-[#dbe4e2] bg-white px-4 py-3 text-xs shadow-[0_8px_25px_rgba(7,27,44,.12)] sm:left-[38%]"><span className="block font-bold text-[#075C45]">Acesso livre</span><span className="text-[#607274]">Leia e assista gratuitamente</span></div>
+        </div>
+      </div>
     </section>
-    <section className="border-y border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.38)]"><div className="mx-auto grid max-w-[1240px] grid-cols-2 gap-6 px-5 py-8 md:grid-cols-4 lg:px-8"><div><span className="serif text-3xl">{summary?.bookCount ?? '—'}</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">books to browse</p></div><div><span className="serif text-3xl">{summary?.videoCount ?? '—'}</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">films and talks</p></div><div><span className="serif text-3xl">04</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">ways to wander</p></div><div><span className="serif text-3xl">01</span><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">open invitation</p></div></div></section>
-    <section className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">{isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="The shelf is taking a moment" body="We couldn't reach the library just now." retry={refetch} /> : <><SectionHeading eyebrow="The short list" title="Worth your next hour" href="/books" /><div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{(summary?.featuredBooks ?? []).slice(0, 5).map(book => <BookCard key={book.id} book={book} />)}</div></>}</section>
-    <section className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">{isLoading ? <LoadingGrid kind="video" /> : <><SectionHeading eyebrow="Watch closely" title="Films with something to say" href="/videos" action="View all films" /><div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{(summary?.featuredVideos ?? []).slice(0, 3).map(video => <VideoCard key={video.id} video={video} />)}</div></>}</section>
-    <section className="mx-5 mt-24 overflow-hidden rounded-3xl bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] md:mx-auto md:max-w-[1240px]"><div className="grid items-center md:grid-cols-[1.2fr_1fr]"><div className="p-8 md:p-14"><p className="mono text-[10px] uppercase tracking-[.22em] opacity-65">The OpenShelf promise</p><h2 className="serif mt-4 text-4xl leading-tight md:text-5xl">A library should feel like a place, not a database.</h2><p className="mt-5 max-w-lg text-sm leading-7 opacity-75">We keep the collection human-sized, the provenance clear, and the door open. Everything here is shared with permission or belongs in the public domain.</p><Button href="/content-policy" variant="soft" className="mt-7">Read our content policy <ArrowRight size={15} /></Button></div><div className="hidden h-full min-h-[310px] bg-[radial-gradient(circle_at_40%_45%,hsl(10_57%_62%/.9),transparent_20%),radial-gradient(circle_at_70%_65%,hsl(38_42%_97%/.18),transparent_25%),linear-gradient(145deg,hsl(174_37%_31%),hsl(190_27%_16%))] md:block" /></div></section>
+    <section className="bg-[#071B2C] text-white">
+      <div className="mx-auto grid max-w-[1240px] divide-y divide-white/15 px-5 py-5 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:px-8">
+        {[[<ShieldCheck size={27} />, 'Conteúdo confiável', 'Materiais organizados e selecionados.'], [<Globe2 size={27} />, 'Acesso livre', 'Disponível gratuitamente para todos.'], [<LockKeyhole size={27} />, 'Privacidade respeitada', 'Não exigimos cadastro para navegar.'], [<Heart size={27} />, 'Feito para você', 'Uma biblioteca simples e acessível.']].map(([icon, title, body], index) => <div key={index} className="flex items-center gap-4 py-4 sm:px-5 lg:py-3 first:sm:pl-0 last:sm:pr-0"><span className="text-[#75b79f]">{icon}</span><span><strong className="block text-sm">{title}</strong><small className="mt-1 block leading-5 text-white/65">{body}</small></span></div>)}
+      </div>
+    </section>
+    <section className="mx-auto max-w-[1240px] px-5 pb-2 pt-16 lg:px-8">
+      <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Descubra algo novo</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Conteúdos em destaque</h2><p className="mt-2 text-sm text-[#607274]">Descubra alguns dos conteúdos disponíveis na nossa biblioteca.</p></div><Button href="/books" variant="ghost" className="hidden sm:inline-flex">Ver biblioteca <ArrowRight size={15} /></Button></div>
+      {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[...featuredBooks.slice(0, 2), ...featuredVideos.slice(0, 1)].map((item, index) => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group overflow-hidden rounded-2xl border border-[#dbe4e2] bg-white transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.1)]" data-testid={`card-featured-book-${item.id}`}><div className="grid grid-cols-[132px_1fr]"><Cover book={item} /><div className="flex flex-col p-5"><span className="mb-3 inline-flex w-fit items-center gap-1.5 rounded-full bg-[#e9f3ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#075C45]"><BookOpen size={12} /> Livro</span><h3 className="line-clamp-2 font-bold leading-snug text-[#071B2C] group-hover:text-[#075C45]">{item.title}</h3><p className="mt-1 text-sm text-[#607274]">{item.author}</p><p className="mt-3 line-clamp-2 text-xs leading-5 text-[#607274]">{item.description}</p><span className="mt-auto pt-4 text-xs font-bold text-[#075C45]">Ver conteúdo <ArrowRight className="ml-1 inline" size={13} /></span></div></div></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group overflow-hidden rounded-2xl border border-[#dbe4e2] bg-white transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.1)]" data-testid={`card-featured-video-${item.id}`}><div className="p-3"><VideoThumb video={item} /></div><div className="p-5 pt-2"><span className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-[#e9f3ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-[#075C45]"><Film size={12} /> Vídeo</span><h3 className="line-clamp-2 font-bold leading-snug text-[#071B2C] group-hover:text-[#075C45]">{item.title}</h3><p className="mt-1 text-sm text-[#607274]">{item.category} · {item.duration}</p><p className="mt-3 line-clamp-2 text-xs leading-5 text-[#607274]">{item.description}</p><span className="mt-4 block text-xs font-bold text-[#075C45]">Ver conteúdo <ArrowRight className="ml-1 inline" size={13} /></span></div></Link>)}</div>}
+    </section>
+    <section className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
+      <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
+      {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]"><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
+    </section>
+    <section id="como-funciona" className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
+      <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14"><div className="max-w-xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Simples por natureza</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Como funciona</h2></div><div className="mt-10 grid gap-8 md:grid-cols-3">{[['01', 'Encontre', 'Pesquise livros e vídeos na nossa biblioteca.', <Search size={21} />], ['02', 'Escolha', 'Abra o conteúdo que deseja conhecer.', <BookOpen size={21} />], ['03', 'Acesse gratuitamente', 'Leia ou assista sem assinatura e sem cadastro.', <PlayCircle size={21} />]].map(([number, title, body, icon]) => <div key={`step-${String(number)}`} className="border-t border-[#cbdcd5] pt-4"><div className="flex items-center justify-between text-[#075C45]"><span className="font-mono text-xs font-bold">{number}</span>{icon}</div><h3 className="mt-5 text-xl font-bold text-[#071B2C]">{title}</h3><p className="mt-2 max-w-xs text-sm leading-6 text-[#607274]">{body}</p></div>)}</div></div>
+    </section>
+    <section className="mx-auto grid max-w-[1240px] items-center gap-10 px-5 py-20 md:grid-cols-[1fr_1.05fr] md:py-24 lg:px-8"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Nossa missão</p><h2 className="mt-3 max-w-xl text-4xl font-bold leading-tight tracking-[-.05em] text-[#071B2C] md:text-5xl">Conhecimento que atravessa fronteiras.</h2></div><div><p className="text-lg leading-8 text-[#53666b]">A Sunnah Brasil foi criada para facilitar o acesso ao conhecimento através de uma biblioteca digital simples, gratuita e acessível.</p><Link href="/about" className="mt-5 inline-flex items-center gap-2 font-bold text-[#075C45]">Conheça a Sunnah Brasil <ArrowRight size={16} /></Link></div></section>
+    <section className="mx-5 overflow-hidden rounded-3xl bg-[#075C45] text-white md:mx-auto md:max-w-[1240px]"><div className="flex flex-col items-start justify-between gap-7 px-7 py-10 md:flex-row md:items-center md:px-14 md:py-12"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#a9d5c4]">A biblioteca está aberta</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] md:text-4xl">Comece a explorar.</h2><p className="mt-2 max-w-lg text-sm leading-6 text-white/75">Encontre livros e vídeos que podem ampliar seus conhecimentos.</p></div><Button href="/books" variant="soft" className="shrink-0 bg-white text-[#075C45] hover:bg-[#e9f3ef]">Explorar biblioteca <ArrowRight size={16} /></Button></div></section>
   </main></Shell>;
 }
 
