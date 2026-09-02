@@ -1134,7 +1134,7 @@ export const getGetVideoDownloadUrl = (id: number,) => {
 }
 
 /**
- * @summary Get a permitted video download URL and record the download
+ * @summary Get a permitted MP4 download URL
  */
 export const getVideoDownload = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<DownloadResponse> => {
 
@@ -1158,7 +1158,7 @@ export const getGetVideoDownloadQueryKey = (id: number,) => {
     }
 
 
-export const getGetVideoDownloadQueryOptions = <TData = Awaited<ReturnType<typeof getVideoDownload>>, TError = ErrorType<void | NotFoundResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVideoDownload>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetVideoDownloadQueryOptions = <TData = Awaited<ReturnType<typeof getVideoDownload>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVideoDownload>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1177,19 +1177,96 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetVideoDownloadQueryResult = NonNullable<Awaited<ReturnType<typeof getVideoDownload>>>
-export type GetVideoDownloadQueryError = ErrorType<void | NotFoundResponse>
+export type GetVideoDownloadQueryError = ErrorType<void>
 
 
 /**
- * @summary Get a permitted video download URL and record the download
+ * @summary Get a permitted MP4 download URL
  */
 
-export function useGetVideoDownload<TData = Awaited<ReturnType<typeof getVideoDownload>>, TError = ErrorType<void | NotFoundResponse>>(
+export function useGetVideoDownload<TData = Awaited<ReturnType<typeof getVideoDownload>>, TError = ErrorType<void>>(
  id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getVideoDownload>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetVideoDownloadQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getDownloadVideoFileUrl = (id: number,) => {
+
+
+
+
+  return `/api/videos/${id}/download/file`
+}
+
+/**
+ * @summary Download a video as an MP4 attachment
+ */
+export const downloadVideoFile = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getDownloadVideoFileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getDownloadVideoFileQueryKey = (id: number,) => {
+    return [
+    `/api/videos/${id}/download/file`
+    ] as const;
+    }
+
+
+export const getDownloadVideoFileQueryOptions = <TData = Awaited<ReturnType<typeof downloadVideoFile>>, TError = ErrorType<void | NotFoundResponse>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadVideoFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getDownloadVideoFileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof downloadVideoFile>>> = ({ signal }) => downloadVideoFile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof downloadVideoFile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type DownloadVideoFileQueryResult = NonNullable<Awaited<ReturnType<typeof downloadVideoFile>>>
+export type DownloadVideoFileQueryError = ErrorType<void | NotFoundResponse>
+
+
+/**
+ * @summary Download a video as an MP4 attachment
+ */
+
+export function useDownloadVideoFile<TData = Awaited<ReturnType<typeof downloadVideoFile>>, TError = ErrorType<void | NotFoundResponse>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof downloadVideoFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getDownloadVideoFileQueryOptions(id,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

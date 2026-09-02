@@ -414,7 +414,7 @@ export const DeleteVideoResponse = zod.void()
 
 
 /**
- * @summary Get a permitted video download URL and record the download
+ * @summary Get a permitted MP4 download URL
  */
 
 
@@ -426,6 +426,19 @@ export const GetVideoDownloadParams = zod.object({
 export const GetVideoDownloadResponse = zod.object({
   "url": zod.string()
 })
+
+
+/**
+ * @summary Download a video as an MP4 attachment
+ */
+
+
+
+export const DownloadVideoFileParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const DownloadVideoFileResponse = zod.unknown()
 
 
 /**

@@ -285,12 +285,12 @@ function BookDetail() {
 
 function VideoDetail() {
   const { id } = useParams<{ id: string }>(); const videoId = Number(id); const q = useGetVideo(videoId); const [requested, setRequested] = useState(false); const dl = useGetVideoDownload(videoId, { query: { enabled: requested, queryKey: getGetVideoDownloadQueryKey(videoId) } }); const video = q.data;
-  if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid kind="video" /></main></Shell>;
-  if (q.isError || !video) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="This film isn't available" body="It may have moved, or the link may be old." /></main></Shell>;
-  const canDownload = Boolean(video.downloadEnabled && video.videoUrl);
   useEffect(() => {
     if (dl.data?.url) window.location.assign(dl.data.url);
   }, [dl.data?.url]);
+  if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid kind="video" /></main></Shell>;
+  if (q.isError || !video) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="This film isn't available" body="It may have moved, or the link may be old." /></main></Shell>;
+  const canDownload = Boolean(video.downloadEnabled && video.videoUrl);
   return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/videos" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]" data-testid="link-back-videos"><ArrowLeft size={15} /> Back to videos</Link><div className="pt-10"><div className="relative overflow-hidden rounded-2xl bg-[hsl(190_27%_22%)]">{video.videoUrl ? <video src={video.videoUrl} controls poster={video.thumbnailUrl ?? undefined} className="aspect-video w-full" /> : <VideoThumb video={video} large />}</div><div className="grid gap-8 py-9 md:grid-cols-[1fr_260px]"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{video.category} · {video.duration}</p><h1 className="serif mt-3 text-4xl leading-tight md:text-5xl">{video.title}</h1><p className="mt-5 max-w-2xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{video.description}</p></div><div className="rounded-2xl bg-[hsl(var(--secondary)/.6)] p-5"><p className="text-sm font-semibold">Keep watching</p><p className="mt-2 text-xs leading-5 text-[hsl(var(--muted-foreground))]">Share this film with someone who likes a slower pace.</p><Button variant="outline" className="mt-5 w-full" onClick={() => setRequested(true)} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'MP4 indisponível' : dl.isLoading ? 'Preparando MP4…' : <><Download size={15} /> Baixar MP4</>}</Button>{dl.isError && <p className="mt-3 text-xs leading-5 text-[hsl(var(--destructive))]">Não foi possível preparar o MP4. Tente novamente.</p>}</div></div></div></main></Shell>;
 }
 

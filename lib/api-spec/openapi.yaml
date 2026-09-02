@@ -296,8 +296,6 @@ paths:
           $ref: "#/components/responses/NotFound"
         "502":
           description: The source video could not be prepared
-        "404":
-          $ref: "#/components/responses/NotFound"
   /categories:
     get:
       operationId: listCategories
