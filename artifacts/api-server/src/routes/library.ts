@@ -1,0 +1,393 @@
+import { getAuth } from "@clerk/express";
+import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
+import { Router, type IRouter, type Request, type Response } from "express";
+import {
+  CreateBookBody,
+  CreateVideoBody,
+  GetBookDownloadParams,
+  GetBookParams,
+  GetVideoDownloadParams,
+  GetVideoParams,
+  ListBooksQueryParams,
+  ListVideosQueryParams,
+  UpdateBookBody,
+  UpdateBookParams,
+  UpdateVideoBody,
+  UpdateVideoParams,
+} from "@workspace/api-zod";
+import { db } from "@workspace/db";
+import {
+  booksTable,
+  categoriesTable,
+  downloadEventsTable,
+  videosTable,
+} from "@workspace/db";
+
+const router: IRouter = Router();
+const DEFAULT_CATEGORIES = [
+  "Fiction",
+  "Education",
+  "Business",
+  "Technology",
+  "Personal Development",
+  "Children's Books",
+  "Other",
+];
+
+type LibraryContent = typeof booksTable.$inferSelect | typeof videosTable.$inferSelect;
+
+function requireAdmin(req: Request, res: Response): string | null {
+  const userId = getAuth(req).userId;
+  const allowedIds = (process.env.CLERK_ADMIN_USER_IDS || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
+
+  if (!userId) {
+    res.status(401).json({ error: "Authentication required" });
+    return null;
+  }
+  if (!allowedIds.includes(userId)) {
+    res.status(403).json({ error: "Admin access required" });
+    return null;
+  }
+  return userId;
+}
+
+function contentUrl(value: string | null, req: Request): string | null {
+  if (!value) return null;
+  if (value.startsWith("/objects/")) return `${req.protocol}://${req.get("host")}/api/storage${value}`;
+  return value;
+}
+
+function toBook(row: typeof booksTable.$inferSelect, req: Request) {
+  return {
+    ...row,
+    coverUrl: contentUrl(row.coverUrl, req),
+    fileUrl: contentUrl(row.fileUrl, req),
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function toVideo(row: typeof videosTable.$inferSelect, req: Request) {
+  return {
+    ...row,
+    thumbnailUrl: contentUrl(row.thumbnailUrl, req),
+    videoUrl: contentUrl(row.videoUrl, req),
+    createdAt: row.createdAt.toISOString(),
+  };
+}
+
+function parseId(value: unknown): number | null {
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : null;
+}
+
+async function ensureSeedData() {
+  const [{ total }] = await db.select({ total: count() }).from(booksTable);
+  if (Number(total) > 0) return;
+
+  await db.insert(categoriesTable).values(DEFAULT_CATEGORIES.map((name) => ({ name }))).onConflictDoNothing();
+  await db.insert(booksTable).values([
+    {
+      title: "The Secret Garden",
+      author: "Frances Hodgson Burnett",
+      description: "A classic story of friendship, wonder, and a hidden garden brought back to life.",
+      category: "Fiction",
+      coverUrl: "https://covers.openlibrary.org/b/id/8231856-L.jpg",
+      fileUrl: "https://www.gutenberg.org/cache/epub/17396/pg17396.txt",
+      fileType: "TXT",
+      fileSize: 245000,
+      featured: true,
+    },
+    {
+      title: "The Art of War",
+      author: "Sun Tzu",
+      description: "A concise, enduring study of strategy, leadership, and clear thinking.",
+      category: "Business",
+      coverUrl: "https://covers.openlibrary.org/b/id/8231851-L.jpg",
+      fileUrl: "https://www.gutenberg.org/cache/epub/17405/pg17405.txt",
+      fileType: "TXT",
+      fileSize: 180000,
+      featured: true,
+    },
+    {
+      title: "A Brief History of Time",
+      author: "Stephen Hawking",
+      description: "An accessible journey through the biggest questions in cosmology and physics.",
+      category: "Education",
+      coverUrl: "https://covers.openlibrary.org/b/id/11153258-L.jpg",
+      fileType: "PDF",
+      fileSize: 0,
+      featured: false,
+    },
+  ]);
+  await db.insert(videosTable).values([
+    {
+      title: "A Walk Through the Archive",
+      description: "A short visual essay about preserving public knowledge for the next generation.",
+      category: "Education",
+      duration: "08:42",
+      downloadEnabled: true,
+      featured: true,
+    },
+    {
+      title: "How Open Media Works",
+      description: "A practical introduction to open licenses, public domain works, and responsible sharing.",
+      category: "Technology",
+      duration: "14:18",
+      downloadEnabled: false,
+      featured: true,
+    },
+    {
+      title: "The Reading Ritual",
+      description: "Small ideas for making more room for reading, reflection, and focused attention.",
+      category: "Personal Development",
+      duration: "05:26",
+      downloadEnabled: false,
+      featured: false,
+    },
+  ]);
+}
+
+router.get("/library/summary", async (req, res) => {
+  await ensureSeedData();
+  const [bookCount, videoCount, featuredBooks, featuredVideos, recentBooks, recentVideos] =
+    await Promise.all([
+      db.select({ value: count() }).from(booksTable),
+      db.select({ value: count() }).from(videosTable),
+      db.select().from(booksTable).where(eq(booksTable.featured, true)).orderBy(asc(booksTable.id)).limit(4),
+      db.select().from(videosTable).where(eq(videosTable.featured, true)).orderBy(asc(videosTable.id)).limit(4),
+      db.select().from(booksTable).orderBy(desc(booksTable.createdAt)).limit(3),
+      db.select().from(videosTable).orderBy(desc(videosTable.createdAt)).limit(3),
+    ]);
+  const recentlyAdded: Array<ReturnType<typeof toBook> | ReturnType<typeof toVideo>> = [
+    ...recentBooks.map((book) => toBook(book, req)),
+    ...recentVideos.map((video) => toVideo(video, req)),
+  ].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 4);
+  res.json({
+    bookCount: Number(bookCount[0]?.value ?? 0),
+    videoCount: Number(videoCount[0]?.value ?? 0),
+    featuredBooks: featuredBooks.map((book) => toBook(book, req)),
+    featuredVideos: featuredVideos.map((video) => toVideo(video, req)),
+    recentlyAdded,
+  });
+});
+
+router.get("/books", async (req, res) => {
+  await ensureSeedData();
+  const parsed = ListBooksQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid search or category" });
+    return;
+  }
+  const { search, category } = parsed.data;
+  const filters = [];
+  if (search) filters.push(or(ilike(booksTable.title, `%${search}%`), ilike(booksTable.author, `%${search}%`), ilike(booksTable.description, `%${search}%`)));
+  if (category) filters.push(eq(booksTable.category, category));
+  const rows = await db.select().from(booksTable).where(filters.length ? and(...filters) : undefined).orderBy(desc(booksTable.createdAt));
+  res.json(rows.map((book) => toBook(book, req)));
+});
+
+router.get("/books/:id", async (req, res) => {
+  await ensureSeedData();
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid book id" });
+    return;
+  }
+  const [book] = await db.select().from(booksTable).where(eq(booksTable.id, id));
+  if (!book) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+  res.json(toBook(book, req));
+});
+
+router.get("/books/:id/download", async (req, res) => {
+  await ensureSeedData();
+  const parsed = GetBookDownloadParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid book id" });
+    return;
+  }
+  const [book] = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.id));
+  if (!book?.fileUrl) {
+    res.status(404).json({ error: "Download not available" });
+    return;
+  }
+  await db.update(booksTable).set({ downloadCount: sql`${booksTable.downloadCount} + 1` }).where(eq(booksTable.id, book.id));
+  await db.insert(downloadEventsTable).values({ contentType: "book", contentId: book.id });
+  res.json({ url: contentUrl(book.fileUrl, req) });
+});
+
+router.post("/books", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const parsed = CreateBookBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid book details" });
+    return;
+  }
+  const [book] = await db.insert(booksTable).values(parsed.data).returning();
+  res.status(201).json(toBook(book, req));
+});
+
+router.patch("/books/:id", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const params = UpdateBookParams.safeParse(req.params);
+  const body = UpdateBookBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Invalid book details" });
+    return;
+  }
+  const [book] = await db.update(booksTable).set(body.data).where(eq(booksTable.id, params.data.id)).returning();
+  if (!book) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+  res.json(toBook(book, req));
+});
+
+router.delete("/books/:id", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const params = GetBookParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid book id" });
+    return;
+  }
+  const deleted = await db.delete(booksTable).where(eq(booksTable.id, params.data.id)).returning({ id: booksTable.id });
+  if (!deleted.length) {
+    res.status(404).json({ error: "Book not found" });
+    return;
+  }
+  res.status(204).send();
+});
+
+router.get("/videos", async (req, res) => {
+  await ensureSeedData();
+  const parsed = ListVideosQueryParams.safeParse(req.query);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid search or category" });
+    return;
+  }
+  const { search, category } = parsed.data;
+  const filters = [];
+  if (search) filters.push(or(ilike(videosTable.title, `%${search}%`), ilike(videosTable.description, `%${search}%`)));
+  if (category) filters.push(eq(videosTable.category, category));
+  const rows = await db.select().from(videosTable).where(filters.length ? and(...filters) : undefined).orderBy(desc(videosTable.createdAt));
+  res.json(rows.map((video) => toVideo(video, req)));
+});
+
+router.get("/videos/:id", async (req, res) => {
+  await ensureSeedData();
+  const id = parseId(req.params.id);
+  if (!id) {
+    res.status(400).json({ error: "Invalid video id" });
+    return;
+  }
+  const [video] = await db.select().from(videosTable).where(eq(videosTable.id, id));
+  if (!video) {
+    res.status(404).json({ error: "Video not found" });
+    return;
+  }
+  await db.update(videosTable).set({ viewCount: sql`${videosTable.viewCount} + 1` }).where(eq(videosTable.id, id));
+  res.json(toVideo(video, req));
+});
+
+router.get("/videos/:id/download", async (req, res) => {
+  await ensureSeedData();
+  const parsed = GetVideoDownloadParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid video id" });
+    return;
+  }
+  const [video] = await db.select().from(videosTable).where(eq(videosTable.id, parsed.data.id));
+  if (!video) {
+    res.status(404).json({ error: "Video not found" });
+    return;
+  }
+  if (!video.downloadEnabled || !video.videoUrl) {
+    res.status(403).json({ error: "Downloads are disabled" });
+    return;
+  }
+  await db.update(videosTable).set({ downloadCount: sql`${videosTable.downloadCount} + 1` }).where(eq(videosTable.id, video.id));
+  await db.insert(downloadEventsTable).values({ contentType: "video", contentId: video.id });
+  res.json({ url: contentUrl(video.videoUrl, req) });
+});
+
+router.post("/videos", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const parsed = CreateVideoBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid video details" });
+    return;
+  }
+  const [video] = await db.insert(videosTable).values(parsed.data).returning();
+  res.status(201).json(toVideo(video, req));
+});
+
+router.patch("/videos/:id", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const params = UpdateVideoParams.safeParse(req.params);
+  const body = UpdateVideoBody.safeParse(req.body);
+  if (!params.success || !body.success) {
+    res.status(400).json({ error: "Invalid video details" });
+    return;
+  }
+  const [video] = await db.update(videosTable).set(body.data).where(eq(videosTable.id, params.data.id)).returning();
+  if (!video) {
+    res.status(404).json({ error: "Video not found" });
+    return;
+  }
+  res.json(toVideo(video, req));
+});
+
+router.delete("/videos/:id", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  const params = GetVideoParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: "Invalid video id" });
+    return;
+  }
+  const deleted = await db.delete(videosTable).where(eq(videosTable.id, params.data.id)).returning({ id: videosTable.id });
+  if (!deleted.length) {
+    res.status(404).json({ error: "Video not found" });
+    return;
+  }
+  res.status(204).send();
+});
+
+router.get("/categories", async (_req, res) => {
+  await ensureSeedData();
+  const [books, videos, categories] = await Promise.all([
+    db.select({ name: booksTable.category, value: count() }).from(booksTable).groupBy(booksTable.category),
+    db.select({ name: videosTable.category, value: count() }).from(videosTable).groupBy(videosTable.category),
+    db.select().from(categoriesTable).orderBy(asc(categoriesTable.id)),
+  ]);
+  const counts = new Map<string, { bookCount: number; videoCount: number }>();
+  for (const category of categories) counts.set(category.name, { bookCount: 0, videoCount: 0 });
+  for (const item of books) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), bookCount: Number(item.value) });
+  for (const item of videos) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), videoCount: Number(item.value) });
+  res.json([...counts.entries()].map(([name, value]) => ({ name, ...value })));
+});
+
+router.get("/admin/stats", async (req, res) => {
+  if (!requireAdmin(req, res)) return;
+  await ensureSeedData();
+  const [bookCount, videoCount, downloads, views] = await Promise.all([
+    db.select({ value: count() }).from(booksTable),
+    db.select({ value: count() }).from(videosTable),
+    db.select({ value: sql<number>`coalesce(sum(${booksTable.downloadCount}), 0)` }).from(booksTable),
+    db.select({ value: sql<number>`coalesce(sum(${videosTable.viewCount}), 0)` }).from(videosTable),
+  ]);
+  const categories = await db.select({ name: categoriesTable.name, bookCount: sql<number>`(select count(*) from books where category = ${categoriesTable.name})`, videoCount: sql<number>`(select count(*) from videos where category = ${categoriesTable.name})` }).from(categoriesTable).orderBy(asc(categoriesTable.id));
+  res.json({
+    bookCount: Number(bookCount[0]?.value ?? 0),
+    videoCount: Number(videoCount[0]?.value ?? 0),
+    totalDownloads: Number(downloads[0]?.value ?? 0),
+    totalViews: Number(views[0]?.value ?? 0),
+    categoryBreakdown: categories.map((category) => ({ name: category.name, bookCount: Number(category.bookCount), videoCount: Number(category.videoCount) })),
+  });
+});
+
+export default router;

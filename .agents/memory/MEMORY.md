@@ -1,0 +1,1 @@
+- [Managed auth and storage](managed-auth-and-storage.md) — keep identity and uploaded media in Replit-managed services; PostgreSQL remains the metadata store.
