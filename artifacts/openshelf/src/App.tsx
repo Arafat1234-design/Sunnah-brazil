@@ -242,10 +242,23 @@ function Home() {
       <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
       {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]"><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
     </section>
-    <section id="como-funciona" className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
-      <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14"><div className="max-w-xl"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Simples por natureza</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Como funciona</h2></div><div className="mt-10 grid gap-8 md:grid-cols-3">{[['01', 'Encontre', 'Pesquise livros e vídeos na nossa biblioteca.', <Search size={21} />], ['02', 'Escolha', 'Abra o conteúdo que deseja conhecer.', <BookOpen size={21} />], ['03', 'Acesse gratuitamente', 'Leia ou assista sem assinatura e sem cadastro.', <PlayCircle size={21} />]].map(([number, title, body, icon]) => <div key={`step-${String(number)}`} className="border-t border-[#cbdcd5] pt-4"><div className="flex items-center justify-between text-[#075C45]"><span className="font-mono text-xs font-bold">{number}</span>{icon}</div><h3 className="mt-5 text-xl font-bold text-[#071B2C]">{title}</h3><p className="mt-2 max-w-xs text-sm leading-6 text-[#607274]">{body}</p></div>)}</div></div>
+    <section id="como-funciona" className="mx-auto max-w-[1240px] px-5 py-20 lg:px-8">
+      <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14">
+        <div className="grid gap-8 md:grid-cols-[.82fr_1.18fr] md:gap-14">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Sobre Nós</p>
+            <h2 className="mt-3 max-w-xl text-4xl font-bold leading-tight tracking-[-.05em] text-[#071B2C] md:text-5xl">Conhecimento que atravessa fronteiras.</h2>
+            <p className="mt-5 text-base font-semibold leading-7 text-[#075C45]">Sunnah Brasil — Conhecimento, Sunnah e orientação para todos.</p>
+          </div>
+          <div className="space-y-5 text-sm leading-7 text-[#53666b]">
+            <p>Sunnah Brasil é uma plataforma digital islâmica fundada por Sheikh Jumma Momade Anli, criada para facilitar o acesso ao conhecimento e aos ensinamentos do Islão.</p>
+            <p>A plataforma reúne livros, vídeos, áudios, artigos, palestras, aulas, sermões e outros conteúdos islâmicos, proporcionando um espaço organizado e acessível para estudo, aprendizagem e reflexão.</p>
+            <p>A nossa missão é utilizar a tecnologia para preservar, divulgar e tornar o conhecimento islâmico acessível a todos, criando uma biblioteca e centro multimédia digital que possa servir a comunidade muçulmana e todos aqueles que desejam conhecer melhor o Islão.</p>
+            <p className="border-t border-[#cbdcd5] pt-5 font-semibold text-[#075C45]">Sunnah Brasil — Conhecimento, Sunnah e orientação para todos.</p>
+          </div>
+        </div>
+      </div>
     </section>
-    <section className="mx-auto grid max-w-[1240px] items-center gap-10 px-5 py-20 md:grid-cols-[1fr_1.05fr] md:py-24 lg:px-8"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Nossa missão</p><h2 className="mt-3 max-w-xl text-4xl font-bold leading-tight tracking-[-.05em] text-[#071B2C] md:text-5xl">Conhecimento que atravessa fronteiras.</h2></div><div><p className="text-lg leading-8 text-[#53666b]">A Sunnah Brasil foi criada para facilitar o acesso ao conhecimento através de uma biblioteca digital simples, gratuita e acessível.</p><Link href="/about" className="mt-5 inline-flex items-center gap-2 font-bold text-[#075C45]">Conheça a Sunnah Brasil <ArrowRight size={16} /></Link></div></section>
   </main></Shell>;
 }
 
