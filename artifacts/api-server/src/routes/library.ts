@@ -188,44 +188,13 @@ function downloadFilename(title: string, extension: string): string {
 }
 
 async function ensureSeedData() {
-  const [{ total }] = await db.select({ total: count() }).from(booksTable);
-  if (Number(total) > 0) return;
+  const [[{ booksTotal }], [{ videosTotal }]] = await Promise.all([
+    db.select({ booksTotal: count() }).from(booksTable),
+    db.select({ videosTotal: count() }).from(videosTable),
+  ]);
+  if (Number(booksTotal) + Number(videosTotal) > 0) return;
 
   await db.insert(categoriesTable).values(DEFAULT_CATEGORIES.map((name) => ({ name }))).onConflictDoNothing();
-  await db.insert(booksTable).values([
-    {
-      title: "The Secret Garden",
-      author: "Frances Hodgson Burnett",
-      description: "A classic story of friendship, wonder, and a hidden garden brought back to life.",
-      category: "Fiction",
-      coverUrl: "https://covers.openlibrary.org/b/id/8231856-L.jpg",
-      fileUrl: "https://www.gutenberg.org/cache/epub/17396/pg17396.txt",
-      fileType: "TXT",
-      fileSize: 245000,
-      featured: true,
-    },
-    {
-      title: "The Art of War",
-      author: "Sun Tzu",
-      description: "A concise, enduring study of strategy, leadership, and clear thinking.",
-      category: "Business",
-      coverUrl: "https://covers.openlibrary.org/b/id/8231851-L.jpg",
-      fileUrl: "https://www.gutenberg.org/cache/epub/17405/pg17405.txt",
-      fileType: "TXT",
-      fileSize: 180000,
-      featured: true,
-    },
-    {
-      title: "A Brief History of Time",
-      author: "Stephen Hawking",
-      description: "An accessible journey through the biggest questions in cosmology and physics.",
-      category: "Education",
-      coverUrl: "https://covers.openlibrary.org/b/id/11153258-L.jpg",
-      fileType: "PDF",
-      fileSize: 0,
-      featured: false,
-    },
-  ]);
   await db.insert(videosTable).values([
     {
       title: "A Walk Through the Archive",
