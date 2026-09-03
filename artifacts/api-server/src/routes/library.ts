@@ -346,7 +346,8 @@ router.get("/books/:id/download/file", async (req, res) => {
     res.setHeader("Content-Type", isPdf ? "application/pdf" : "application/octet-stream");
     res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(book.title, extension)}"`);
     res.setHeader("Content-Length", output.length);
-    res.send(output);
+    res.setHeader("Cache-Control", "no-store, max-age=0");
+    res.end(output);
   } catch (error) {
     req.log.error({ err: error, bookId: book.id }, "Error preparing book download");
     res.status(502).json({ error: "Could not prepare the book download" });
@@ -469,7 +470,8 @@ router.get("/videos/:id/download/file", async (req, res) => {
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(video.title, "mp4")}"`);
     res.setHeader("Content-Length", mp4.length);
-    res.send(mp4);
+    res.setHeader("Cache-Control", "no-store, max-age=0");
+    res.end(mp4);
   } catch (error) {
     req.log.error({ err: error, videoId: video.id }, "Error preparing video download");
     res.status(502).json({ error: "Could not prepare the MP4 download" });
