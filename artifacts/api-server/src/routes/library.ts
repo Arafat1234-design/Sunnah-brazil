@@ -58,7 +58,7 @@ function requireAdmin(req: Request, res: Response): string | null {
 
 function contentUrl(value: string | null, req: Request): string | null {
   if (!value) return null;
-  if (value.startsWith("/objects/")) return `${req.protocol}://${req.get("host")}/api/storage${value}`;
+  if (value.startsWith("/objects/")) return `/api/storage${value}`;
   return value;
 }
 
