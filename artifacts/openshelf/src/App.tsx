@@ -117,7 +117,7 @@ function Header() {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
   };
-  return <header className="sticky top-0 z-30 border-b border-[#e3e9e7] bg-white/95 backdrop-blur-md">
+  return <header className="sticky top-0 z-30 border-b border-[#e3e9e7] bg-[#eee6da]/95 backdrop-blur-md">
     <div className="mx-auto flex min-h-[72px] max-w-[1240px] items-center justify-between gap-5 px-5 lg:px-8">
       <Logo />
       <nav className="hidden items-center gap-0.5 lg:flex">{items.map(([label, href]) =>
