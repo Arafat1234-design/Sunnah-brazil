@@ -27,14 +27,8 @@ import {
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 const DEFAULT_CATEGORIES = [
-  "Fiction",
   "Education",
   "Islam",
-  "Business",
-  "Technology",
-  "Personal Development",
-  "Children's Books",
-  "Other",
 ];
 
 type LibraryContent = typeof booksTable.$inferSelect | typeof videosTable.$inferSelect;
