@@ -200,18 +200,18 @@ function Home() {
     <section className="relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
       <div className="relative mx-auto max-w-[1240px] px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
-        <div className="max-w-[600px]">
+        <div className="mx-auto max-w-[780px] text-center">
           <div className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
-          <h1 className="max-w-[650px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
-          <p className="mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <h1 className="serif mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
+          <p className="mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button href="/books" className="bg-[#075C45] px-5">Explorar livros <BookOpen size={16} /></Button>
             <Button href="/videos" variant="primary" className="!bg-[#071B2C] !text-white hover:!bg-[#102d43]">Assistir vídeos <PlayCircle size={17} /></Button>
           </div>
-          <div className="mt-9 grid max-w-[560px] gap-4 border-t border-[#e2e9e7] pt-5 text-xs text-[#53666b] sm:grid-cols-3">
-            <div className="flex items-center gap-2"><HeartHandshake className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">100% gratuito</strong>Sem cadastro necessário</span></div>
-            <div className="flex items-center gap-2"><ShieldCheck className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Acesso aberto</strong>Para todos, sempre</span></div>
-            <div className="flex items-center gap-2"><BookMarked className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Bem selecionado</strong>Conteúdo organizado</span></div>
+          <div className="mx-auto mt-9 grid max-w-[560px] gap-4 border-t border-[#e2e9e7] pt-5 text-xs text-[#53666b] sm:grid-cols-3">
+            <div className="flex flex-col items-center gap-2 text-center"><HeartHandshake className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">100% gratuito</strong>Sem cadastro necessário</span></div>
+            <div className="flex flex-col items-center gap-2 text-center"><ShieldCheck className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Acesso aberto</strong>Para todos, sempre</span></div>
+            <div className="flex flex-col items-center gap-2 text-center"><BookMarked className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Bem selecionado</strong>Conteúdo organizado</span></div>
           </div>
         </div>
       </div>
