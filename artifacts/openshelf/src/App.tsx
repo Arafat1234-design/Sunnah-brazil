@@ -188,7 +188,6 @@ function Home() {
   const categories = useListCategories();
   const featuredBooks = summary?.featuredBooks ?? [];
   const featuredVideos = summary?.featuredVideos ?? [];
-  const heroBook = featuredBooks[0];
   const heroVideo = featuredVideos[0];
   const categoryIcon = (name: string) => {
     const normalized = name.toLowerCase();
@@ -221,11 +220,6 @@ function Home() {
             <div className="flex items-center justify-between text-[10px] uppercase tracking-[.16em] text-white/70"><span>Vídeo em destaque</span><Film size={17} /></div>
             <div className="absolute inset-x-7 bottom-8 sm:inset-x-8 sm:bottom-10"><div className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-white/15"><Play size={19} fill="currentColor" /></div><p className="serif text-3xl leading-[1.04] sm:text-4xl">{heroVideo?.title ?? 'Conhecimento em movimento'}</p><p className="mt-3 text-xs text-white/70">{heroVideo?.category ?? 'Vídeos'} {heroVideo?.duration ? `· ${heroVideo.duration}` : ''}</p></div>
           </div>
-          <div className="absolute left-[8%] top-0 h-[88%] w-[54%] -rotate-[7deg] overflow-hidden rounded-2xl border-[7px] border-white bg-[#071B2C] shadow-[0_22px_45px_rgba(7,27,44,.2)] sm:left-[9%]">
-            {heroBook ? <Cover book={heroBook} large /> : <div className="flex h-full flex-col justify-between p-6 text-white"><span className="text-[10px] uppercase tracking-[.16em] text-white/65">Livro em destaque</span><p className="serif text-3xl">Uma nova forma de aprender.</p></div>}
-            <div className="absolute inset-x-5 bottom-5 flex items-center justify-between text-[10px] font-semibold text-white"><span>Livro em destaque</span><span className="rounded bg-white/15 px-2 py-1">PDF</span></div>
-          </div>
-          <div className="absolute bottom-2 left-[32%] rounded-xl border border-[#dbe4e2] bg-white px-4 py-3 text-xs shadow-[0_8px_25px_rgba(7,27,44,.12)] sm:left-[38%]"><span className="block font-bold text-[#075C45]">Acesso livre</span><span className="text-[#607274]">Leia e assista gratuitamente</span></div>
         </div>
       </div>
     </section>
