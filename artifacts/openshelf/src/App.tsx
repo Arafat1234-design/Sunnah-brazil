@@ -188,7 +188,6 @@ function Home() {
   const categories = useListCategories();
   const featuredBooks = summary?.featuredBooks ?? [];
   const featuredVideos = summary?.featuredVideos ?? [];
-  const heroVideo = featuredVideos[0];
   const categoryIcon = (name: string) => {
     const normalized = name.toLowerCase();
     if (normalized.includes('educ')) return <GraduationCap size={24} />;
@@ -200,7 +199,7 @@ function Home() {
   return <Shell><main className="overflow-hidden">
     <section className="relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
-      <div className="relative mx-auto grid max-w-[1240px] gap-12 px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:grid-cols-[.96fr_1.04fr] lg:items-center lg:px-8 lg:pt-20">
+      <div className="relative mx-auto max-w-[1240px] px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
         <div className="max-w-[600px]">
           <div className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
           <h1 className="max-w-[650px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
@@ -213,12 +212,6 @@ function Home() {
             <div className="flex items-center gap-2"><HeartHandshake className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">100% gratuito</strong>Sem cadastro necessário</span></div>
             <div className="flex items-center gap-2"><ShieldCheck className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Acesso aberto</strong>Para todos, sempre</span></div>
             <div className="flex items-center gap-2"><BookMarked className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Bem selecionado</strong>Conteúdo organizado</span></div>
-          </div>
-        </div>
-        <div className="relative mx-auto min-h-[340px] w-full max-w-[570px] sm:min-h-[405px]">
-          <div className="absolute right-0 top-3 h-[82%] w-[55%] rotate-[5deg] overflow-hidden rounded-2xl bg-[#075C45] p-6 text-white shadow-[0_22px_45px_rgba(7,27,44,.16)] sm:p-8">
-            <div className="flex items-center justify-between text-[10px] uppercase tracking-[.16em] text-white/70"><span>Vídeo em destaque</span><Film size={17} /></div>
-            <div className="absolute inset-x-7 bottom-8 sm:inset-x-8 sm:bottom-10"><div className="mb-4 grid h-12 w-12 place-items-center rounded-full bg-white/15"><Play size={19} fill="currentColor" /></div><p className="serif text-3xl leading-[1.04] sm:text-4xl">{heroVideo?.title ?? 'Conhecimento em movimento'}</p><p className="mt-3 text-xs text-white/70">{heroVideo?.category ?? 'Vídeos'} {heroVideo?.duration ? `· ${heroVideo.duration}` : ''}</p></div>
           </div>
         </div>
       </div>
