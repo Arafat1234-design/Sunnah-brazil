@@ -152,6 +152,25 @@ paths:
                 $ref: "#/components/schemas/DownloadResponse"
         "404":
           $ref: "#/components/responses/NotFound"
+  /books/{id}/read/file:
+    get:
+      operationId: readBookFile
+      tags: [books]
+      summary: Read a book inline in the app
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: PDF file rendered inline
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "502":
+          description: The source file could not be prepared
   /books/{id}/download/file:
     get:
       operationId: downloadBookFile

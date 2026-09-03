@@ -252,6 +252,19 @@ export const GetBookDownloadResponse = zod.object({
 
 
 /**
+ * @summary Read a book inline in the app
+ */
+
+
+
+export const ReadBookFileParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const ReadBookFileResponse = zod.unknown()
+
+
+/**
  * @summary Download a book as a PDF attachment
  */
 

@@ -1,0 +1,146 @@
+Redesign the existing “Sobre / About” page for my Islamic digital library website “Sunnah Brasil”.
+
+The website provides Islamic books, videos, and educational resources. The design should feel premium, peaceful, authentic, trustworthy, and distinctly Islamic without looking outdated or overly decorative.
+
+DESIGN STYLE:
+- Minimalist luxury Islamic aesthetic
+- Main colors: deep forest green, off-white/cream, dark navy-green, subtle gold accents
+- Lots of whitespace
+- Elegant editorial/serif typography for large headings
+- Clean modern sans-serif typography for body text
+- Subtle Islamic geometric patterns in the background
+- Small tasteful Islamic ornaments
+- Rounded cards with very subtle borders
+- Smooth hover animations
+- Responsive on desktop, tablet, and mobile
+- Keep the existing Sunnah Brasil logo
+- Do NOT make the page look like a generic corporate website
+
+HEADER:
+Keep the navigation:
+- Livros
+- Vídeos
+- Categorias
+- Sobre
+- Como funciona
+- Button: “Explorar biblioteca”
+
+Highlight “Sobre” with a soft pale-green rounded pill.
+
+HERO SECTION:
+
+Small uppercase label:
+“SOBRE A SUNNAH BRASIL”
+
+Main heading:
+“Conhecimento que
+ilumina e transforma.”
+
+Supporting text:
+“A Sunnah Brasil existe para espalhar conhecimento autêntico, baseado no Alcorão e na Sunnah, de forma acessível a todos.
+
+Aqui você encontra livros, vídeos e recursos que fortalecem a sua fé, inspiram boas ações e aproximam você de Allah ﷻ.”
+
+On the right side, create an elegant Islamic decorative panel featuring:
+
+Arabic:
+“رَبِّ زِدْنِي عِلْمًا”
+
+Below it:
+“Meu Senhor! Aumenta-me em conhecimento.”
+
+Reference:
+“Alcorão 20:114”
+
+Use beautiful Arabic typography and subtle gold decorative elements.
+
+FEATURES SECTION:
+
+Create three columns/cards:
+
+1. “Autenticidade em primeiro lugar”
+Text:
+“Todo conteúdo é cuidadosamente selecionado de fontes confiáveis e alinhado com o Alcorão e a Sunnah segundo a compreensão dos Salaf.”
+
+Icon: elegant shield/check icon.
+
+2. “Conhecimento acessível”
+Text:
+“Tornamos o conhecimento islâmico simples, organizado e acessível para todos, em qualquer lugar e a qualquer momento.”
+
+Icon: open Qur’an/book icon.
+
+3. “Benefício para todos”
+Text:
+“Nosso objetivo é que cada visita traga benefício, inspire o bem e seja uma causa de recompensa contínua (Sadaqah Jariyah).”
+
+Icon: community/people icon.
+
+Use subtle gold dividers and Islamic ornament details.
+
+QUOTE / MISSION BANNER:
+
+Add a wide dark forest-green rounded banner.
+
+Text:
+
+“Aprender é um ato de adoração.
+Ensinar é caridade.
+Compartilhar é Sadaqah.”
+
+Then:
+
+“Que Allah ﷻ faça desta plataforma uma fonte de luz, orientação e benefícios para todos.”
+
+Include a subtle Islamic geometric pattern on the right side and a small gold Islamic icon.
+
+CLOSING MESSAGE:
+
+Centered underneath:
+
+“Que Allah ﷻ aceite nossos esforços e nos guie ao que Lhe agrada.”
+
+Add a small elegant gold Islamic ornament underneath.
+
+FOOTER:
+
+Keep the existing footer structure but improve the wording.
+
+Logo section:
+“Conhecimento que atravessa fronteiras.
+Uma biblioteca digital pública, simples e acessível.”
+
+Columns:
+EXPLORAR
+- Livros
+- Vídeos
+- Categorias
+- Como funciona
+
+SUNNAH BRASIL
+- Sobre
+- Contato e direitos
+- Política de privacidade
+- Termos de uso
+
+TRANSPARÊNCIA
+“Se você acredita que algum conteúdo viola seus direitos autorais, entre em contato conosco para análise.”
+
+Button/link:
+“Falar com a equipe ↗”
+
+Bottom:
+“© 2026 Sunnah Brasil · Acesso gratuito ao conhecimento”
+
+IMPORTANT:
+- Preserve the website's existing functionality and routing.
+- Do not remove existing navigation or footer links.
+- Make the page fully responsive.
+- Use Lucide icons or another clean icon library rather than random emoji.
+- Use proper Arabic typography where Arabic text appears.
+- Use ﷻ appropriately after Allah.
+- Avoid excessive decorative elements.
+- The final result should feel like a professional Islamic library/knowledge platform, not a mosque website.
+- Add subtle fade-up animations when sections enter the viewport.
+- Make buttons and cards interactive with tasteful hover effects.
+- Maintain excellent spacing and visual hierarchy.

@@ -673,6 +673,83 @@ export function useGetBookDownload<TData = Awaited<ReturnType<typeof getBookDown
 
 
 
+export const getReadBookFileUrl = (id: number,) => {
+
+
+
+
+  return `/api/books/${id}/read/file`
+}
+
+/**
+ * @summary Read a book inline in the app
+ */
+export const readBookFile = async (id: number, options?: Parameters<typeof customFetch>[1]): Promise<Blob> => {
+
+  return customFetch<Blob>(getReadBookFileUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getReadBookFileQueryKey = (id: number,) => {
+    return [
+    `/api/books/${id}/read/file`
+    ] as const;
+    }
+
+
+export const getReadBookFileQueryOptions = <TData = Awaited<ReturnType<typeof readBookFile>>, TError = ErrorType<NotFoundResponse | void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof readBookFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getReadBookFileQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof readBookFile>>> = ({ signal }) => readBookFile(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof readBookFile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ReadBookFileQueryResult = NonNullable<Awaited<ReturnType<typeof readBookFile>>>
+export type ReadBookFileQueryError = ErrorType<NotFoundResponse | void>
+
+
+/**
+ * @summary Read a book inline in the app
+ */
+
+export function useReadBookFile<TData = Awaited<ReturnType<typeof readBookFile>>, TError = ErrorType<NotFoundResponse | void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof readBookFile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getReadBookFileQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getDownloadBookFileUrl = (id: number,) => {
 
 

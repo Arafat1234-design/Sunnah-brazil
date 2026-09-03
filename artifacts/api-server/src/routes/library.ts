@@ -261,6 +261,35 @@ router.get("/books/:id/download", async (req, res) => {
   res.json({ url: `/api/books/${book.id}/download/file` });
 });
 
+router.get("/books/:id/read/file", async (req, res) => {
+  await ensureSeedData();
+  const parsed = GetBookDownloadParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid book id" });
+    return;
+  }
+  const [book] = await db.select().from(booksTable).where(eq(booksTable.id, parsed.data.id));
+  if (!book?.fileUrl) {
+    res.status(404).json({ error: "Reading file not available" });
+    return;
+  }
+
+  try {
+    const source = await readContent(book.fileUrl);
+    const isPdf = book.fileType === "PDF" || book.fileType === "TXT";
+    const output = book.fileType === "TXT" ? textToPdf(source.toString("utf8")) : source;
+    const extension = isPdf ? "pdf" : book.fileType.toLowerCase();
+    res.setHeader("Content-Type", isPdf ? "application/pdf" : "application/octet-stream");
+    res.setHeader("Content-Disposition", `inline; filename="${downloadFilename(book.title, extension)}"`);
+    res.setHeader("Content-Length", output.length);
+    res.setHeader("Cache-Control", "no-store, max-age=0");
+    res.end(output);
+  } catch (error) {
+    req.log.error({ err: error, bookId: book.id }, "Error preparing book reader file");
+    res.status(502).json({ error: "Could not prepare the book for reading" });
+  }
+});
+
 router.get("/books/:id/download/file", async (req, res) => {
   await ensureSeedData();
   const parsed = GetBookDownloadParams.safeParse(req.params);

@@ -4,6 +4,8 @@ import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, use
 import { ClerkProvider, SignIn, SignUp, useAuth, useClerk } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
+import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
+import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound,
   Download, FileText, Film, Headphones, Heart, Info, LayoutGrid, LockKeyhole,
@@ -29,6 +31,7 @@ const teal = 'text-[hsl(var(--primary))]';
 const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
+GlobalWorkerOptions.workerSrc = pdfWorker;
 
 function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
@@ -283,12 +286,103 @@ function BookDetail() {
   return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/books" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-books"><ArrowLeft size={15} /> Back to books</Link><div className="grid gap-10 py-12 md:grid-cols-[280px_1fr] md:gap-16"><Cover book={book} large /><div className="pt-2"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{book.category} · {downloadableType}</p><h1 className="serif mt-4 text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">{book.title}</h1><p className="mt-4 text-lg text-[hsl(var(--muted-foreground))]">By {book.author}</p><p className="mt-8 max-w-xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{book.description}</p><div className="mt-8 flex flex-wrap items-center gap-3"><Button onClick={download} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'PDF indisponível' : dl.isLoading ? `Preparando ${downloadableType}…` : <><Download size={16} /> Baixar {downloadableType}</>}</Button>{canDownload && <a href={`${basePath}/books/${book.id}/read`} className="inline-flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--secondary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--secondary-foreground))] transition-all duration-200 hover:bg-[hsl(var(--border))]" data-testid="link-book-read"><BookOpen size={16} /> Ler</a>}<Button variant="soft"><Heart size={16} /> Save for later</Button></div>{dl.isError && <p className="mt-3 text-sm text-[hsl(var(--destructive))]">Não foi possível preparar o download. Tente novamente.</p>}{!canDownload && <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">Este livro ainda não possui um arquivo disponível.</p>}<div className="mt-8 flex gap-6 border-t border-[hsl(var(--border))] pt-5 text-xs text-[hsl(var(--muted-foreground))]"><span>{book.fileSize ? `${(book.fileSize / 1024 / 1024).toFixed(1)} MB` : 'Arquivo digital'}</span><span>{book.downloadCount.toLocaleString()} downloads</span></div></div></div></main></Shell>;
 }
 
+function PdfReader({ url, title }: { url: string; title: string }) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const [pdf, setPdf] = useState<PDFDocumentProxy | null>(null);
+  const [pageNumber, setPageNumber] = useState(1);
+  const [pageCount, setPageCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let disposed = false;
+    const loadingTask = getDocument({ url });
+    setPdf(null);
+    setPageNumber(1);
+    setPageCount(0);
+    setIsLoading(true);
+    setError(false);
+    loadingTask.promise.then(documentProxy => {
+      if (disposed) {
+        return;
+      }
+      setPdf(documentProxy);
+      setPageCount(documentProxy.numPages);
+      setIsLoading(false);
+    }).catch(() => {
+      if (!disposed) {
+        setIsLoading(false);
+        setError(true);
+      }
+    });
+    return () => {
+      disposed = true;
+      void loadingTask.destroy();
+    };
+  }, [url]);
+
+  useEffect(() => {
+    if (!pdf || !canvasRef.current) return;
+    let disposed = false;
+    let renderTask: ReturnType<PDFPageProxy['render']> | undefined;
+    setIsPageLoading(true);
+    const renderPage = async () => {
+      try {
+        const page = await pdf.getPage(pageNumber);
+        if (disposed || !canvasRef.current) return;
+        const baseViewport = page.getViewport({ scale: 1 });
+        const maxWidth = Math.min(920, Math.max(280, window.innerWidth - 56));
+        const scale = Math.min(1.5, maxWidth / baseViewport.width);
+        const viewport = page.getViewport({ scale });
+        const canvas = canvasRef.current;
+        const outputScale = window.devicePixelRatio || 1;
+        canvas.width = Math.floor(viewport.width * outputScale);
+        canvas.height = Math.floor(viewport.height * outputScale);
+        canvas.style.width = `${Math.floor(viewport.width)}px`;
+        canvas.style.height = `${Math.floor(viewport.height)}px`;
+        const context = canvas.getContext('2d');
+        if (!context) throw new Error('Canvas unavailable');
+        renderTask = page.render({
+          canvas,
+          viewport,
+          transform: outputScale !== 1 ? [outputScale, 0, 0, outputScale, 0, 0] : undefined,
+        });
+        await renderTask.promise;
+        if (!disposed) setIsPageLoading(false);
+      } catch {
+        if (!disposed) {
+          setIsPageLoading(false);
+          setError(true);
+        }
+      }
+    };
+    void renderPage();
+    return () => {
+      disposed = true;
+      renderTask?.cancel();
+    };
+  }, [pdf, pageNumber]);
+
+  return <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.45)] shadow-[0_12px_35px_rgba(7,27,44,.08)]">
+    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[hsl(var(--border))] bg-[hsl(var(--card))] px-4 py-3">
+      <p className="text-sm font-semibold" data-testid="text-reader-title">{title}</p>
+      {pdf && <div className="flex items-center gap-2"><button type="button" onClick={() => setPageNumber(current => Math.max(1, current - 1))} disabled={pageNumber <= 1 || isPageLoading} className="rounded-full bg-[hsl(var(--secondary))] px-3 py-2 text-xs font-semibold transition hover:bg-[hsl(var(--border))] disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-reader-previous">Anterior</button><span className="min-w-[108px] text-center text-xs text-[hsl(var(--muted-foreground))]" data-testid="text-reader-page">Página {pageNumber} de {pageCount}</span><button type="button" onClick={() => setPageNumber(current => Math.min(pageCount, current + 1))} disabled={pageNumber >= pageCount || isPageLoading} className="rounded-full bg-[hsl(var(--primary))] px-3 py-2 text-xs font-semibold text-[hsl(var(--primary-foreground))] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50" data-testid="button-reader-next">Próxima</button></div>}
+    </div>
+    <div className="flex min-h-[520px] justify-center overflow-auto p-4 md:p-8">
+      {isLoading ? <div className="flex min-h-[460px] items-center text-sm text-[hsl(var(--muted-foreground))]" data-testid="status-reader-loading">Carregando o livro…</div> : error ? <div className="flex min-h-[460px] max-w-sm flex-col items-center justify-center text-center"><FileText className="text-[hsl(var(--muted-foreground))]" size={28} /><p className="mt-4 font-semibold">Não foi possível abrir este livro.</p><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Tente baixar o PDF para continuar a leitura.</p></div> : <div className="relative"><canvas ref={canvasRef} aria-label={`Página ${pageNumber} de ${title}`} className="block max-w-full rounded-sm bg-white shadow-md" data-testid="canvas-reader-page" />{isPageLoading && <span className="absolute inset-x-0 top-3 mx-auto w-fit rounded-full bg-[hsl(var(--primary))] px-3 py-1 text-[10px] font-semibold text-[hsl(var(--primary-foreground))]">Renderizando…</span>}</div>}
+    </div>
+  </div>;
+}
+
 function BookReader() {
   const { id } = useParams<{ id: string }>(); const bookId = Number(id); const q = useGetBook(bookId); const book = q.data;
   const canRead = Boolean(book?.fileUrl && (book.fileType === 'PDF' || book.fileType === 'TXT'));
   if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid /></main></Shell>;
   if (q.isError || !book) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="This title isn't on the shelf" body="It may have moved, or the link may be old." /></main></Shell>;
-  return <Shell><main className="mx-auto max-w-[1180px] px-5 pb-16 pt-8 lg:px-8"><div className="flex flex-wrap items-center justify-between gap-4"><Link href={`/books/${book.id}`} className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-book-detail"><ArrowLeft size={15} /> Voltar ao livro</Link><div className="flex flex-wrap items-center gap-2"><Button href={`/books/${book.id}`} variant="soft"><Info size={15} /> Detalhes</Button>{book.fileUrl && <a href={book.fileUrl} download className="inline-flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition-all duration-200 hover:brightness-110" data-testid="link-reader-download"><Download size={15} /> Baixar PDF</a>}</div></div><div className="py-8"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Leitor digital · {book.category}</p><h1 className="serif mt-3 max-w-4xl text-4xl leading-tight tracking-[-.04em] md:text-5xl">{book.title}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">Por {book.author}</p></div>{canRead ? <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-white shadow-[0_12px_35px_rgba(7,27,44,.08)]"><iframe src={book.fileUrl ?? undefined} title={`Lendo ${book.title}`} className="h-[78vh] min-h-[520px] w-full md:min-h-[700px]" data-testid="iframe-book-reader" /></div> : <StateMessage title="Leitura indisponível" body="Este livro ainda não possui um arquivo compatível para leitura no app." />}</main></Shell>;
+  const readerUrl = `/api/books/${book.id}/read/file`;
+  const downloadUrl = `/api/books/${book.id}/download/file`;
+  return <Shell><main className="mx-auto max-w-[1180px] px-5 pb-16 pt-8 lg:px-8"><div className="flex flex-wrap items-center justify-between gap-4"><Link href={`/books/${book.id}`} className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-book-detail"><ArrowLeft size={15} /> Voltar ao livro</Link><div className="flex flex-wrap items-center gap-2"><Button href={`/books/${book.id}`} variant="soft"><Info size={15} /> Detalhes</Button>{book.fileUrl && <a href={downloadUrl} download className="inline-flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition-all duration-200 hover:brightness-110" data-testid="link-reader-download"><Download size={15} /> Baixar PDF</a>}</div></div><div className="py-8"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Leitor digital · {book.category}</p><h1 className="serif mt-3 max-w-4xl text-4xl leading-tight tracking-[-.04em] md:text-5xl">{book.title}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">Por {book.author}</p></div>{canRead ? <PdfReader url={readerUrl} title={book.title} /> : <StateMessage title="Leitura indisponível" body="Este livro ainda não possui um arquivo compatível para leitura no app." />}</main></Shell>;
 }
 
 function VideoDetail() {
