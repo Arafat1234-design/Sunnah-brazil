@@ -199,7 +199,7 @@ function Home() {
     return <BookOpen size={24} />;
   };
   return <Shell><main className="overflow-hidden">
-    <section className="relative border-b border-[#dbe4e2] bg-white">
+    <section className="relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
       <div className="relative mx-auto grid max-w-[1240px] gap-12 px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:grid-cols-[.96fr_1.04fr] lg:items-center lg:px-8 lg:pt-20">
         <div className="max-w-[600px]">
