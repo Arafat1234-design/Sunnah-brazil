@@ -29,6 +29,7 @@ const objectStorageService = new ObjectStorageService();
 const DEFAULT_CATEGORIES = [
   "Fiction",
   "Education",
+  "Islam",
   "Business",
   "Technology",
   "Personal Development",
