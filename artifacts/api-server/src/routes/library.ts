@@ -190,32 +190,6 @@ async function ensureSeedData() {
   if (Number(booksTotal) + Number(videosTotal) > 0) return;
 
   await db.insert(categoriesTable).values(DEFAULT_CATEGORIES.map((name) => ({ name }))).onConflictDoNothing();
-  await db.insert(videosTable).values([
-    {
-      title: "A Walk Through the Archive",
-      description: "A short visual essay about preserving public knowledge for the next generation.",
-      category: "Education",
-      duration: "08:42",
-      downloadEnabled: true,
-      featured: true,
-    },
-    {
-      title: "How Open Media Works",
-      description: "A practical introduction to open licenses, public domain works, and responsible sharing.",
-      category: "Technology",
-      duration: "14:18",
-      downloadEnabled: false,
-      featured: true,
-    },
-    {
-      title: "The Reading Ritual",
-      description: "Small ideas for making more room for reading, reflection, and focused attention.",
-      category: "Personal Development",
-      duration: "05:26",
-      downloadEnabled: false,
-      featured: false,
-    },
-  ]);
 }
 
 router.get("/library/summary", async (req, res) => {
