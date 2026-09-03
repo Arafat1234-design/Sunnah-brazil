@@ -92,7 +92,15 @@
 
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; font-family: var(--app-font-sans); }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: var(--app-font-sans);
+    background-image: url('/sunnah-islamic-background.png');
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
   ::selection { background: hsl(var(--accent) / .28); }
 }
 
