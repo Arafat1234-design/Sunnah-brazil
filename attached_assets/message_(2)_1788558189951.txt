@@ -1,0 +1,359 @@
+I want to add a new EVENTS system to my existing Sunnah Brasil website.
+
+IMPORTANT:
+Do NOT redesign the existing website.
+Do NOT break or rebuild anything that already works.
+
+Keep the existing:
+- Books system
+- Videos system
+- Images system
+- Categories
+- Admin panel
+- Navigation
+- Homepage
+- Existing styling
+- Database
+- Authentication
+- Downloads
+- Analytics
+
+Only add the new Events functionality.
+
+==================================================
+1. ADD EVENTS TO ADMIN PANEL
+==================================================
+
+Add a new Admin section:
+
+📅 Eventos
+
+Make it very simple for me to create and manage events without editing code.
+
+The Events section should have:
+
++ Novo evento
+
+Each event should allow me to enter:
+
+- Event title
+- Short description
+- Full description
+- Event date
+- Start time
+- End time (optional)
+- Event image (allow me to choose an existing image from my Image Library)
+- Mosque / venue name
+- Location / city
+- Full address
+- Google Maps link
+- Optional event website/link
+- Event status
+- Publish / Unpublish
+
+==================================================
+2. EVENT DATE & TIME
+==================================================
+
+The date and time entered in Admin must be the exact date and time displayed on the public website.
+
+Use the appropriate timezone for the event location.
+
+For Sunnah Brasil, default to:
+
+Africa/Maputo
+
+Do not hard-code the countdown to a particular date.
+
+The countdown must automatically calculate the remaining time based on the event's saved date and time.
+
+==================================================
+3. LIVE COUNTDOWN
+==================================================
+
+When an event is published, display the NEXT upcoming event prominently near the top of the public website.
+
+Example:
+
+🕌 PRÓXIMO EVENTO
+
+Palestra sobre Tawheed
+
+📅 20 Setembro 2026
+🕐 18:00
+📍 Masjid [Name], Maputo
+
+COUNTDOWN:
+
+02
+DIAS
+
+14
+HORAS
+
+32
+MIN
+
+08
+SEG
+
+The countdown must update LIVE every second.
+
+Do not require the visitor to refresh the page.
+
+When the countdown reaches zero, automatically stop the countdown.
+
+==================================================
+4. PUBLIC WEBSITE EVENT BANNER
+==================================================
+
+Add a beautiful event banner near the top of the homepage.
+
+It should match the existing Sunnah Brasil design.
+
+Use:
+- Existing website colors
+- Existing typography
+- Existing Islamic aesthetic
+- Existing background
+- Rounded corners
+- Subtle Islamic decorative elements
+- Deep green / cream / subtle gold
+
+Do NOT redesign the rest of the homepage.
+
+The event banner should only appear when there is a published upcoming event.
+
+If there is no upcoming published event, the banner should not appear.
+
+==================================================
+5. EVENT IMAGE
+==================================================
+
+Allow me to select an image from the existing Image Library when creating an event.
+
+Do NOT require me to upload the same image again.
+
+If no image is selected, use a clean default Islamic decorative design.
+
+==================================================
+6. EVENT DETAILS
+==================================================
+
+When visitors click:
+
+“Ver detalhes”
+
+open a dedicated event details page.
+
+Show:
+
+- Event image
+- Event title
+- Date
+- Time
+- Countdown
+- Venue
+- Mosque
+- Address
+- Description
+- Google Maps button
+
+Button:
+
+“Ver localização”
+
+The Google Maps button should open the Google Maps link that I entered in Admin.
+
+==================================================
+7. EVENT MANAGEMENT
+==================================================
+
+In Admin → Eventos, show a list/table of events.
+
+Each event should show:
+
+Event name
+Date
+Location
+Status
+Published/Unpublished
+
+Actions:
+
+Edit
+Duplicate
+Publish/Unpublish
+Delete
+
+Add search/filter if useful.
+
+Allow me to easily distinguish:
+
+🟢 Upcoming
+⚪ Draft
+🔵 Published
+⚫ Past
+
+==================================================
+8. AUTOMATIC EVENT STATUS
+==================================================
+
+Events should automatically become “Past” after their scheduled end time.
+
+Do not delete past events.
+
+Keep them in Admin so I can see previous events.
+
+Past events should simply stop appearing in the “Next Event” banner.
+
+==================================================
+9. MULTIPLE EVENTS
+==================================================
+
+Allow me to create multiple upcoming events.
+
+The homepage should automatically display the nearest upcoming published event.
+
+For example:
+
+Event A → September 20
+Event B → October 5
+Event C → October 20
+
+The website should automatically display Event A first.
+
+After Event A passes, Event B becomes the next event automatically.
+
+I should NOT have to manually change which event appears on the homepage.
+
+==================================================
+10. EVENTS PAGE
+==================================================
+
+Add an “Eventos” page to the public website.
+
+Show:
+
+PRÓXIMOS EVENTOS
+
+and
+
+EVENTOS ANTERIORES
+
+Upcoming events should be displayed first.
+
+Past events can appear underneath.
+
+Use the same existing website design.
+
+==================================================
+11. ADMIN DASHBOARD
+==================================================
+
+If the Admin Dashboard already exists, add a small Events statistic/card:
+
+📅 Próximos eventos
+
+Show the number of upcoming published events.
+
+Also show the next upcoming event:
+
+“Next:
+Palestra sobre Tawheed
+20 Sep · 18:00”
+
+==================================================
+12. IMPORTANT — EXISTING SYSTEMS
+==================================================
+
+Do NOT modify the existing Book upload system.
+
+Do NOT modify the existing Video upload system.
+
+Do NOT modify the existing Image upload system.
+
+Do NOT redesign the Admin panel.
+
+Only add the Events section to the existing Admin navigation.
+
+Reuse the existing database architecture and UI components where possible.
+
+Do not create duplicate systems.
+
+==================================================
+13. DATABASE
+==================================================
+
+Create the necessary event data structure using the existing database.
+
+Each event should have a unique ID.
+
+Store:
+
+- title
+- short description
+- full description
+- date
+- start time
+- end time
+- timezone
+- image reference
+- venue
+- city
+- address
+- maps URL
+- external URL if provided
+- published status
+- created date
+- updated date
+
+Do not store event information directly inside frontend code.
+
+This is important because I want to manage everything from Admin.
+
+==================================================
+14. RESPONSIVE DESIGN
+==================================================
+
+The event banner and countdown must work properly on:
+
+Desktop
+Tablet
+Mobile
+
+On mobile, stack the countdown units cleanly so they remain easy to read.
+
+==================================================
+15. TEST EVERYTHING
+==================================================
+
+After building it, test:
+
+1. Create an event from Admin.
+2. Publish it.
+3. Confirm it immediately appears on the homepage.
+4. Confirm the countdown is accurate.
+5. Confirm the countdown updates every second.
+6. Confirm the event details page works.
+7. Confirm the location button works.
+8. Create a second event and confirm the nearest event appears first.
+9. Change an event from Published to Unpublished and confirm it disappears from the public website.
+10. Confirm past events no longer appear as the next event.
+11. Confirm existing Books, Videos, Images and other functionality still work.
+
+IMPORTANT:
+
+I want this to work like a real Content Management System.
+
+I should be able to simply go to:
+
+Admin → Eventos → Novo evento
+
+fill in the information, click:
+
+“Publicar”
+
+and the event should automatically appear on the website with the correct live countdown.
+
+I should never need to edit code to add or remove an event.
