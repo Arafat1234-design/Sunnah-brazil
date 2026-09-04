@@ -1086,6 +1086,8 @@ function AdminAccessGate() {
         setState('unlocked');
       } else if (response.status === 401) {
         setMessage('Palavra-passe incorreta.');
+       } else if (response.status === 403) {
+         setMessage('A sua conta Clerk não está autorizada como administradora.');
       } else if (response.status === 503) {
         setMessage('A proteção adicional ainda não foi configurada no servidor.');
       } else {
