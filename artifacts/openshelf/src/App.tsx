@@ -237,14 +237,14 @@ function useCountdown(target: string) {
   };
 }
 
-function Countdown({ target, compact = false }: { target: string; compact?: boolean }) {
+function Countdown({ target, compact = false, transparent = false }: { target: string; compact?: boolean; transparent?: boolean }) {
   const countdown = useCountdown(target);
   if (countdown.totalSeconds <= 0) return <span className="text-sm font-semibold text-[hsl(var(--muted-foreground))]">O evento já começou</span>;
   const values = compact
     ? [['Dias', countdown.days], ['H', countdown.hours], ['M', countdown.minutes], ['S', countdown.seconds]]
     : [['dias', countdown.days], ['horas', countdown.hours], ['min', countdown.minutes], ['seg', countdown.seconds]];
-  return <div className={`flex items-center gap-2 ${compact ? 'text-[hsl(var(--primary-foreground))]' : 'text-[hsl(var(--foreground))]'}`} aria-label="Contagem regressiva">
-    {values.map(([label, value]) => <span key={String(label)} className={`rounded-xl px-2.5 py-2 text-center ${compact ? 'bg-white/12' : 'bg-[hsl(var(--secondary))]'}`}><strong className="mono block text-lg leading-none">{String(value).padStart(2, '0')}</strong><small className="mt-1 block text-[9px] uppercase tracking-wider opacity-70">{label}</small></span>)}
+  return <div className={`flex items-center gap-2 ${compact && !transparent ? 'text-[hsl(var(--primary-foreground))]' : 'text-[hsl(var(--foreground))]'}`} aria-label="Contagem regressiva">
+    {values.map(([label, value]) => <span key={String(label)} className={`rounded-lg px-2 py-1.5 text-center ${compact && !transparent ? 'bg-white/12' : 'border border-[#dbe4e2] bg-[#e9f3ef]'}`}><strong className="mono block text-base leading-none">{String(value).padStart(2, '0')}</strong><small className="mt-1 block text-[8px] uppercase tracking-wider opacity-70">{label}</small></span>)}
   </div>;
 }
 
@@ -268,12 +268,16 @@ function EventCard({ event }: { event: CatalogEvent }) {
 }
 
 function NextEventBanner({ event }: { event: CatalogEvent }) {
-  return <section className="sticky top-3 z-30 mx-auto -mb-8 max-w-[1240px] px-4 pt-4 lg:px-8">
-    <div className="relative overflow-hidden rounded-3xl bg-[#163d3a] text-white shadow-[0_18px_40px_rgba(7,27,44,.12)]">
-      <div className="pointer-events-none absolute -right-16 -top-20 h-60 w-60 rounded-full border-[24px] border-white/10" />
-      <div className="relative grid gap-7 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-9">
-        <div><div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#9ed3bd]"><CalendarDays size={14} /> Próximo evento</div><h2 className="serif mt-3 max-w-2xl text-3xl leading-tight md:text-4xl">{event.title}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">{event.shortDescription}</p><div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-white/70"><span className="flex items-center gap-1.5"><Clock3 size={14} />{formatEventDate(event.eventDate)} · {formatEventTime(event)}</span><span className="flex items-center gap-1.5"><MapPin size={14} />{event.city}</span></div><div className="mt-6 flex flex-wrap gap-3"><Button href={`/events/${event.id}`} className="!bg-white !text-[#163d3a]">Ver detalhes <ArrowRight size={15} /></Button><Countdown target={event.startsAt} compact /></div></div>
-        <EventImage event={event} className="hidden aspect-square w-44 rounded-2xl md:block lg:w-52" />
+  return <section className="sticky top-2 z-30 mx-auto -mb-5 max-w-[1240px] px-4 pt-2 lg:px-8">
+    <div className="relative overflow-hidden rounded-2xl border border-[#dbe4e2] bg-transparent text-[#163d3a]">
+      <div className="relative grid gap-3 p-3 md:grid-cols-[1fr_auto] md:items-center md:p-4">
+        <div>
+          <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-[#075C45]"><CalendarDays size={12} /> Próximo evento</div>
+          <h2 className="serif mt-1 max-w-2xl text-xl leading-tight md:text-2xl">{event.title}</h2>
+          <div className="mt-2 flex flex-wrap items-center gap-2.5 text-[11px] text-[#607274]"><span className="flex items-center gap-1"><Clock3 size={12} />{formatEventDate(event.eventDate)} · {formatEventTime(event)}</span><span className="flex items-center gap-1"><MapPin size={12} />{event.city}</span></div>
+          <div className="mt-3 flex flex-wrap items-center gap-2"><Button href={`/events/${event.id}`} className="!px-3 !py-2 !text-xs">Ver detalhes <ArrowRight size={13} /></Button><Countdown target={event.startsAt} compact transparent /></div>
+        </div>
+        <EventImage event={event} className="hidden aspect-square w-24 rounded-xl md:block lg:w-28" />
       </div>
     </div>
   </section>;
