@@ -21,6 +21,7 @@ export * from "./admins";
 export * from "./books";
 export * from "./categories";
 export * from "./events";
+export * from "./catalogEvents";
 export * from "./analytics";
 export * from "./images";
 export * from "./videos";

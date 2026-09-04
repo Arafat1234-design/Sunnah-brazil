@@ -120,6 +120,79 @@ export interface ImageInput {
 
 export type ImageUpdate = ImageInput;
 
+export type EventStatus = typeof EventStatus[keyof typeof EventStatus];
+
+
+export const EventStatus = {
+  draft: 'draft',
+  upcoming: 'upcoming',
+  past: 'past',
+} as const;
+
+export interface Event {
+  id: number;
+  title: string;
+  shortDescription: string;
+  fullDescription: string;
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  eventDate: string;
+  startTime: string;
+  /** @nullable */
+  endTime: string | null;
+  timezone: string;
+  startsAt: string;
+  /** @nullable */
+  endsAt: string | null;
+  /** @nullable */
+  imageId: number | null;
+  /** @nullable */
+  imageUrl: string | null;
+  venue: string;
+  city: string;
+  address: string;
+  mapsUrl: string;
+  /** @nullable */
+  externalUrl: string | null;
+  published: boolean;
+  status: EventStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface EventInput {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  shortDescription: string;
+  /** @minLength 1 */
+  fullDescription: string;
+  /** @pattern ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ */
+  eventDate: string;
+  /** @pattern ^[0-2][0-9]:[0-5][0-9]$ */
+  startTime: string;
+  /**
+     * @nullable
+     * @pattern ^[0-2][0-9]:[0-5][0-9]$
+     */
+  endTime?: string | null;
+  timezone?: string;
+  /** @nullable */
+  imageId?: number | null;
+  /** @minLength 1 */
+  venue: string;
+  /** @minLength 1 */
+  city: string;
+  /** @minLength 1 */
+  address: string;
+  /** @minLength 1 */
+  mapsUrl: string;
+  /** @nullable */
+  externalUrl?: string | null;
+  published: boolean;
+}
+
+export type EventUpdate = EventInput;
+
 export interface Category {
   name: string;
   bookCount: number;

@@ -5,6 +5,7 @@ import analyticsRouter from "./analytics";
 import adminAccessRouter from "./adminAccess";
 import libraryRouter from "./library";
 import storageRouter from "./storage";
+import eventsRouter from "./events";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(imagesRouter);
 router.use(analyticsRouter);
 router.use(adminAccessRouter);
 router.use(storageRouter);
+router.use(eventsRouter);
 
 export default router;

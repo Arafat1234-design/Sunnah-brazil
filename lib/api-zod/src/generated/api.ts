@@ -558,6 +558,286 @@ export const DeleteImageResponse = zod.void()
 
 
 /**
+ * @summary List published events
+ */
+export const listEventsResponseEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const ListEventsResponseItem = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "shortDescription": zod.string(),
+  "fullDescription": zod.string(),
+  "eventDate": zod.string().regex(listEventsResponseEventDateRegExp),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date().nullable(),
+  "imageId": zod.int().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "venue": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "mapsUrl": zod.url(),
+  "externalUrl": zod.url().nullable(),
+  "published": zod.boolean(),
+  "status": zod.enum(['draft', 'upcoming', 'past']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListEventsResponse = zod.array(ListEventsResponseItem)
+
+
+/**
+ * @summary Create an event
+ */
+
+
+
+export const createEventBodyEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+export const createEventBodyStartTimeRegExp = new RegExp('^[0-2][0-9]:[0-5][0-9]$');
+export const createEventBodyEndTimeRegExp = new RegExp('^[0-2][0-9]:[0-5][0-9]$');
+export const createEventBodyTimezoneDefault = `Africa/Maputo`;
+
+
+
+export const createEventBodyPublishedDefault = false;
+
+export const CreateEventBody = zod.object({
+  "title": zod.string().min(1),
+  "shortDescription": zod.string().min(1),
+  "fullDescription": zod.string().min(1),
+  "eventDate": zod.string().regex(createEventBodyEventDateRegExp),
+  "startTime": zod.string().regex(createEventBodyStartTimeRegExp),
+  "endTime": zod.string().regex(createEventBodyEndTimeRegExp).nullish(),
+  "timezone": zod.string().default(createEventBodyTimezoneDefault),
+  "imageId": zod.int().nullish(),
+  "venue": zod.string().min(1),
+  "city": zod.string().min(1),
+  "address": zod.string().min(1),
+  "mapsUrl": zod.url().min(1),
+  "externalUrl": zod.url().nullish(),
+  "published": zod.boolean().default(createEventBodyPublishedDefault)
+})
+
+export const createEventResponseEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const CreateEventResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "shortDescription": zod.string(),
+  "fullDescription": zod.string(),
+  "eventDate": zod.string().regex(createEventResponseEventDateRegExp),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date().nullable(),
+  "imageId": zod.int().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "venue": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "mapsUrl": zod.url(),
+  "externalUrl": zod.url().nullable(),
+  "published": zod.boolean(),
+  "status": zod.enum(['draft', 'upcoming', 'past']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Get a published event
+ */
+
+
+
+export const GetEventParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const getEventResponseEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const GetEventResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "shortDescription": zod.string(),
+  "fullDescription": zod.string(),
+  "eventDate": zod.string().regex(getEventResponseEventDateRegExp),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date().nullable(),
+  "imageId": zod.int().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "venue": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "mapsUrl": zod.url(),
+  "externalUrl": zod.url().nullable(),
+  "published": zod.boolean(),
+  "status": zod.enum(['draft', 'upcoming', 'past']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Update an event
+ */
+
+
+
+export const UpdateEventParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+
+
+
+export const updateEventBodyOneEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+export const updateEventBodyOneStartTimeRegExp = new RegExp('^[0-2][0-9]:[0-5][0-9]$');
+export const updateEventBodyOneEndTimeRegExp = new RegExp('^[0-2][0-9]:[0-5][0-9]$');
+export const updateEventBodyOneTimezoneDefault = `Africa/Maputo`;
+
+
+
+export const updateEventBodyOnePublishedDefault = false;
+
+export const UpdateEventBody = zod.object({
+  "title": zod.string().min(1),
+  "shortDescription": zod.string().min(1),
+  "fullDescription": zod.string().min(1),
+  "eventDate": zod.string().regex(updateEventBodyOneEventDateRegExp),
+  "startTime": zod.string().regex(updateEventBodyOneStartTimeRegExp),
+  "endTime": zod.string().regex(updateEventBodyOneEndTimeRegExp).nullish(),
+  "timezone": zod.string().default(updateEventBodyOneTimezoneDefault),
+  "imageId": zod.int().nullish(),
+  "venue": zod.string().min(1),
+  "city": zod.string().min(1),
+  "address": zod.string().min(1),
+  "mapsUrl": zod.url().min(1),
+  "externalUrl": zod.url().nullish(),
+  "published": zod.boolean().default(updateEventBodyOnePublishedDefault)
+})
+
+export const updateEventResponseEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const UpdateEventResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "shortDescription": zod.string(),
+  "fullDescription": zod.string(),
+  "eventDate": zod.string().regex(updateEventResponseEventDateRegExp),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date().nullable(),
+  "imageId": zod.int().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "venue": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "mapsUrl": zod.url(),
+  "externalUrl": zod.url().nullable(),
+  "published": zod.boolean(),
+  "status": zod.enum(['draft', 'upcoming', 'past']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary Delete an event
+ */
+
+
+
+export const DeleteEventParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const DeleteEventResponse = zod.void()
+
+
+/**
+ * @summary Duplicate an event as an unpublished draft
+ */
+
+
+
+export const DuplicateEventParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const duplicateEventResponseEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const DuplicateEventResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "shortDescription": zod.string(),
+  "fullDescription": zod.string(),
+  "eventDate": zod.string().regex(duplicateEventResponseEventDateRegExp),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date().nullable(),
+  "imageId": zod.int().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "venue": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "mapsUrl": zod.url(),
+  "externalUrl": zod.url().nullable(),
+  "published": zod.boolean(),
+  "status": zod.enum(['draft', 'upcoming', 'past']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List all events for administration
+ */
+export const listAdminEventsResponseEventDateRegExp = new RegExp('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+
+
+export const ListAdminEventsResponseItem = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "shortDescription": zod.string(),
+  "fullDescription": zod.string(),
+  "eventDate": zod.string().regex(listAdminEventsResponseEventDateRegExp),
+  "startTime": zod.string(),
+  "endTime": zod.string().nullable(),
+  "timezone": zod.string(),
+  "startsAt": zod.coerce.date(),
+  "endsAt": zod.coerce.date().nullable(),
+  "imageId": zod.int().nullable(),
+  "imageUrl": zod.string().nullable(),
+  "venue": zod.string(),
+  "city": zod.string(),
+  "address": zod.string(),
+  "mapsUrl": zod.url(),
+  "externalUrl": zod.url().nullable(),
+  "published": zod.boolean(),
+  "status": zod.enum(['draft', 'upcoming', 'past']),
+  "createdAt": zod.coerce.date(),
+  "updatedAt": zod.coerce.date()
+})
+export const ListAdminEventsResponse = zod.array(ListAdminEventsResponseItem)
+
+
+/**
  * @summary Get a permitted MP4 download URL
  */
 

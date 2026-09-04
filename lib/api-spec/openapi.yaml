@@ -20,6 +20,8 @@ tags:
     description: Public image gallery
   - name: categories
     description: Content categories
+  - name: events
+    description: Public events and announcements
   - name: admin
     description: Protected administration
   - name: storage
@@ -374,6 +376,129 @@ paths:
           description: Admin access required
         "404":
           $ref: "#/components/responses/NotFound"
+  /events:
+    get:
+      operationId: listEvents
+      tags: [events]
+      summary: List published events
+      responses:
+        "200":
+          description: Published events, with upcoming events first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+    post:
+      operationId: createEvent
+      tags: [admin]
+      summary: Create an event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "400":
+          description: Invalid event details
+        "403":
+          description: Admin password required
+  /events/{id}:
+    get:
+      operationId: getEvent
+      tags: [events]
+      summary: Get a published event
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Event details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateEvent
+      tags: [admin]
+      summary: Update an event
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventUpdate"
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "400":
+          description: Invalid event details
+        "403":
+          description: Admin password required
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      operationId: deleteEvent
+      tags: [admin]
+      summary: Delete an event
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Event deleted
+        "403":
+          description: Admin password required
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /events/{id}/duplicate:
+    post:
+      operationId: duplicateEvent
+      tags: [admin]
+      summary: Duplicate an event as an unpublished draft
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "201":
+          description: Duplicated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Event"
+        "403":
+          description: Admin password required
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /admin/events:
+    get:
+      operationId: listAdminEvents
+      tags: [admin]
+      summary: List all events for administration
+      responses:
+        "200":
+          description: All events including drafts and past events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Event"
+        "403":
+          description: Admin password required
   /videos/{id}/download:
     get:
       operationId: getVideoDownload
@@ -711,6 +836,53 @@ components:
     ImageUpdate:
       allOf:
         - $ref: "#/components/schemas/ImageInput"
+      required: []
+    Event:
+      type: object
+      required: [id, title, shortDescription, fullDescription, eventDate, startTime, endTime, timezone, startsAt, endsAt, imageId, imageUrl, venue, city, address, mapsUrl, externalUrl, published, status, createdAt, updatedAt]
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        shortDescription: { type: string }
+        fullDescription: { type: string }
+        eventDate: { type: string, pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+        startTime: { type: string }
+        endTime: { type: ["string", "null"] }
+        timezone: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: ["string", "null"], format: date-time }
+        imageId: { type: ["integer", "null"] }
+        imageUrl: { type: ["string", "null"] }
+        venue: { type: string }
+        city: { type: string }
+        address: { type: string }
+        mapsUrl: { type: string, format: uri }
+        externalUrl: { type: ["string", "null"], format: uri }
+        published: { type: boolean }
+        status: { type: string, enum: [draft, upcoming, past] }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    EventInput:
+      type: object
+      required: [title, shortDescription, fullDescription, eventDate, startTime, venue, city, address, mapsUrl, published]
+      properties:
+        title: { type: string, minLength: 1 }
+        shortDescription: { type: string, minLength: 1 }
+        fullDescription: { type: string, minLength: 1 }
+        eventDate: { type: string, pattern: "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" }
+        startTime: { type: string, pattern: "^[0-2][0-9]:[0-5][0-9]$" }
+        endTime: { type: ["string", "null"], pattern: "^[0-2][0-9]:[0-5][0-9]$" }
+        timezone: { type: string, default: Africa/Maputo }
+        imageId: { type: ["integer", "null"] }
+        venue: { type: string, minLength: 1 }
+        city: { type: string, minLength: 1 }
+        address: { type: string, minLength: 1 }
+        mapsUrl: { type: string, format: uri, minLength: 1 }
+        externalUrl: { type: ["string", "null"], format: uri }
+        published: { type: boolean, default: false }
+    EventUpdate:
+      allOf:
+        - $ref: "#/components/schemas/EventInput"
       required: []
     Category:
       type: object

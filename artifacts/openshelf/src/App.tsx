@@ -12,7 +12,7 @@ import {
   Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2, HeartHandshake,
   BookMarked, Compass, UsersRound, PlayCircle, ArrowUpRight,
-  Images, Maximize2,
+  Images, Maximize2, CalendarDays, Clock3, MapPin, ExternalLink, Copy, Eye, EyeOff,
 } from 'lucide-react';
 import {
   CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -20,12 +20,13 @@ import {
 import {
   getGetBookDownloadQueryKey, getGetBookQueryKey,
   getGetLibrarySummaryQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
-  getListBooksQueryKey, getListCategoriesQueryKey, getListImagesQueryKey, getListVideosQueryKey,
-  type Book, type BookInput, type Category, type Image, type ImageInput, type Video, type VideoInput,
+  getListAdminEventsQueryKey, getListBooksQueryKey, getListCategoriesQueryKey, getListEventsQueryKey, getListImagesQueryKey, getListVideosQueryKey,
+  type Book, type BookInput, type Category, type Event as CatalogEvent, type EventInput, type EventUpdate, type Image, type ImageInput, type Video, type VideoInput,
   useCreateBook, useCreateImage, useCreateVideo, useDeleteBook, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
   useGetBook, useGetBookDownload, useGetLibrarySummary, useGetVideo,
-  useGetVideoDownload, useListBooks, useListCategories, useListImages, useListVideos,
-  useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateImage, useUpdateVideo,
+  useGetEvent, useGetVideoDownload, useListAdminEvents, useListBooks, useListCategories, useListEvents, useListImages, useListVideos,
+  useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateEvent, useUpdateImage, useUpdateVideo,
+  useCreateEvent, useDeleteEvent, useDuplicateEvent,
 } from '@workspace/api-client-react';
 import NotFound from '@/pages/not-found';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -135,7 +136,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const [search, setSearch] = useState('');
-  const items = [['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
+   const items = [['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
@@ -165,7 +166,7 @@ function Footer() {
   return <footer className="mt-24 border-t border-[#dbe4e2] bg-[#f5f8f7]">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
       <div><Logo /><p className="mt-4 max-w-[290px] text-sm leading-6 text-[#607274]">Conhecimento que atravessa fronteiras. Uma biblioteca digital pública, simples e acessível.</p></div>
-      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/categories">Categorias</Link><Link href="/#como-funciona">Como funciona</Link></div></div>
+       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/events">Eventos</Link><Link href="/categories">Categorias</Link><Link href="/#como-funciona">Como funciona</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Sunnah Brasil</p><div className="grid gap-2 text-sm"><Link href="/about">Sobre</Link><Link href="/contact">Contato e direitos</Link><Link href="/content-policy">Política de privacidade</Link><Link href="/terms">Termos de uso</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Transparência</p><p className="text-sm leading-6 text-[#607274]">Se você acredita que algum conteúdo viola seus direitos autorais, entre em contato conosco para análise.</p><Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#075C45]">Falar com a equipe <ArrowUpRight size={14} /></Link></div>
     </div><div className="mx-auto max-w-[1240px] border-t border-[#dbe4e2] px-5 py-5 text-xs text-[#607274] lg:px-8">© 2026 Sunnah Brasil · Acesso gratuito ao conhecimento</div>
@@ -206,11 +207,85 @@ function SectionHeading({ eyebrow, title, href, action = 'See the shelf' }: { ey
   return <div className="mb-7 flex items-end justify-between gap-4"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{eyebrow}</p><h2 className="serif mt-2 text-3xl leading-none md:text-4xl">{title}</h2></div>{href && <Button href={href} variant="ghost" className="hidden sm:inline-flex">{action}<ArrowRight size={15} /></Button>}</div>;
 }
 
+const formatEventDate = (value: string) => {
+  const date = new Date(`${value}T00:00:00Z`);
+  return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(date);
+};
+
+const formatEventTime = (event: CatalogEvent) => `${event.startTime}${event.endTime ? ` – ${event.endTime}` : ''}`;
+
+function useCountdown(target: string) {
+  const getRemaining = () => Math.max(0, new Date(target).getTime() - Date.now());
+  const [remaining, setRemaining] = useState(getRemaining);
+  useEffect(() => {
+    if (getRemaining() <= 0) return;
+    let timer = 0;
+    timer = window.setInterval(() => {
+      const next = getRemaining();
+      setRemaining(next);
+      if (next <= 0) window.clearInterval(timer);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [target]);
+  const totalSeconds = Math.floor(remaining / 1000);
+  return {
+    totalSeconds,
+    days: Math.floor(totalSeconds / 86400),
+    hours: Math.floor((totalSeconds % 86400) / 3600),
+    minutes: Math.floor((totalSeconds % 3600) / 60),
+    seconds: totalSeconds % 60,
+  };
+}
+
+function Countdown({ target, compact = false }: { target: string; compact?: boolean }) {
+  const countdown = useCountdown(target);
+  if (countdown.totalSeconds <= 0) return <span className="text-sm font-semibold text-[hsl(var(--muted-foreground))]">O evento já começou</span>;
+  const values = compact
+    ? [['Dias', countdown.days], ['H', countdown.hours], ['M', countdown.minutes], ['S', countdown.seconds]]
+    : [['dias', countdown.days], ['horas', countdown.hours], ['min', countdown.minutes], ['seg', countdown.seconds]];
+  return <div className={`flex items-center gap-2 ${compact ? 'text-[hsl(var(--primary-foreground))]' : 'text-[hsl(var(--foreground))]'}`} aria-label="Contagem regressiva">
+    {values.map(([label, value]) => <span key={String(label)} className={`rounded-xl px-2.5 py-2 text-center ${compact ? 'bg-white/12' : 'bg-[hsl(var(--secondary))]'}`}><strong className="mono block text-lg leading-none">{String(value).padStart(2, '0')}</strong><small className="mt-1 block text-[9px] uppercase tracking-wider opacity-70">{label}</small></span>)}
+  </div>;
+}
+
+function EventImage({ event, className = '' }: { event: CatalogEvent; className?: string }) {
+  return <div className={`overflow-hidden bg-[hsl(var(--secondary))] ${className}`}>
+    {event.imageUrl ? <img src={event.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full min-h-40 items-center justify-center bg-[radial-gradient(circle_at_72%_18%,hsl(10_57%_62%/.5),transparent_32%),linear-gradient(135deg,hsl(190_27%_22%),hsl(174_37%_31%))] text-white"><CalendarDays size={42} strokeWidth={1.3} /></div>}
+  </div>;
+}
+
+function EventCard({ event }: { event: CatalogEvent }) {
+  const isUpcoming = event.status === 'upcoming';
+  return <Link href={`/events/${event.id}`} className="group block overflow-hidden rounded-2xl border border-[#dbe4e2] bg-white transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.1)]" data-testid={`card-event-${event.id}`}>
+    <EventImage event={event} className="aspect-[16/9]" />
+    <div className="p-5">
+      <div className="flex items-center justify-between gap-3"><span className={`mono text-[10px] uppercase tracking-[.15em] ${isUpcoming ? 'text-[#075C45]' : 'text-[#8a6e4b]'}`}>{isUpcoming ? 'Próximo evento' : 'Evento realizado'}</span><CalendarDays size={15} className="text-[#075C45]" /></div>
+      <h2 className="mt-3 line-clamp-2 text-xl font-bold leading-tight text-[#071B2C] group-hover:text-[#075C45]">{event.title}</h2>
+      <p className="mt-2 line-clamp-2 text-sm leading-6 text-[#607274]">{event.shortDescription}</p>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-xs text-[#607274]"><span className="flex items-center gap-1.5"><Clock3 size={13} />{formatEventDate(event.eventDate)} · {formatEventTime(event)}</span><span className="flex items-center gap-1.5"><MapPin size={13} />{event.city}</span></div>
+    </div>
+  </Link>;
+}
+
+function NextEventBanner({ event }: { event: CatalogEvent }) {
+  return <section className="mx-auto max-w-[1240px] px-5 pt-12 lg:px-8">
+    <div className="relative overflow-hidden rounded-3xl bg-[#163d3a] text-white shadow-[0_18px_40px_rgba(7,27,44,.12)]">
+      <div className="pointer-events-none absolute -right-16 -top-20 h-60 w-60 rounded-full border-[24px] border-white/10" />
+      <div className="relative grid gap-7 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-9">
+        <div><div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-[#9ed3bd]"><CalendarDays size={14} /> Próximo evento</div><h2 className="serif mt-3 max-w-2xl text-3xl leading-tight md:text-4xl">{event.title}</h2><p className="mt-3 max-w-xl text-sm leading-6 text-white/70">{event.shortDescription}</p><div className="mt-5 flex flex-wrap items-center gap-3 text-xs text-white/70"><span className="flex items-center gap-1.5"><Clock3 size={14} />{formatEventDate(event.eventDate)} · {formatEventTime(event)}</span><span className="flex items-center gap-1.5"><MapPin size={14} />{event.city}</span></div><div className="mt-6 flex flex-wrap gap-3"><Button href={`/events/${event.id}`} className="!bg-white !text-[#163d3a]">Ver detalhes <ArrowRight size={15} /></Button><Countdown target={event.startsAt} compact /></div></div>
+        <EventImage event={event} className="hidden aspect-square w-44 rounded-2xl md:block lg:w-52" />
+      </div>
+    </div>
+  </section>;
+}
+
 function Home() {
   const { data: summary, isLoading, isError, refetch } = useGetLibrarySummary();
   const categories = useListCategories();
+  const events = useListEvents();
   const featuredBooks = summary?.featuredBooks ?? [];
   const featuredVideos = summary?.featuredVideos ?? [];
+  const nextEvent = events.data?.find(event => event.status === 'upcoming');
   const categoryIcon = (name: string) => {
     const normalized = name.toLowerCase();
     if (normalized.includes('educ')) return <GraduationCap size={24} />;
@@ -239,6 +314,7 @@ function Home() {
         </div>
       </div>
     </section>
+     {nextEvent && <NextEventBanner event={nextEvent} />}
     <section className="bg-[#163d3a] text-white">
       <div className="mx-auto grid max-w-[1240px] divide-y divide-white/15 px-5 py-5 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:px-8">
         {[[<ShieldCheck size={27} />, 'Conteúdo confiável', 'Materiais organizados e selecionados.'], [<Globe2 size={27} />, 'Acesso livre', 'Disponível gratuitamente para todos.'], [<LockKeyhole size={27} />, 'Privacidade respeitada', 'Não exigimos cadastro para navegar.'], [<Heart size={27} />, 'Feito para você', 'Uma biblioteca simples e acessível.']].map(([icon, title, body], index) => <div key={index} className="flex items-center gap-4 py-4 sm:px-5 lg:py-3 first:sm:pl-0 last:sm:pr-0"><span className="text-[#75b79f]">{icon}</span><span><strong className="block text-sm">{title}</strong><small className="mt-1 block leading-5 text-white/65">{body}</small></span></div>)}
@@ -364,6 +440,42 @@ function GalleryPage() {
     </div>
   </div>}
   </Shell>;
+}
+
+function EventsPage() {
+  const eventsQuery = useListEvents();
+  const [view, setView] = useState<'upcoming' | 'past'>('upcoming');
+  const events = (eventsQuery.data ?? []).filter(event => event.status === view);
+  return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 lg:px-8">
+    <section className="rounded-[2rem] border border-[#dbe4e2] bg-[#e7f0eb] px-6 py-12 md:px-12 md:py-16">
+      <p className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">Agenda Sunnah Brasil</p>
+      <h1 className="serif mt-3 max-w-3xl text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-7xl">Encontros para aprender e partilhar.</h1>
+      <p className="mt-5 max-w-xl text-base leading-7 text-[#53666b] md:text-lg">Acompanhe palestras, aulas e encontros islâmicos publicados pela Sunnah Brasil.</p>
+    </section>
+    <div className="mt-10 flex flex-wrap items-center gap-2 border-b border-[#dbe4e2] pb-4">
+      <button onClick={() => setView('upcoming')} className={`rounded-full px-4 py-2.5 text-sm font-semibold ${view === 'upcoming' ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55]'}`} data-testid="button-events-upcoming">Próximos</button>
+      <button onClick={() => setView('past')} className={`rounded-full px-4 py-2.5 text-sm font-semibold ${view === 'past' ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55]'}`} data-testid="button-events-past">Realizados</button>
+    </div>
+    <section className="mt-8" aria-live="polite">
+      {eventsQuery.isLoading ? <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map(item => <div key={item} className="skeleton h-96 rounded-2xl" />)}</div> : eventsQuery.isError ? <StateMessage error title="Os eventos estão indisponíveis" body="Tente novamente em alguns instantes." retry={eventsQuery.refetch} /> : events.length === 0 ? <StateMessage title={view === 'upcoming' ? 'Ainda não há próximos eventos' : 'Ainda não há eventos realizados'} body={view === 'upcoming' ? 'Volte em breve para acompanhar a próxima agenda.' : 'Os eventos concluídos aparecerão aqui.'} /> : <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{events.map(event => <EventCard key={event.id} event={event} />)}</div>}
+    </section>
+  </main></Shell>;
+}
+
+function EventDetail() {
+  const { id } = useParams<{ id: string }>();
+  const eventQuery = useGetEvent(Number(id));
+  const event = eventQuery.data;
+  if (eventQuery.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><div className="skeleton h-[520px] rounded-3xl" /></main></Shell>;
+  if (eventQuery.isError || !event) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="Este evento não está disponível" body="O evento pode ter sido removido ou o link pode estar desatualizado." /></main></Shell>;
+  const upcoming = event.status === 'upcoming';
+  return <Shell><main className="mx-auto max-w-[1100px] px-5 pb-20 pt-10 lg:px-8">
+    <Link href="/events" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-events"><ArrowLeft size={15} /> Voltar aos eventos</Link>
+    <div className="mt-8 overflow-hidden rounded-3xl border border-[#dbe4e2] bg-white">
+      <div className="grid md:grid-cols-[.9fr_1.1fr]"><EventImage event={event} className="min-h-64 md:min-h-[440px]" /><div className="p-7 md:p-12"><span className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">{upcoming ? 'Próximo evento' : 'Evento realizado'}</span><h1 className="serif mt-4 text-4xl leading-tight tracking-[-.04em] text-[#071B2C] md:text-6xl">{event.title}</h1><p className="mt-5 text-base leading-7 text-[#607274]">{event.shortDescription}</p><div className="mt-7 grid gap-4 border-y border-[#dbe4e2] py-5 text-sm text-[#53666b]"><div className="flex items-start gap-3"><CalendarDays className="mt-0.5 shrink-0 text-[#075C45]" size={18} /><span><strong className="block text-[#071B2C]">Data e hora</strong>{formatEventDate(event.eventDate)} · {formatEventTime(event)}<small className="mt-1 block text-xs text-[#607274]">{event.timezone}</small></span></div><div className="flex items-start gap-3"><MapPin className="mt-0.5 shrink-0 text-[#075C45]" size={18} /><span><strong className="block text-[#071B2C]">{event.venue}</strong>{event.address}, {event.city}</span></div></div>{upcoming && <div className="mt-6"><p className="mb-3 text-xs font-bold uppercase tracking-[.16em] text-[#075C45]">Começa em</p><Countdown target={event.startsAt} /></div>}<div className="mt-7 flex flex-wrap gap-3"><a href={event.mapsUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full bg-[#075C45] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110" data-testid="link-event-map"><MapPin size={15} /> Abrir no Google Maps <ExternalLink size={14} /></a>{event.externalUrl && <a href={event.externalUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-2 rounded-full border border-[#dbe4e2] px-4 py-2.5 text-sm font-semibold text-[#075C45] transition hover:border-[#075C45]" data-testid="link-event-external">Mais informações <ExternalLink size={14} /></a>}</div></div></div>
+      <div className="border-t border-[#dbe4e2] px-7 py-8 md:px-12"><h2 className="serif text-3xl text-[#071B2C]">Sobre este evento</h2><p className="mt-4 max-w-3xl whitespace-pre-line text-[15px] leading-8 text-[#607274]">{event.fullDescription}</p></div>
+    </div>
+  </main></Shell>;
 }
 
 function BookDetail() {
@@ -531,6 +643,8 @@ function StatCard({ label, value, icon }: { label: string; value: number | strin
 type EditorState = { kind: 'book' | 'video'; id?: number; title: string; author?: string; description: string; category: string; coverUrl?: string; fileUrl?: string; fileType?: BookInput['fileType']; fileSize?: number; duration?: string; thumbnailUrl?: string; videoUrl?: string; downloadEnabled?: boolean; featured?: boolean };
 const emptyBook: EditorState = { kind: 'book', title: '', author: 'Autor não informado', description: 'Livro digital para leitura e estudo.', category: 'Islam', coverUrl: '', fileUrl: '', fileType: 'PDF', fileSize: 0, featured: false };
 const emptyVideo: EditorState = { kind: 'video', title: '', description: '', category: '', thumbnailUrl: '', videoUrl: '', duration: '', downloadEnabled: false, featured: false };
+type EventDraft = { id?: number; title: string; shortDescription: string; fullDescription: string; eventDate: string; startTime: string; endTime: string; timezone: string; imageId: number | null; venue: string; city: string; address: string; mapsUrl: string; externalUrl: string; published: boolean };
+const emptyEvent: EventDraft = { title: '', shortDescription: '', fullDescription: '', eventDate: '', startTime: '18:00', endTime: '20:00', timezone: 'Africa/Maputo', imageId: null, venue: '', city: '', address: '', mapsUrl: '', externalUrl: '', published: false };
 
 const bookFileType = (name: string): BookInput['fileType'] => {
   const extension = name.split('.').pop()?.toUpperCase();
@@ -822,6 +936,44 @@ function ImageEditor({ image, close, refresh }: { image?: Image; close: () => vo
   return <div className="fixed inset-0 z-50 grid place-items-center bg-[hsl(193_25%_19%/.52)] p-4"><form onSubmit={submit} className="max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[hsl(var(--card))] p-6 shadow-xl"><div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">{draft.id ? 'Edit image' : 'New image'}</p><h2 className="serif mt-1 text-3xl">Add to gallery</h2></div><button type="button" onClick={close} data-testid="button-close-image-editor"><X size={20} /></button></div><label className="mt-6 block rounded-xl border border-dashed border-[hsl(var(--primary)/.45)] bg-[hsl(var(--secondary)/.35)] p-5 text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={16} />Upload image file</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} className="mt-3 block w-full text-xs" onChange={event => { const file = event.target.files?.[0]; event.currentTarget.value = ''; if (file) void chooseFile(file); }} data-testid="input-editor-gallery-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading ? 'Uploading and generating metadata…' : draft.imageUrl ? 'Image ready — title and details were generated from the filename.' : 'JPG, PNG, WebP or GIF · maximum 10 MB'}</span></label>{draft.imageUrl && <img src={draft.imageUrl} alt={draft.alt || draft.title} className="mt-4 max-h-56 w-full rounded-xl object-contain bg-[hsl(var(--secondary))]" />}<div className="mt-5 grid gap-4"><label className="text-sm font-semibold">Title<input required value={draft.title} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-title" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Category<input required value={draft.category} onChange={event => setDraft(current => ({ ...current, category: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-category" /></label><label className="text-sm font-semibold">Alt text<input required value={draft.alt} onChange={event => setDraft(current => ({ ...current, alt: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-alt" /></label></div><label className="text-sm font-semibold">Description<textarea required rows={3} value={draft.description} onChange={event => setDraft(current => ({ ...current, description: event.target.value }))} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-editor-image-description" /></label>{error && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{error}</p>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.featured ?? false} onChange={event => setDraft(current => ({ ...current, featured: event.target.checked }))} data-testid="checkbox-editor-image-featured" /> Feature this image</label></div><div className="mt-7 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={close}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save image'}</Button></div></form></div>;
 }
 
+function EventEditor({ event, close, refresh }: { event?: CatalogEvent; close: () => void; refresh: () => void }) {
+  const [draft, setDraft] = useState<EventDraft>(event ? { id: event.id, title: event.title, shortDescription: event.shortDescription, fullDescription: event.fullDescription, eventDate: event.eventDate, startTime: event.startTime, endTime: event.endTime ?? '', timezone: event.timezone, imageId: event.imageId, venue: event.venue, city: event.city, address: event.address, mapsUrl: event.mapsUrl, externalUrl: event.externalUrl ?? '', published: event.published } : emptyEvent);
+  const images = useListImages();
+  const create = useCreateEvent();
+  const update = useUpdateEvent();
+  const [error, setError] = useState('');
+  const patch = (key: keyof EventDraft, value: string | boolean | number | null) => setDraft(current => ({ ...current, [key]: value }));
+  const submit = (formEvent: FormEvent) => {
+    formEvent.preventDefault();
+    setError('');
+    const data: EventInput = { title: draft.title, shortDescription: draft.shortDescription, fullDescription: draft.fullDescription, eventDate: draft.eventDate, startTime: draft.startTime, endTime: draft.endTime || null, timezone: draft.timezone || 'Africa/Maputo', imageId: draft.imageId, venue: draft.venue, city: draft.city, address: draft.address, mapsUrl: draft.mapsUrl, externalUrl: draft.externalUrl || null, published: draft.published };
+    const done = () => { refresh(); close(); };
+    if (draft.id) update.mutate({ id: draft.id, data: data as EventUpdate }, { onSuccess: done, onError: () => setError('Não foi possível atualizar o evento.') });
+    else create.mutate({ data }, { onSuccess: done, onError: () => setError('Não foi possível criar o evento.') });
+  };
+  const busy = create.isPending || update.isPending;
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-[hsl(193_25%_19%/.52)] p-4">
+    <form onSubmit={submit} className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-[hsl(var(--card))] p-6 shadow-xl md:p-7">
+      <div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">{draft.id ? 'Editar evento' : 'Novo evento'}</p><h2 className="serif mt-1 text-3xl">{draft.id ? 'Atualizar agenda' : 'Criar evento'}</h2></div><button type="button" onClick={close} data-testid="button-close-event-editor"><X size={20} /></button></div>
+      <div className="mt-6 grid gap-4">
+        <label className="text-sm font-semibold">Título<input required value={draft.title} onChange={event => patch('title', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-title" /></label>
+        <label className="text-sm font-semibold">Descrição curta<textarea required rows={2} value={draft.shortDescription} onChange={event => patch('shortDescription', event.target.value)} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-event-short-description" /></label>
+        <label className="text-sm font-semibold">Descrição completa<textarea required rows={5} value={draft.fullDescription} onChange={event => patch('fullDescription', event.target.value)} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-event-full-description" /></label>
+        <div className="grid gap-4 sm:grid-cols-3"><label className="text-sm font-semibold">Data<input required type="date" value={draft.eventDate} onChange={event => patch('eventDate', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-date" /></label><label className="text-sm font-semibold">Início<input required type="time" value={draft.startTime} onChange={event => patch('startTime', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-start-time" /></label><label className="text-sm font-semibold">Fim<input type="time" value={draft.endTime} onChange={event => patch('endTime', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-end-time" /></label></div>
+        <label className="text-sm font-semibold">Fuso horário<input required value={draft.timezone} onChange={event => patch('timezone', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-timezone" /><span className="mt-1 block text-xs font-normal text-[hsl(var(--muted-foreground))]">Padrão: Africa/Maputo</span></label>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Local<input required value={draft.venue} onChange={event => patch('venue', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-venue" /></label><label className="text-sm font-semibold">Cidade<input required value={draft.city} onChange={event => patch('city', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-city" /></label></div>
+        <label className="text-sm font-semibold">Endereço<input required value={draft.address} onChange={event => patch('address', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-address" /></label>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Link do Google Maps<input required type="url" value={draft.mapsUrl} onChange={event => patch('mapsUrl', event.target.value)} placeholder="https://maps.google.com/..." className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-maps-url" /></label><label className="text-sm font-semibold">Link externo (opcional)<input type="url" value={draft.externalUrl} onChange={event => patch('externalUrl', event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-event-external-url" /></label></div>
+        <label className="text-sm font-semibold">Imagem da biblioteca<select value={draft.imageId ?? ''} onChange={event => patch('imageId', event.target.value ? Number(event.target.value) : null)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="select-event-image"><option value="">Sem imagem</option>{(images.data ?? []).map(image => <option key={image.id} value={image.id}>{image.title}</option>)}</select><span className="mt-1 block text-xs font-normal text-[hsl(var(--muted-foreground))]">Escolha uma imagem já publicada na galeria.</span></label>
+        {draft.imageId && images.data?.find(image => image.id === draft.imageId) && <img src={images.data.find(image => image.id === draft.imageId)?.imageUrl} alt="" className="h-36 w-full rounded-xl object-cover" />}
+        <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.published} onChange={event => patch('published', event.target.checked)} data-testid="checkbox-event-published" /> Publicar evento agora</label>
+        {error && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{error}</p>}
+      </div>
+      <div className="mt-7 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={close}>Cancelar</Button><Button type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar evento'}</Button></div>
+    </form>
+  </div>;
+}
+
 function ImageList({ images, onAdd, onEdit, onDelete }: { images: Image[]; onAdd: () => void; onEdit: (image: Image) => void; onDelete: (id: number) => void }) {
   return <div><div className="mb-6 flex items-center justify-between"><p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} images in gallery</p><Button onClick={onAdd}><Plus size={16} /> Add image</Button></div><div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="No images yet" body="Upload the first image to begin the public gallery." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={image.imageUrl} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Featured' : 'Standard'}</span><button onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div></div>;
 }
@@ -884,9 +1036,11 @@ function Overview() {
     ...(period === 'custom' && end ? { end } : {}),
   }), [period, start, end]);
   const analytics = useGetAdminAnalytics(params);
+  const adminEvents = useListAdminEvents();
   const data = analytics.data;
   const hasTraffic = Boolean(data?.traffic.length);
   const hasLiveVisitors = Boolean(data?.liveVisitors.visitors.length);
+  const upcomingEventCount = adminEvents.data?.filter(event => event.status === 'upcoming').length ?? 0;
 
   return <div className="space-y-6">
     <div className="flex flex-col gap-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card)/.74)] p-5 md:flex-row md:items-end md:justify-between">
@@ -901,6 +1055,7 @@ function Overview() {
         <StatCard label="Livros no acervo" value={formatCount(data.summary.bookCount)} icon={<BookOpen size={16} />} />
         <StatCard label="Vídeos no acervo" value={formatCount(data.summary.videoCount)} icon={<Film size={16} />} />
         <StatCard label="Imagens no acervo" value={formatCount(data.summary.imageCount)} icon={<Images size={16} />} />
+        <StatCard label="Próximos eventos" value={formatCount(upcomingEventCount)} icon={<CalendarDays size={16} />} />
         <StatCard label="Downloads totais" value={formatCount(data.summary.totalDownloads)} icon={<Download size={16} />} />
         <StatCard label="Visitantes no período" value={formatCount(data.summary.totalVisitors)} icon={<UsersRound size={16} />} />
         <StatCard label="Visualizações de páginas" value={formatCount(data.summary.totalPageviews)} icon={<BarChart3 size={16} />} />
@@ -939,48 +1094,73 @@ function AdminCategories({ categories }: { categories: Category[] }) {
   </div>;
 }
 
+function AdminEvents({ events, onAdd, onEdit, onDelete, onDuplicate, onTogglePublish }: { events: CatalogEvent[]; onAdd: () => void; onEdit: (event: CatalogEvent) => void; onDelete: (id: number) => void; onDuplicate: (id: number) => void; onTogglePublish: (event: CatalogEvent) => void }) {
+  const [filter, setFilter] = useState<'all' | 'draft' | 'upcoming' | 'past'>('all');
+  const filtered = events.filter(event => filter === 'all' || event.status === filter);
+  const statusLabel = (status: CatalogEvent['status']) => status === 'draft' ? 'Rascunho' : status === 'upcoming' ? 'Publicado · Próximo' : 'Publicado · Realizado';
+  return <div>
+    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-end md:justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Agenda pública</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Eventos</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Crie e publique encontros sem alterar o acervo existente.</p></div><Button onClick={onAdd}><Plus size={16} /> Novo evento</Button></div>
+    <div className="mb-5 flex gap-2 overflow-x-auto pb-1">{[['all', 'Todos'], ['upcoming', 'Próximos'], ['draft', 'Rascunhos'], ['past', 'Realizados']].map(([value, label]) => <button key={value} onClick={() => setFilter(value as typeof filter)} className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${filter === value ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}`}>{label}</button>)}</div>
+    <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{filtered.length === 0 ? <StateMessage title="Nenhum evento encontrado" body={filter === 'all' ? 'Crie o primeiro evento da agenda.' : 'Não há eventos nesta categoria.'} /> : filtered.map(event => <div key={event.id} className="flex flex-col gap-4 border-b border-[hsl(var(--border))] p-4 last:border-0 sm:flex-row sm:items-center"><EventImage event={event} className="h-20 w-28 shrink-0 rounded-xl" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{event.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{formatEventDate(event.eventDate)} · {formatEventTime(event)} · {event.city}</p><span className={`mt-2 inline-flex rounded-full px-2 py-1 text-[10px] font-semibold ${event.status === 'draft' ? 'bg-[hsl(var(--secondary))]' : event.status === 'past' ? 'bg-[#f4eadb] text-[#8a6e4b]' : 'bg-[#e5f2eb] text-[#075C45]'}`}>{statusLabel(event.status)}</span></div><div className="flex shrink-0 flex-wrap gap-1"><button onClick={() => onTogglePublish(event)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" title={event.published ? 'Despublicar' : 'Publicar'} data-testid={`button-toggle-event-${event.id}`}>{event.published ? <EyeOff size={16} /> : <Eye size={16} />}</button><button onClick={() => onDuplicate(event.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" title="Duplicar" data-testid={`button-duplicate-event-${event.id}`}><Copy size={16} /></button><button onClick={() => onEdit(event)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" title="Editar" data-testid={`button-edit-event-${event.id}`}><Settings2 size={16} /></button><button onClick={() => onDelete(event.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" title="Excluir" data-testid={`button-delete-event-${event.id}`}><Trash2 size={16} /></button></div></div>)}</div>
+  </div>;
+}
+
 function AdminSettings() {
   return <div>
     <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Espaço privado</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Configurações</h2><p className="mt-2 max-w-xl text-sm leading-6 text-[hsl(var(--muted-foreground))]">Informações do painel e princípios de privacidade da biblioteca.</p></div>
     <div className="grid gap-5 lg:grid-cols-2">
-      <AnalyticsCard eyebrow="Acesso" title="Conta administrativa"><div className="mt-5 rounded-xl bg-[hsl(var(--secondary)/.55)] p-4 text-sm leading-6 text-[hsl(var(--muted-foreground))]">O acesso ao painel é protegido pelo Clerk e limitado aos utilizadores Admin configurados para este projeto.</div></AnalyticsCard>
+      <AnalyticsCard eyebrow="Acesso" title="Conta administrativa"><div className="mt-5 rounded-xl bg-[hsl(var(--secondary)/.55)] p-4 text-sm leading-6 text-[hsl(var(--muted-foreground))]">O painel é protegido por uma palavra-passe administrativa dedicada, guardada nos Secrets do projeto, com uma sessão curta e segura.</div></AnalyticsCard>
       <AnalyticsCard eyebrow="Privacidade" title="Análises anónimas"><div className="mt-5 rounded-xl bg-[hsl(var(--secondary)/.55)] p-4 text-sm leading-6 text-[hsl(var(--muted-foreground))]">As análises guardam apenas dados agregados: caminhos públicos, dispositivo, país aproximado e um identificador com hash rotativo. Não guardamos nomes, emails, endereços exatos ou URLs de referência brutos.</div></AnalyticsCard>
     </div>
   </div>;
 }
 
 function Admin() {
-  const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images' | 'categories' | 'settings'>('overview');
+  const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images' | 'events' | 'categories' | 'settings'>('overview');
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [imageEditor, setImageEditor] = useState<Image | 'new' | null>(null);
+  const [eventEditor, setEventEditor] = useState<CatalogEvent | 'new' | null>(null);
   const qc = useQueryClient();
   const books = useListBooks();
   const videos = useListVideos();
   const images = useListImages();
+  const events = useListAdminEvents();
   const categories = useListCategories();
   const delBook = useDeleteBook();
   const delVideo = useDeleteVideo();
   const delImage = useDeleteImage();
+  const delEvent = useDeleteEvent();
+  const duplicateEvent = useDuplicateEvent();
+  const updateEvent = useUpdateEvent();
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: getListBooksQueryKey() });
     qc.invalidateQueries({ queryKey: getListVideosQueryKey() });
     qc.invalidateQueries({ queryKey: getListImagesQueryKey() });
+    qc.invalidateQueries({ queryKey: getListEventsQueryKey() });
+    qc.invalidateQueries({ queryKey: getListAdminEventsQueryKey() });
     qc.invalidateQueries({ queryKey: getGetLibrarySummaryQueryKey() });
     qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
   };
 
-  const confirmDelete = (kind: 'book' | 'video' | 'image', id: number) => {
-    if (!window.confirm(kind === 'image' ? 'Remove this image from the public gallery?' : 'Remove this item from the catalog?')) return;
+  const confirmDelete = (kind: 'book' | 'video' | 'image' | 'event', id: number) => {
+    if (!window.confirm(kind === 'image' ? 'Remove this image from the public gallery?' : kind === 'event' ? 'Excluir este evento? Esta ação não pode ser desfeita.' : 'Remove this item from the catalog?')) return;
     if (kind === 'book') delBook.mutate({ id }, { onSuccess: refresh });
     if (kind === 'video') delVideo.mutate({ id }, { onSuccess: refresh });
     if (kind === 'image') delImage.mutate({ id }, { onSuccess: refresh });
+    if (kind === 'event') delEvent.mutate({ id }, { onSuccess: refresh });
   };
 
-  const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'categories' ? 'Categorias' : 'Configurações';
-  const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
+  const togglePublish = (event: CatalogEvent) => {
+    const data: EventInput = { title: event.title, shortDescription: event.shortDescription, fullDescription: event.fullDescription, eventDate: event.eventDate, startTime: event.startTime, endTime: event.endTime, timezone: event.timezone, imageId: event.imageId, venue: event.venue, city: event.city, address: event.address, mapsUrl: event.mapsUrl, externalUrl: event.externalUrl, published: !event.published };
+    updateEvent.mutate({ id: event.id, data }, { onSuccess: refresh });
+  };
+  const duplicate = (id: number) => duplicateEvent.mutate({ id }, { onSuccess: refresh });
+
+  const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'events' ? 'Eventos' : tab === 'categories' ? 'Categorias' : 'Configurações';
+  const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'events', label: 'Eventos', icon: <CalendarDays size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
   const renderNav = (mobile = false) => navItems.map(item => <button key={item.key} onClick={() => setTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
-  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}</Shell>;
+  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
 }
 
 function CatalogList({ tab, books, videos, onAdd, onEdit, onDelete }: { tab: 'books' | 'videos'; books: Book[]; videos: Video[]; onAdd: () => void; onEdit: (item: Book | Video) => void; onDelete: (id: number) => void }) {
@@ -1111,7 +1291,7 @@ function Router() {
   const [location] = useLocation();
   return <ErrorBoundary resetKey={location}><Switch>
     <Route path="/" component={Home} /><Route path="/books" component={Books} /><Route path="/books/:id/read" component={BookReader} /><Route path="/books/:id" component={BookDetail} />
-    <Route path="/videos" component={Videos} /><Route path="/videos/:id" component={VideoDetail} /><Route path="/images" component={GalleryPage} /><Route path="/categories" component={Categories} />
+    <Route path="/videos" component={Videos} /><Route path="/videos/:id" component={VideoDetail} /><Route path="/images" component={GalleryPage} /><Route path="/events" component={EventsPage} /><Route path="/events/:id" component={EventDetail} /><Route path="/categories" component={Categories} />
     <Route path="/about" component={About} /><Route path="/contact" component={Contact} /><Route path="/terms"><LegalPage type="terms" /></Route><Route path="/content-policy"><LegalPage type="policy" /></Route>
     <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={AdminRoute} />
     <Route path="/sign-in/*?" component={() => <ClerkSignInPage />} /><Route path="/sign-up/*?" component={() => <ClerkSignInPage signUp />} />
