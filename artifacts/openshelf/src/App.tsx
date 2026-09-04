@@ -377,6 +377,11 @@ function GalleryPage() {
   const [category, setCategory] = useState('Todos');
   const [selected, setSelected] = useState<GalleryItem | null>(null);
   const imagesQuery = useListImages();
+  const downloadName = (item: GalleryItem) => {
+    const extension = item.src.split('?')[0].match(/\.([a-zA-Z0-9]+)$/)?.[1] ?? 'jpg';
+    const safeTitle = item.title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || `imagem-${item.id}`;
+    return `${safeTitle}.${extension}`;
+  };
   const galleryItems = useMemo<GalleryItem[]>(() => (imagesQuery.data ?? []).map(image => ({
     id: String(image.id),
     title: image.title,
@@ -440,7 +445,7 @@ function GalleryPage() {
     <div role="dialog" aria-modal="true" aria-labelledby="gallery-dialog-title" aria-describedby="gallery-dialog-description" className="relative grid max-h-[92dvh] w-full max-w-4xl overflow-hidden rounded-2xl bg-[#fffdf8] shadow-2xl md:grid-cols-[1.2fr_.8fr]" onClick={event => event.stopPropagation()}>
       <button onClick={() => setSelected(null)} aria-label="Fechar imagem" data-testid="button-images-close-lightbox" className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-[#fffdf8]/90 text-[#071B2C] shadow-sm transition hover:bg-white"><X size={20} /></button>
       <div className="min-h-[280px] bg-[#e7f0eb] md:min-h-[520px]"><img src={selected.src} alt={selected.alt} className="h-full w-full object-cover" /></div>
-      <div className="flex flex-col justify-center p-7 md:p-10"><span className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">{selected.category}</span><h2 id="gallery-dialog-title" className="serif mt-3 text-4xl leading-tight tracking-[-.04em] text-[#071B2C]">{selected.title}</h2><p id="gallery-dialog-description" className="mt-4 text-sm leading-7 text-[#607274]">{selected.description}</p><p className="mt-8 border-t border-[#dbe4e2] pt-5 text-xs leading-5 text-[#607274]">Abra espaço para uma pausa. Às vezes, uma imagem é o começo de uma reflexão.</p><button onClick={() => setSelected(null)} data-testid="button-images-lightbox-done" className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-[#075C45] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110">Voltar à galeria <ArrowLeft size={15} /></button></div>
+      <div className="flex flex-col justify-center p-7 md:p-10"><span className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">{selected.category}</span><h2 id="gallery-dialog-title" className="serif mt-3 text-4xl leading-tight tracking-[-.04em] text-[#071B2C] md:text-5xl">{selected.title}</h2><p id="gallery-dialog-description" className="mt-4 text-sm leading-7 text-[#607274]">{selected.description}</p><p className="mt-8 border-t border-[#dbe4e2] pt-5 text-xs leading-5 text-[#607274]">Abra espaço para uma pausa. Às vezes, uma imagem é o começo de uma reflexão.</p><div className="mt-7 flex flex-wrap gap-3"><a href={selected.src} download={downloadName(selected)} onClick={() => trackEvent('image_downloaded', { content_type: 'image' })} data-testid="link-images-download" className="inline-flex items-center gap-2 rounded-full bg-[#075C45] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"><Download size={16} /> Baixar imagem</a><button onClick={() => setSelected(null)} data-testid="button-images-lightbox-done" className="inline-flex items-center gap-2 rounded-full border border-[#dbe4e2] px-4 py-2.5 text-sm font-semibold text-[#075C45] transition hover:border-[#075C45]">Voltar à galeria <ArrowLeft size={15} /></button></div></div>
     </div>
   </div>}
   </Shell>;
