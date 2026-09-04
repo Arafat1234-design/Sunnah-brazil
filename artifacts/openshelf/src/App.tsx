@@ -1043,12 +1043,16 @@ function AdminAccessGate() {
   useEffect(() => {
     let active = true;
     void fetch(`${basePath}/api/admin/access`, { credentials: 'include' })
-      .then(response => {
+      .then(async response => {
         if (!active) return;
-        if (response.ok) {
+        const payload = response.ok ? await response.json().catch(() => null) : null;
+        if (response.ok && payload?.authorized === true) {
           setState('unlocked');
-        } else if (response.status === 403) {
+        } else if (response.ok && payload?.authorized === false) {
           setState('locked');
+        } else if (response.status === 403) {
+          setState('error');
+          setMessage('A sua conta não tem acesso ao painel administrativo.');
         } else {
           setState('error');
           setMessage('Não foi possível verificar a proteção adicional.');
