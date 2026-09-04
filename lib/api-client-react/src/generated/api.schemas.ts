@@ -146,6 +146,18 @@ export interface AdminStats {
   categoryBreakdown: Category[];
 }
 
+export interface AdminPasswordInput {
+  /**
+     * @minLength 1
+     * @maxLength 256
+     */
+  password: string;
+}
+
+export interface AdminAccessStatus {
+  authorized: boolean;
+}
+
 export type AnalyticsEventInputEventType = typeof AnalyticsEventInputEventType[keyof typeof AnalyticsEventInputEventType];
 
 

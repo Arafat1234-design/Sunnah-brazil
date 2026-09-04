@@ -6,8 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminAccessStatus';
 export * from './adminAnalytics';
 export * from './adminAnalyticsLiveVisitors';
+export * from './adminPasswordInput';
 export * from './adminStats';
 export * from './analyticsEventInput';
 export * from './analyticsEventInputEventType';

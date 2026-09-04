@@ -709,6 +709,36 @@ export const GetAdminAnalyticsResponse = zod.object({
 
 
 /**
+ * @summary Check the additional Admin password session
+ */
+export const GetAdminAccessResponse = zod.object({
+  "authorized": zod.boolean()
+})
+
+
+/**
+ * @summary Unlock the Admin workspace with the additional password
+ */
+export const unlockAdminAccessBodyPasswordMax = 256;
+
+
+
+export const UnlockAdminAccessBody = zod.object({
+  "password": zod.string().min(1).max(unlockAdminAccessBodyPasswordMax)
+})
+
+export const UnlockAdminAccessResponse = zod.object({
+  "authorized": zod.boolean()
+})
+
+
+/**
+ * @summary Lock the additional Admin password session
+ */
+export const LockAdminAccessResponse = zod.void()
+
+
+/**
  * @summary Request a presigned upload URL
  */
 

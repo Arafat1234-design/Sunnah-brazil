@@ -20,7 +20,9 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AdminAccessStatus,
   AdminAnalytics,
+  AdminPasswordInput,
   AdminStats,
   AnalyticsEventInput,
   Book,
@@ -2046,6 +2048,225 @@ export function useGetAdminAnalytics<TData = Awaited<ReturnType<typeof getAdminA
 
 
 
+
+export const getGetAdminAccessUrl = () => {
+
+
+
+
+  return `/api/admin/access`
+}
+
+/**
+ * @summary Check the additional Admin password session
+ */
+export const getAdminAccess = async ( options?: Parameters<typeof customFetch>[1]): Promise<AdminAccessStatus> => {
+
+  return customFetch<AdminAccessStatus>(getGetAdminAccessUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAdminAccessQueryKey = () => {
+    return [
+    `/api/admin/access`
+    ] as const;
+    }
+
+
+export const getGetAdminAccessQueryOptions = <TData = Awaited<ReturnType<typeof getAdminAccess>>, TError = ErrorType<UnauthorizedResponse | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminAccess>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAdminAccessQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAdminAccess>>> = ({ signal }) => getAdminAccess({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAdminAccess>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAdminAccessQueryResult = NonNullable<Awaited<ReturnType<typeof getAdminAccess>>>
+export type GetAdminAccessQueryError = ErrorType<UnauthorizedResponse | void>
+
+
+/**
+ * @summary Check the additional Admin password session
+ */
+
+export function useGetAdminAccess<TData = Awaited<ReturnType<typeof getAdminAccess>>, TError = ErrorType<UnauthorizedResponse | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAdminAccess>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAdminAccessQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUnlockAdminAccessUrl = () => {
+
+
+
+
+  return `/api/admin/access`
+}
+
+/**
+ * @summary Unlock the Admin workspace with the additional password
+ */
+export const unlockAdminAccess = async (adminPasswordInput: AdminPasswordInput, options?: Parameters<typeof customFetch>[1]): Promise<AdminAccessStatus> => {
+
+  return customFetch<AdminAccessStatus>(getUnlockAdminAccessUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(adminPasswordInput)
+  }
+);}
+
+
+
+
+
+export const getUnlockAdminAccessMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockAdminAccess>>, TError,{data: BodyType<AdminPasswordInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unlockAdminAccess>>, TError,{data: BodyType<AdminPasswordInput>}, TContext> => {
+
+const mutationKey = ['unlockAdminAccess'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unlockAdminAccess>>, {data: BodyType<AdminPasswordInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  unlockAdminAccess(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnlockAdminAccessMutationResult = NonNullable<Awaited<ReturnType<typeof unlockAdminAccess>>>
+    export type UnlockAdminAccessMutationBody = BodyType<AdminPasswordInput>
+    export type UnlockAdminAccessMutationError = ErrorType<void>
+
+    /**
+ * @summary Unlock the Admin workspace with the additional password
+ */
+export const useUnlockAdminAccess = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unlockAdminAccess>>, TError,{data: BodyType<AdminPasswordInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unlockAdminAccess>>,
+        TError,
+        {data: BodyType<AdminPasswordInput>},
+        TContext
+      > => {
+      return useMutation(getUnlockAdminAccessMutationOptions(options));
+    }
+
+export const getLockAdminAccessUrl = () => {
+
+
+
+
+  return `/api/admin/access`
+}
+
+/**
+ * @summary Lock the additional Admin password session
+ */
+export const lockAdminAccess = async ( options?: Parameters<typeof customFetch>[1]): Promise<void> => {
+
+  return customFetch<void>(getLockAdminAccessUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getLockAdminAccessMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockAdminAccess>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof lockAdminAccess>>, TError,void, TContext> => {
+
+const mutationKey = ['lockAdminAccess'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof lockAdminAccess>>, void> = () => {
+
+
+          return  lockAdminAccess(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LockAdminAccessMutationResult = NonNullable<Awaited<ReturnType<typeof lockAdminAccess>>>
+
+    export type LockAdminAccessMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Lock the additional Admin password session
+ */
+export const useLockAdminAccess = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof lockAdminAccess>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof lockAdminAccess>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLockAdminAccessMutationOptions(options));
+    }
 
 export const getRequestUploadUrlUrl = () => {
 

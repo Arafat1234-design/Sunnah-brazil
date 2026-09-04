@@ -1034,11 +1034,74 @@ function ClerkSignInPage({ signUp = false }: { signUp?: boolean }) {
   </div>;
 }
 
+function AdminAccessGate() {
+  const [state, setState] = useState<'checking' | 'locked' | 'unlocked' | 'error'>('checking');
+  const [password, setPassword] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void fetch(`${basePath}/api/admin/access`, { credentials: 'include' })
+      .then(response => {
+        if (!active) return;
+        if (response.ok) {
+          setState('unlocked');
+        } else if (response.status === 403) {
+          setState('locked');
+        } else {
+          setState('error');
+          setMessage('Não foi possível verificar a proteção adicional.');
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setState('error');
+          setMessage('Não foi possível contactar o servidor.');
+        }
+      });
+    return () => { active = false; };
+  }, []);
+
+  if (state === 'unlocked') return <Admin />;
+  if (state === 'checking') return <div className="grid min-h-[100dvh] place-items-center bg-[hsl(var(--background))]"><p className="mono text-xs uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">A verificar proteção…</p></div>;
+
+  const submit = async (event: FormEvent) => {
+    event.preventDefault();
+    setSubmitting(true);
+    setMessage('');
+    try {
+      const response = await fetch(`${basePath}/api/admin/access`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      if (response.ok) {
+        setPassword('');
+        setState('unlocked');
+      } else if (response.status === 401) {
+        setMessage('Palavra-passe incorreta.');
+      } else if (response.status === 503) {
+        setMessage('A proteção adicional ainda não foi configurada no servidor.');
+      } else {
+        setMessage('Não foi possível desbloquear o painel.');
+      }
+    } catch {
+      setMessage('Não foi possível contactar o servidor.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return <div className="flex min-h-[100dvh] items-center justify-center bg-[hsl(var(--sidebar))] px-5"><div className="w-full max-w-[420px] rounded-3xl bg-[hsl(var(--card))] p-7 shadow-xl md:p-10"><Logo /><p className="mono mt-12 text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Proteção adicional</p><h1 className="serif mt-3 text-4xl">Confirmar acesso.</h1><p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">A sua conta Clerk está autorizada. Introduza a palavra-passe adicional para abrir o painel administrativo.</p>{state === 'error' ? <p className="mt-6 rounded-xl bg-[hsl(var(--destructive)/.1)] p-4 text-sm text-[hsl(var(--destructive))]" role="alert">{message}</p> : <form onSubmit={submit} className="mt-7"><label className="text-sm font-semibold">Palavra-passe<input type="password" required autoComplete="current-password" value={password} onChange={event => setPassword(event.target.value)} className="mt-2 h-12 w-full rounded-xl border border-[hsl(var(--border))] bg-transparent px-3 outline-none focus:border-[hsl(var(--primary))]" autoFocus /></label>{message && <p className="mt-3 text-sm text-[hsl(var(--destructive))]" role="alert">{message}</p>}<Button type="submit" disabled={submitting} className="mt-6 w-full">{submitting ? 'A verificar…' : 'Abrir painel'}</Button></form>}<Link href="/" className="mt-6 block text-center text-xs text-[hsl(var(--muted-foreground))]">Voltar à biblioteca</Link></div></div>;
+}
+
 function AdminRoute() {
   const { isLoaded, isSignedIn } = useAuth();
   if (!isLoaded) return <div className="grid min-h-[100dvh] place-items-center bg-[hsl(var(--background))]"><p className="mono text-xs uppercase tracking-[.16em] text-[hsl(var(--muted-foreground))]">Checking access…</p></div>;
   if (!isSignedIn) return <Redirect to="/sign-in" />;
-  return <Admin />;
+  return <AdminAccessGate />;
 }
 
 function Router() {

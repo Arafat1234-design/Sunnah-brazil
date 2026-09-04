@@ -491,6 +491,54 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: Admin access required
+  /admin/access:
+    get:
+      operationId: getAdminAccess
+      tags: [admin]
+      summary: Check the additional Admin password session
+      responses:
+        "200":
+          description: Access status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccessStatus"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
+        "503":
+          description: Admin password is not configured
+    post:
+      operationId: unlockAdminAccess
+      tags: [admin]
+      summary: Unlock the Admin workspace with the additional password
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminPasswordInput"
+      responses:
+        "200":
+          description: Admin access unlocked
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAccessStatus"
+        "401":
+          description: Invalid Admin password
+        "403":
+          description: Admin access required
+        "503":
+          description: Admin password is not configured
+    delete:
+      operationId: lockAdminAccess
+      tags: [admin]
+      summary: Lock the additional Admin password session
+      responses:
+        "204":
+          description: Admin access locked
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -705,6 +753,16 @@ components:
         categoryBreakdown:
           type: array
           items: { $ref: "#/components/schemas/Category" }
+    AdminPasswordInput:
+      type: object
+      required: [password]
+      properties:
+        password: { type: string, minLength: 1, maxLength: 256, format: password }
+    AdminAccessStatus:
+      type: object
+      required: [authorized]
+      properties:
+        authorized: { type: boolean }
     AnalyticsEventInput:
       type: object
       required: [visitorId, path]
