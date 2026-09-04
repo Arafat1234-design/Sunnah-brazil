@@ -268,7 +268,7 @@ function EventCard({ event }: { event: CatalogEvent }) {
 }
 
 function NextEventBanner({ event }: { event: CatalogEvent }) {
-  return <section className="mx-auto max-w-[1240px] px-5 pt-12 lg:px-8">
+  return <section className="sticky top-3 z-30 mx-auto -mb-8 max-w-[1240px] px-4 pt-4 lg:px-8">
     <div className="relative overflow-hidden rounded-3xl bg-[#163d3a] text-white shadow-[0_18px_40px_rgba(7,27,44,.12)]">
       <div className="pointer-events-none absolute -right-16 -top-20 h-60 w-60 rounded-full border-[24px] border-white/10" />
       <div className="relative grid gap-7 p-6 md:grid-cols-[1fr_auto] md:items-center md:p-9">
@@ -294,7 +294,8 @@ function Home() {
     if (normalized.includes('desenv')) return <Compass size={24} />;
     return <BookOpen size={24} />;
   };
-  return <Shell><main className="overflow-hidden">
+  return <Shell><main className="overflow-x-clip">
+     {nextEvent && <NextEventBanner event={nextEvent} />}
     <section className="relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
       <div className="relative mx-auto max-w-[1240px] px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
@@ -314,7 +315,6 @@ function Home() {
         </div>
       </div>
     </section>
-     {nextEvent && <NextEventBanner event={nextEvent} />}
     <section className="bg-[#163d3a] text-white">
       <div className="mx-auto grid max-w-[1240px] divide-y divide-white/15 px-5 py-5 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:px-8">
         {[[<ShieldCheck size={27} />, 'Conteúdo confiável', 'Materiais organizados e selecionados.'], [<Globe2 size={27} />, 'Acesso livre', 'Disponível gratuitamente para todos.'], [<LockKeyhole size={27} />, 'Privacidade respeitada', 'Não exigimos cadastro para navegar.'], [<Heart size={27} />, 'Feito para você', 'Uma biblioteca simples e acessível.']].map(([icon, title, body], index) => <div key={index} className="flex items-center gap-4 py-4 sm:px-5 lg:py-3 first:sm:pl-0 last:sm:pr-0"><span className="text-[#75b79f]">{icon}</span><span><strong className="block text-sm">{title}</strong><small className="mt-1 block leading-5 text-white/65">{body}</small></span></div>)}
