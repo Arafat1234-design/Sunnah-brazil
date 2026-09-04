@@ -1,7 +1,7 @@
-import { getAuth } from "@clerk/express";
 import { and, asc, count, desc, eq, ilike, or, sql } from "drizzle-orm";
 import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectStorageService } from "../lib/objectStorage";
+import { requireAdmin } from "../lib/adminAuth";
 import {
   CreateBookBody,
   CreateVideoBody,
@@ -32,24 +32,6 @@ const DEFAULT_CATEGORIES = [
 ];
 
 type LibraryContent = typeof booksTable.$inferSelect | typeof videosTable.$inferSelect;
-
-function requireAdmin(req: Request, res: Response): string | null {
-  const userId = getAuth(req).userId;
-  const allowedIds = (process.env.CLERK_ADMIN_USER_IDS || "")
-    .split(",")
-    .map((value) => value.trim())
-    .filter(Boolean);
-
-  if (!userId) {
-    res.status(401).json({ error: "Authentication required" });
-    return null;
-  }
-  if (!allowedIds.includes(userId)) {
-    res.status(403).json({ error: "Admin access required" });
-    return null;
-  }
-  return userId;
-}
 
 function contentUrl(value: string | null, req: Request): string | null {
   if (!value) return null;

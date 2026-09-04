@@ -427,6 +427,137 @@ export const DeleteVideoResponse = zod.void()
 
 
 /**
+ * @summary Search and filter gallery images
+ */
+export const listImagesQuerySearchMax = 100;
+
+export const listImagesQueryCategoryMax = 80;
+
+
+
+export const ListImagesQueryParams = zod.object({
+  "search": zod.coerce.string().max(listImagesQuerySearchMax).optional(),
+  "category": zod.coerce.string().max(listImagesQueryCategoryMax).optional()
+})
+
+export const ListImagesResponseItem = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "imageUrl": zod.string(),
+  "alt": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "featured": zod.boolean()
+})
+export const ListImagesResponse = zod.array(ListImagesResponseItem)
+
+
+/**
+ * @summary Add an image to the gallery
+ */
+
+
+
+
+
+
+
+export const CreateImageBody = zod.object({
+  "title": zod.string().min(1),
+  "description": zod.string().min(1),
+  "category": zod.string().min(1),
+  "imageUrl": zod.string().min(1),
+  "alt": zod.string().min(1),
+  "featured": zod.boolean().optional()
+})
+
+export const CreateImageResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "imageUrl": zod.string(),
+  "alt": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "featured": zod.boolean()
+})
+
+
+/**
+ * @summary Get a gallery image
+ */
+
+
+
+export const GetImageParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const GetImageResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "imageUrl": zod.string(),
+  "alt": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "featured": zod.boolean()
+})
+
+
+/**
+ * @summary Update a gallery image
+ */
+
+
+
+export const UpdateImageParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+
+
+
+
+
+
+
+export const UpdateImageBody = zod.object({
+  "title": zod.string().min(1),
+  "description": zod.string().min(1),
+  "category": zod.string().min(1),
+  "imageUrl": zod.string().min(1),
+  "alt": zod.string().min(1),
+  "featured": zod.boolean().optional()
+})
+
+export const UpdateImageResponse = zod.object({
+  "id": zod.int(),
+  "title": zod.string(),
+  "description": zod.string(),
+  "category": zod.string(),
+  "imageUrl": zod.string(),
+  "alt": zod.string(),
+  "createdAt": zod.coerce.date(),
+  "featured": zod.boolean()
+})
+
+
+/**
+ * @summary Remove a gallery image
+ */
+
+
+
+export const DeleteImageParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const DeleteImageResponse = zod.void()
+
+
+/**
  * @summary Get a permitted MP4 download URL
  */
 
@@ -496,6 +627,26 @@ export const RequestUploadUrlBody = zod.object({
 })
 
 export const RequestUploadUrlResponse = zod.object({
+  "uploadURL": zod.url(),
+  "objectPath": zod.string()
+})
+
+
+/**
+ * @summary Request an image upload URL
+ */
+
+
+
+
+
+export const RequestImageUploadUrlBody = zod.object({
+  "name": zod.string().min(1),
+  "size": zod.int().min(1),
+  "contentType": zod.string().min(1)
+})
+
+export const RequestImageUploadUrlResponse = zod.object({
   "uploadURL": zod.url(),
   "objectPath": zod.string()
 })

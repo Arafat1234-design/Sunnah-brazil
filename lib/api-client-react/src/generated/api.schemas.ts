@@ -93,6 +93,33 @@ export interface VideoInput {
 
 export type VideoUpdate = VideoInput;
 
+export interface Image {
+  id: number;
+  title: string;
+  description: string;
+  category: string;
+  imageUrl: string;
+  alt: string;
+  createdAt: string;
+  featured: boolean;
+}
+
+export interface ImageInput {
+  /** @minLength 1 */
+  title: string;
+  /** @minLength 1 */
+  description: string;
+  /** @minLength 1 */
+  category: string;
+  /** @minLength 1 */
+  imageUrl: string;
+  /** @minLength 1 */
+  alt: string;
+  featured?: boolean;
+}
+
+export type ImageUpdate = ImageInput;
+
 export interface Category {
   name: string;
   bookCount: number;
@@ -159,6 +186,17 @@ category?: CategoryParameter;
 };
 
 export type ListVideosParams = {
+/**
+ * @maxLength 100
+ */
+search?: SearchParameter;
+/**
+ * @maxLength 80
+ */
+category?: CategoryParameter;
+};
+
+export type ListImagesParams = {
 /**
  * @maxLength 100
  */
