@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850">
-  <defs><linearGradient id="room" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#d6e2d8"/><stop offset="1" stop-color="#a9c1b5"/></linearGradient><pattern id="lines" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M0 60 60 0M-15 60 60-15M0 75 75 0" stroke="#fff8e8" stroke-opacity=".2" stroke-width="2"/></pattern></defs>
-  <rect width="1200" height="850" fill="url(#room)"/><rect width="1200" height="850" fill="url(#lines)"/><path d="M0 725h1200v125H0Z" fill="#55796d"/><path d="M180 725V250h840v475" fill="#f5ead5" fill-opacity=".45"/><path d="M510 725V430a90 90 0 0 1 180 0v295" fill="#55796d"/><path d="M230 565h160v160H230zM810 565h160v160H810z" fill="#b67e63" fill-opacity=".72"/><text x="600" y="150" fill="#31564f" font-family="Georgia,serif" font-size="46" text-anchor="middle">A paz começa em casa</text>
-</svg>

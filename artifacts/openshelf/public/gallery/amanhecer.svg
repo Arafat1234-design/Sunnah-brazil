@@ -1,4 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100">
-  <defs><linearGradient id="dawn" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#2d5260"/><stop offset=".58" stop-color="#be806a"/><stop offset="1" stop-color="#f0d1a3"/></linearGradient><pattern id="tile" width="86" height="86" patternUnits="userSpaceOnUse"><path d="M43 4 82 43 43 82 4 43Z" fill="none" stroke="#fff0d1" stroke-opacity=".18" stroke-width="2"/></pattern></defs>
-  <rect width="900" height="1100" fill="url(#dawn)"/><rect width="900" height="1100" fill="url(#tile)"/><circle cx="450" cy="450" r="135" fill="#fff0d1" fill-opacity=".78"/><path d="M0 785c184-65 274-66 450 0 176 66 266 65 450 0v315H0Z" fill="#203d49"/><path d="M450 702V490M347 702V566M553 702V566" stroke="#f5e3bf" stroke-width="7"/><text x="450" y="900" fill="#f5e3bf" font-family="Georgia,serif" font-size="48" text-anchor="middle">Começar de novo</text>
-</svg>

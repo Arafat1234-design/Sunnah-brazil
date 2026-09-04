@@ -270,14 +270,7 @@ function Videos() {
 
 type GalleryItem = { id: string; title: string; description: string; category: string; src: string; alt: string };
 
-const galleryItems: GalleryItem[] = [
-  { id: 'luz-do-alcorao', title: 'Luz no caminho', description: 'Uma lembrança sobre buscar clareza e direção no conhecimento.', category: 'Reflexão', src: `${basePath}/gallery/luz-do-alcorão.svg`, alt: 'Lua crescente sobre um fundo verde com padrões geométricos' },
-  { id: 'tempo-de-oracao', title: 'Um tempo para voltar', description: 'A oração como pausa, presença e retorno ao que importa.', category: 'Adoração', src: `${basePath}/gallery/tempo-de-oracao.svg`, alt: 'Mesquita ao entardecer sob um céu estrelado' },
-  { id: 'cuidado-com-o-proximo', title: 'Cuidar também é fé', description: 'Pequenos gestos de cuidado que aproximam os corações.', category: 'Convivência', src: `${basePath}/gallery/cuidado-com-o-proximo.svg`, alt: 'Coração estilizado dentro de um arco em tons quentes' },
-  { id: 'pegadas-de-conhecimento', title: 'Uma jornada de conhecimento', description: 'Aprender é caminhar com paciência, curiosidade e propósito.', category: 'Caminho', src: `${basePath}/gallery/pegadas-de-conhecimento.svg`, alt: 'Caminho pontilhado seguindo por uma paisagem geométrica' },
-  { id: 'amanhecer', title: 'Começar de novo', description: 'Todo amanhecer traz uma oportunidade de renovar a intenção.', category: 'Reflexão', src: `${basePath}/gallery/amanhecer.svg`, alt: 'Sol nascente atrás de uma paisagem azul e terracota' },
-  { id: 'paz-no-lar', title: 'A paz começa em casa', description: 'Um lar sereno é feito de escuta, gentileza e lembrança.', category: 'Convivência', src: `${basePath}/gallery/paz-no-lar.svg`, alt: 'Interior sereno com arco central e janelas geométricas' },
-];
+const galleryItems: GalleryItem[] = [];
 
 function GalleryPage() {
   const [search, setSearch] = useState('');
