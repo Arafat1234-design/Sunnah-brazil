@@ -1,3 +1,3 @@
 - [Managed auth and storage](managed-auth-and-storage.md) — keep identity and uploaded media in Replit-managed services; PostgreSQL remains the metadata store.
 - [Anonymous analytics boundary](analytics-privacy.md) — persist only salted visitor hashes, coarse device/country, categorized referrers, and public paths; exclude Admin/auth routes.
-- [Admin access layers](admin-access.md) — require both an authorized Clerk identity and the Replit Secret-backed Admin password before serving private Admin APIs.
+- [Admin access](admin-access.md) — protect the private Admin workspace with the Replit Secret-backed password and a signed short-lived session.
