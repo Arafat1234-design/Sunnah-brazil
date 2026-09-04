@@ -286,7 +286,7 @@ function NextEventBanner({ event }: { event: CatalogEvent }) {
 function Home() {
   const { data: summary, isLoading, isError, refetch } = useGetLibrarySummary();
   const categories = useListCategories();
-  const events = useListEvents();
+  const events = useListEvents({ query: { refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const featuredBooks = summary?.featuredBooks ?? [];
   const featuredVideos = summary?.featuredVideos ?? [];
   const nextEvent = events.data?.find(event => event.status === 'upcoming');
@@ -447,7 +447,7 @@ function GalleryPage() {
 }
 
 function EventsPage() {
-  const eventsQuery = useListEvents();
+  const eventsQuery = useListEvents({ query: { refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const [view, setView] = useState<'upcoming' | 'past'>('upcoming');
   const events = (eventsQuery.data ?? []).filter(event => event.status === view);
   return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 lg:px-8">

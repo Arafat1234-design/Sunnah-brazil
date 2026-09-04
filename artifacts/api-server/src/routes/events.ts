@@ -166,6 +166,7 @@ router.get("/events", async (_req, res): Promise<void> => {
     if (aUpcoming !== bUpcoming) return aUpcoming ? -1 : 1;
     return aUpcoming ? a.startsAt.localeCompare(b.startsAt) : b.startsAt.localeCompare(a.startsAt);
   });
+  res.setHeader("Cache-Control", "no-store, max-age=0");
   res.json(ListEventsResponse.parse(formatted));
 });
 
@@ -180,6 +181,7 @@ router.get("/events/:id", async (req, res): Promise<void> => {
     res.status(404).json({ error: "Event not found" });
     return;
   }
+  res.setHeader("Cache-Control", "no-store, max-age=0");
   res.json(event);
 });
 
