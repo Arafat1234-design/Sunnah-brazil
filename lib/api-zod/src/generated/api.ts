@@ -613,6 +613,102 @@ export const GetAdminStatsResponse = zod.object({
 
 
 /**
+ * @summary Record an anonymous pageview or content event
+ */
+export const trackAnalyticsEventBodyVisitorIdMin = 16;
+export const trackAnalyticsEventBodyVisitorIdMax = 128;
+
+export const trackAnalyticsEventBodyPathMax = 240;
+
+export const trackAnalyticsEventBodyTitleMax = 160;
+
+export const trackAnalyticsEventBodyReferrerMax = 300;
+
+export const trackAnalyticsEventBodyEventTypeDefault = `pageview`;
+
+export const TrackAnalyticsEventBody = zod.object({
+  "visitorId": zod.string().min(trackAnalyticsEventBodyVisitorIdMin).max(trackAnalyticsEventBodyVisitorIdMax),
+  "path": zod.string().min(1).max(trackAnalyticsEventBodyPathMax),
+  "title": zod.string().max(trackAnalyticsEventBodyTitleMax).optional(),
+  "referrer": zod.string().max(trackAnalyticsEventBodyReferrerMax).optional(),
+  "eventType": zod.enum(['pageview', 'content_view']).default(trackAnalyticsEventBodyEventTypeDefault)
+})
+
+export const TrackAnalyticsEventResponse = zod.void()
+
+
+/**
+ * @summary Get privacy-conscious dashboard analytics
+ */
+export const getAdminAnalyticsQueryPeriodDefault = `7d`;
+
+export const GetAdminAnalyticsQueryParams = zod.object({
+  "period": zod.enum(['today', '7d', '30d', '90d', '12m', 'custom']).default(getAdminAnalyticsQueryPeriodDefault),
+  "start": zod.date().optional(),
+  "end": zod.date().optional()
+})
+
+export const GetAdminAnalyticsResponse = zod.object({
+  "period": zod.object({
+  "key": zod.string(),
+  "start": zod.coerce.date(),
+  "end": zod.coerce.date()
+}),
+  "summary": zod.object({
+  "bookCount": zod.int(),
+  "videoCount": zod.int(),
+  "imageCount": zod.int(),
+  "totalDownloads": zod.int(),
+  "totalVisitors": zod.int(),
+  "totalPageviews": zod.int()
+}),
+  "liveVisitors": zod.object({
+  "count": zod.int(),
+  "visitors": zod.array(zod.object({
+  "path": zod.string(),
+  "device": zod.string(),
+  "country": zod.string(),
+  "lastSeenAt": zod.coerce.date()
+}))
+}),
+  "traffic": zod.array(zod.object({
+  "date": zod.coerce.date(),
+  "visitors": zod.int(),
+  "pageviews": zod.int()
+})),
+  "downloads": zod.object({
+  "total": zod.int(),
+  "today": zod.int(),
+  "week": zod.int(),
+  "month": zod.int(),
+  "leaders": zod.array(zod.object({
+  "title": zod.string(),
+  "downloads": zod.int()
+}))
+}),
+  "popularContent": zod.array(zod.object({
+  "type": zod.string(),
+  "title": zod.string(),
+  "path": zod.string(),
+  "views": zod.int()
+})),
+  "trafficSources": zod.array(zod.object({
+  "name": zod.string(),
+  "visitors": zod.int()
+})),
+  "devices": zod.array(zod.object({
+  "name": zod.string(),
+  "visitors": zod.int()
+})),
+  "recentActivity": zod.array(zod.object({
+  "type": zod.string(),
+  "title": zod.string(),
+  "createdAt": zod.coerce.date()
+}))
+})
+
+
+/**
  * @summary Request a presigned upload URL
  */
 

@@ -6,14 +6,25 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './adminAnalytics';
+export * from './adminAnalyticsLiveVisitors';
 export * from './adminStats';
+export * from './analyticsEventInput';
+export * from './analyticsEventInputEventType';
+export * from './analyticsPeriod';
+export * from './analyticsSegment';
+export * from './analyticsSummary';
 export * from './book';
 export * from './bookInput';
 export * from './bookInputFileType';
 export * from './bookUpdate';
 export * from './category';
 export * from './categoryParameter';
+export * from './downloadAnalytics';
+export * from './downloadLeader';
 export * from './downloadResponse';
+export * from './getAdminAnalyticsParams';
+export * from './getAdminAnalyticsPeriod';
 export * from './healthStatus';
 export * from './image';
 export * from './imageInput';
@@ -22,8 +33,12 @@ export * from './librarySummary';
 export * from './listBooksParams';
 export * from './listImagesParams';
 export * from './listVideosParams';
+export * from './liveVisitor';
 export * from './notFoundResponse';
+export * from './popularContent';
+export * from './recentActivity';
 export * from './searchParameter';
+export * from './trafficPoint';
 export * from './unauthorizedResponse';
 export * from './uploadRequest';
 export * from './uploadResponse';

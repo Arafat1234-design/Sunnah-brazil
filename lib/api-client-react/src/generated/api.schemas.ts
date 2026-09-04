@@ -146,6 +146,108 @@ export interface AdminStats {
   categoryBreakdown: Category[];
 }
 
+export type AnalyticsEventInputEventType = typeof AnalyticsEventInputEventType[keyof typeof AnalyticsEventInputEventType];
+
+
+export const AnalyticsEventInputEventType = {
+  pageview: 'pageview',
+  content_view: 'content_view',
+} as const;
+
+export interface AnalyticsEventInput {
+  /**
+     * @minLength 16
+     * @maxLength 128
+     */
+  visitorId: string;
+  /**
+     * @minLength 1
+     * @maxLength 240
+     */
+  path: string;
+  /** @maxLength 160 */
+  title?: string;
+  /** @maxLength 300 */
+  referrer?: string;
+  eventType?: AnalyticsEventInputEventType;
+}
+
+export interface AnalyticsPeriod {
+  key: string;
+  start: string;
+  end: string;
+}
+
+export interface AnalyticsSummary {
+  bookCount: number;
+  videoCount: number;
+  imageCount: number;
+  totalDownloads: number;
+  totalVisitors: number;
+  totalPageviews: number;
+}
+
+export interface LiveVisitor {
+  path: string;
+  device: string;
+  country: string;
+  lastSeenAt: string;
+}
+
+export interface TrafficPoint {
+  date: string;
+  visitors: number;
+  pageviews: number;
+}
+
+export interface DownloadLeader {
+  title: string;
+  downloads: number;
+}
+
+export interface DownloadAnalytics {
+  total: number;
+  today: number;
+  week: number;
+  month: number;
+  leaders: DownloadLeader[];
+}
+
+export interface AnalyticsSegment {
+  name: string;
+  visitors: number;
+}
+
+export interface PopularContent {
+  type: string;
+  title: string;
+  path: string;
+  views: number;
+}
+
+export interface RecentActivity {
+  type: string;
+  title: string;
+  createdAt: string;
+}
+
+export type AdminAnalyticsLiveVisitors = {
+  count: number;
+  visitors: LiveVisitor[];
+};
+
+export interface AdminAnalytics {
+  period: AnalyticsPeriod;
+  summary: AnalyticsSummary;
+  liveVisitors: AdminAnalyticsLiveVisitors;
+  traffic: TrafficPoint[];
+  downloads: DownloadAnalytics;
+  popularContent: PopularContent[];
+  trafficSources: AnalyticsSegment[];
+  devices: AnalyticsSegment[];
+  recentActivity: RecentActivity[];
+}
+
 export interface UploadRequest {
   /** @minLength 1 */
   name: string;
@@ -206,4 +308,22 @@ search?: SearchParameter;
  */
 category?: CategoryParameter;
 };
+
+export type GetAdminAnalyticsParams = {
+period?: GetAdminAnalyticsPeriod;
+start?: string;
+end?: string;
+};
+
+export type GetAdminAnalyticsPeriod = typeof GetAdminAnalyticsPeriod[keyof typeof GetAdminAnalyticsPeriod];
+
+
+export const GetAdminAnalyticsPeriod = {
+  today: 'today',
+  '7d': '7d',
+  '30d': '30d',
+  '90d': '90d',
+  '12m': '12m',
+  custom: 'custom',
+} as const;
 

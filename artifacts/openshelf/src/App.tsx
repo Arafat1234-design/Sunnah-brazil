@@ -8,18 +8,21 @@ import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy, type PDFPagePr
 import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound,
-  Download, FileText, Film, Headphones, Heart, Info, LayoutGrid, LockKeyhole,
+  Download, FileText, Film, Headphones, Heart, Info, LockKeyhole,
   Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2, HeartHandshake,
   BookMarked, Compass, UsersRound, PlayCircle, ArrowUpRight,
   Images, Maximize2,
 } from 'lucide-react';
 import {
-  getGetAdminStatsQueryKey, getGetBookDownloadQueryKey, getGetBookQueryKey,
+  CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';
+import {
+  getGetBookDownloadQueryKey, getGetBookQueryKey,
   getGetLibrarySummaryQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
   getListBooksQueryKey, getListCategoriesQueryKey, getListImagesQueryKey, getListVideosQueryKey,
   type Book, type BookInput, type Category, type Image, type ImageInput, type Video, type VideoInput,
-  useCreateBook, useCreateImage, useCreateVideo, useDeleteBook, useDeleteImage, useDeleteVideo, useGetAdminStats,
+  useCreateBook, useCreateImage, useCreateVideo, useDeleteBook, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
   useGetBook, useGetBookDownload, useGetLibrarySummary, useGetVideo,
   useGetVideoDownload, useListBooks, useListCategories, useListImages, useListVideos,
   useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateImage, useUpdateVideo,
@@ -33,6 +36,25 @@ const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 GlobalWorkerOptions.workerSrc = pdfWorker;
+
+type AnalyticsData = Record<string, string | number | boolean>;
+
+declare global {
+  interface Window {
+    umami?: {
+      track(name: string, data?: AnalyticsData): void;
+    };
+  }
+}
+
+function trackEvent(name: string, data?: AnalyticsData): void {
+  if (typeof window === 'undefined') return;
+  try {
+    window.umami?.track(name, data);
+  } catch {
+    // Analytics must never interrupt the library.
+  }
+}
 
 function stripBase(path: string) {
   return basePath && path.startsWith(basePath) ? path.slice(basePath.length) || '/' : path;
@@ -326,7 +348,7 @@ function GalleryPage() {
 
     <section className="mt-8" aria-live="polite">
       {imagesQuery.isLoading ? <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(item => <div key={item} className="skeleton h-64 rounded-2xl" />)}</div> : imagesQuery.isError ? <StateMessage error title="A galeria está indisponível" body="Tente novamente em alguns instantes." retry={imagesQuery.refetch} /> : filteredItems.length === 0 ? <div className="rounded-2xl border border-[#dbe4e2] bg-[#fffdf8] px-6 py-16 text-center" data-testid="state-images-empty"><div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-[#e9f3ef] text-[#075C45]"><Search size={19} /></div><h2 className="serif text-2xl text-[#071B2C]">Nenhuma imagem encontrada</h2><p className="mx-auto mt-2 max-w-sm text-sm text-[#607274]">Tente outra palavra ou escolha uma categoria diferente.</p><button onClick={() => { setSearch(''); setCategory('Todos'); }} data-testid="button-images-clear-filters" className="mt-5 rounded-full border border-[#dbe4e2] px-4 py-2 text-sm font-semibold text-[#075C45] transition hover:border-[#075C45]">Limpar filtros</button></div> : <div className="grid auto-rows-[180px] grid-cols-1 gap-4 sm:grid-cols-2 md:auto-rows-[200px] lg:grid-cols-4">
-        {filteredItems.map((item, index) => <button key={item.id} onClick={() => setSelected(item)} data-testid={`card-image-${item.id}`} aria-label={`Abrir imagem: ${item.title}`} className={`group relative overflow-hidden rounded-2xl border border-[#dbe4e2] bg-[#dfeae4] text-left shadow-[0_5px_16px_rgba(7,27,44,.05)] transition duration-300 hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.12)] focus:outline-none focus:ring-4 focus:ring-[#075C45]/20 ${index === 0 ? 'sm:row-span-2 lg:col-span-2 lg:row-span-2' : index === 3 ? 'lg:col-span-2' : ''}`}>
+        {filteredItems.map((item, index) => <button key={item.id} onClick={() => { trackEvent('image_opened', { content_type: 'image' }); setSelected(item); }} data-testid={`card-image-${item.id}`} aria-label={`Abrir imagem: ${item.title}`} className={`group relative overflow-hidden rounded-2xl border border-[#dbe4e2] bg-[#dfeae4] text-left shadow-[0_5px_16px_rgba(7,27,44,.05)] transition duration-300 hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.12)] focus:outline-none focus:ring-4 focus:ring-[#075C45]/20 ${index === 0 ? 'sm:row-span-2 lg:col-span-2 lg:row-span-2' : index === 3 ? 'lg:col-span-2' : ''}`}>
           <img src={item.src} alt={item.alt} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
           <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#071b2c]/80 via-[#071b2c]/35 to-transparent px-5 pb-4 pt-12 text-white"><span className="mono block text-[9px] uppercase tracking-[.18em] text-[#d6e6d9]">{item.category}</span><span className="mt-1 block font-semibold">{item.title}</span></span>
           <span className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-[#fffdf8]/90 text-[#075C45] opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus:opacity-100"><Maximize2 size={15} /></span>
@@ -349,7 +371,7 @@ function BookDetail() {
   const book = q.data;
   const downloadableType = book && (book.fileType === 'PDF' || book.fileType === 'TXT') ? 'PDF' : book?.fileType;
   const canDownload = Boolean(book?.fileUrl);
-  const download = () => { setRequested(true); };
+  const download = () => { trackEvent('book_download_started', { content_type: 'book' }); setRequested(true); };
   useEffect(() => {
     if (dl.data?.url) window.location.assign(dl.data.url);
   }, [dl.data?.url]);
@@ -465,7 +487,7 @@ function VideoDetail() {
   if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid kind="video" /></main></Shell>;
   if (q.isError || !video) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="This film isn't available" body="It may have moved, or the link may be old." /></main></Shell>;
   const canDownload = Boolean(video.downloadEnabled && video.videoUrl);
-  return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/videos" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]" data-testid="link-back-videos"><ArrowLeft size={15} /> Back to videos</Link><div className="pt-10"><div className="relative overflow-hidden rounded-2xl bg-[hsl(190_27%_22%)]">{video.videoUrl ? <video src={video.videoUrl} controls poster={video.thumbnailUrl ?? undefined} className="aspect-video w-full" /> : <VideoThumb video={video} large />}</div><div className="grid gap-8 py-9 md:grid-cols-[1fr_260px]"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{video.category} · {video.duration}</p><h1 className="serif mt-3 text-4xl leading-tight md:text-5xl">{video.title}</h1><p className="mt-5 max-w-2xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{video.description}</p></div><div className="rounded-2xl bg-[hsl(var(--secondary)/.6)] p-5"><p className="text-sm font-semibold">Keep watching</p><p className="mt-2 text-xs leading-5 text-[hsl(var(--muted-foreground))]">Share this film with someone who likes a slower pace.</p><Button variant="outline" className="mt-5 w-full" onClick={() => setRequested(true)} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'MP4 indisponível' : dl.isLoading ? 'Preparando MP4…' : <><Download size={15} /> Baixar MP4</>}</Button>{dl.isError && <p className="mt-3 text-xs leading-5 text-[hsl(var(--destructive))]">Não foi possível preparar o MP4. Tente novamente.</p>}</div></div></div></main></Shell>;
+  return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/videos" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]" data-testid="link-back-videos"><ArrowLeft size={15} /> Back to videos</Link><div className="pt-10"><div className="relative overflow-hidden rounded-2xl bg-[hsl(190_27%_22%)]">{video.videoUrl ? <video src={video.videoUrl} controls poster={video.thumbnailUrl ?? undefined} className="aspect-video w-full" /> : <VideoThumb video={video} large />}</div><div className="grid gap-8 py-9 md:grid-cols-[1fr_260px]"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{video.category} · {video.duration}</p><h1 className="serif mt-3 text-4xl leading-tight md:text-5xl">{video.title}</h1><p className="mt-5 max-w-2xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{video.description}</p></div><div className="rounded-2xl bg-[hsl(var(--secondary)/.6)] p-5"><p className="text-sm font-semibold">Keep watching</p><p className="mt-2 text-xs leading-5 text-[hsl(var(--muted-foreground))]">Share this film with someone who likes a slower pace.</p><Button variant="outline" className="mt-5 w-full" onClick={() => { trackEvent('video_download_started', { content_type: 'video' }); setRequested(true); }} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'MP4 indisponível' : dl.isLoading ? 'Preparando MP4…' : <><Download size={15} /> Baixar MP4</>}</Button>{dl.isError && <p className="mt-3 text-xs leading-5 text-[hsl(var(--destructive))]">Não foi possível preparar o MP4. Tente novamente.</p>}</div></div></div></main></Shell>;
 }
 
 function Categories() {
@@ -804,21 +826,143 @@ function ImageList({ images, onAdd, onEdit, onDelete }: { images: Image[]; onAdd
   return <div><div className="mb-6 flex items-center justify-between"><p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} images in gallery</p><Button onClick={onAdd}><Plus size={16} /> Add image</Button></div><div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="No images yet" body="Upload the first image to begin the public gallery." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={image.imageUrl} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Featured' : 'Standard'}</span><button onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div></div>;
 }
 
+type AnalyticsPeriodKey = 'today' | '7d' | '30d' | '90d' | '12m' | 'custom';
+
+const analyticsPeriodLabels: Record<AnalyticsPeriodKey, string> = {
+  today: 'Hoje',
+  '7d': 'Últimos 7 dias',
+  '30d': 'Últimos 30 dias',
+  '90d': 'Últimos 90 dias',
+  '12m': 'Últimos 12 meses',
+  custom: 'Período personalizado',
+};
+
+const formatCount = (value: number | undefined) => new Intl.NumberFormat('pt-BR').format(value ?? 0);
+const formatDate = (value: string, withTime = false) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('pt-BR', withTime ? { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' } : { day: '2-digit', month: 'short' }).format(date);
+};
+
+function AnalyticsSkeleton() {
+  return <div className="space-y-5" aria-label="Carregando análises">
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{[1, 2, 3, 4, 5, 6].map(item => <div className="skeleton h-28 rounded-2xl" key={item} />)}</div>
+    <div className="skeleton h-80 rounded-2xl" />
+    <div className="grid gap-5 lg:grid-cols-2"><div className="skeleton h-72 rounded-2xl" /><div className="skeleton h-72 rounded-2xl" /></div>
+  </div>;
+}
+
+function AnalyticsCard({ eyebrow, title, children, className = '' }: { eyebrow?: string; title: string; children: ReactNode; className?: string }) {
+  return <section className={`rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card)/.92)] p-5 shadow-[var(--shadow-sm)] md:p-6 ${className}`}>
+    <div className="flex items-start justify-between gap-4">
+      <div>{eyebrow && <p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">{eyebrow}</p>}<h2 className="serif mt-1 text-2xl tracking-[-.02em]">{title}</h2></div>
+    </div>
+    {children}
+  </section>;
+}
+
+function EmptyAnalytics({ label }: { label: string }) {
+  return <div className="grid min-h-28 place-items-center rounded-xl border border-dashed border-[hsl(var(--border))] px-5 text-center text-sm text-[hsl(var(--muted-foreground))]">{label}</div>;
+}
+
+function SegmentList({ items, label }: { items: { name: string; visitors: number }[]; label: string }) {
+  if (!items.length) return <EmptyAnalytics label={label} />;
+  const max = Math.max(...items.map(item => item.visitors), 1);
+  return <div className="mt-5 space-y-4">{items.slice(0, 6).map(item => <div key={item.name}>
+    <div className="flex items-center justify-between gap-3 text-sm"><span className="truncate">{item.name}</span><span className="mono shrink-0 text-[11px] text-[hsl(var(--muted-foreground))]">{formatCount(item.visitors)}</span></div>
+    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[hsl(var(--secondary))]" aria-hidden="true"><div className="h-full rounded-full bg-[hsl(var(--primary))]" style={{ width: `${Math.max((item.visitors / max) * 100, item.visitors ? 4 : 0)}%` }} /></div>
+  </div>)}</div>;
+}
+
+function Overview() {
+  const [period, setPeriod] = useState<AnalyticsPeriodKey>('30d');
+  const [start, setStart] = useState('');
+  const [end, setEnd] = useState('');
+  const params = useMemo(() => ({
+    period,
+    ...(period === 'custom' && start ? { start } : {}),
+    ...(period === 'custom' && end ? { end } : {}),
+  }), [period, start, end]);
+  const analytics = useGetAdminAnalytics(params);
+  const data = analytics.data;
+  const hasTraffic = Boolean(data?.traffic.length);
+  const hasLiveVisitors = Boolean(data?.liveVisitors.visitors.length);
+
+  return <div className="space-y-6">
+    <div className="flex flex-col gap-4 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card)/.74)] p-5 md:flex-row md:items-end md:justify-between">
+      <div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Visão geral</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">A biblioteca, em contexto.</h2><p className="mt-2 max-w-xl text-sm leading-6 text-[hsl(var(--muted-foreground))]">Leitura objetiva do acervo e do uso público, sem identificar visitantes.</p></div>
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end">
+        <label className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">Período<select aria-label="Selecionar período das análises" value={period} onChange={event => setPeriod(event.target.value as AnalyticsPeriodKey)} className="mt-1 block h-10 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-3 text-sm outline-none focus:border-[hsl(var(--primary))] sm:w-44"><option value="today">Hoje</option><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="90d">Últimos 90 dias</option><option value="12m">Últimos 12 meses</option><option value="custom">Personalizado</option></select></label>
+        {period === 'custom' && <div className="flex gap-2"><label className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">De<input aria-label="Data inicial" type="date" value={start} onChange={event => setStart(event.target.value)} className="mt-1 block h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-2 text-xs outline-none focus:border-[hsl(var(--primary))]" /></label><label className="text-xs font-semibold text-[hsl(var(--muted-foreground))]">Até<input aria-label="Data final" type="date" value={end} onChange={event => setEnd(event.target.value)} className="mt-1 block h-10 rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-2 text-xs outline-none focus:border-[hsl(var(--primary))]" /></label></div>}
+      </div>
+    </div>
+    {analytics.isLoading ? <AnalyticsSkeleton /> : analytics.isError ? <StateMessage error title="Não foi possível carregar as análises" body="Tente novamente em alguns instantes." retry={analytics.refetch} /> : data ? <>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <StatCard label="Livros no acervo" value={formatCount(data.summary.bookCount)} icon={<BookOpen size={16} />} />
+        <StatCard label="Vídeos no acervo" value={formatCount(data.summary.videoCount)} icon={<Film size={16} />} />
+        <StatCard label="Imagens no acervo" value={formatCount(data.summary.imageCount)} icon={<Images size={16} />} />
+        <StatCard label="Downloads totais" value={formatCount(data.summary.totalDownloads)} icon={<Download size={16} />} />
+        <StatCard label="Visitantes no período" value={formatCount(data.summary.totalVisitors)} icon={<UsersRound size={16} />} />
+        <StatCard label="Visualizações de páginas" value={formatCount(data.summary.totalPageviews)} icon={<BarChart3 size={16} />} />
+      </div>
+      <AnalyticsCard eyebrow={analyticsPeriodLabels[period]} title="Tráfego ao longo do tempo" className="overflow-hidden">
+        {hasTraffic ? <div className="mt-6 h-64 w-full"><ResponsiveContainer width="100%" height="100%"><LineChart data={data.traffic} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}><CartesianGrid stroke="hsl(var(--border))" vertical={false} strokeDasharray="3 3" /><XAxis dataKey="date" tickFormatter={value => formatDate(String(value))} tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} minTickGap={28} /><YAxis tickLine={false} axisLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} allowDecimals={false} /><Tooltip labelFormatter={value => formatDate(String(value), true)} contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 12, fontSize: 12 }} /><Line type="monotone" dataKey="visitors" name="Visitantes" stroke="hsl(var(--primary))" strokeWidth={2.5} dot={false} /><Line type="monotone" dataKey="pageviews" name="Visualizações" stroke="hsl(var(--accent))" strokeWidth={2} dot={false} /></LineChart></ResponsiveContainer></div> : <div className="mt-5"><EmptyAnalytics label="Ainda não há dados de tráfego para este período." /></div>}
+        <div className="mt-4 flex flex-wrap gap-5 text-xs text-[hsl(var(--muted-foreground))]"><span className="flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-[hsl(var(--primary))]" />Visitantes</span><span className="flex items-center gap-2"><i className="h-2 w-2 rounded-full bg-[hsl(var(--accent))]" />Visualizações</span></div>
+      </AnalyticsCard>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <AnalyticsCard eyebrow="Acesso agora" title={`${formatCount(data.liveVisitors.count)} visitantes ativos`}>
+          {hasLiveVisitors ? <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[420px] text-left text-sm"><thead className="border-b border-[hsl(var(--border))] text-[11px] uppercase tracking-wider text-[hsl(var(--muted-foreground))]"><tr><th className="pb-3 font-medium">Página</th><th className="pb-3 font-medium">Dispositivo</th><th className="pb-3 text-right font-medium">Visto</th></tr></thead><tbody>{data.liveVisitors.visitors.slice(0, 8).map((visitor, index) => <tr key={`${visitor.path}-${visitor.lastSeenAt}-${index}`} className="border-b border-[hsl(var(--border)/.7)] last:border-0"><td className="max-w-[170px] truncate py-3">{visitor.path}</td><td className="py-3 text-[hsl(var(--muted-foreground))]">{visitor.device || 'Não informado'}</td><td className="py-3 text-right text-xs text-[hsl(var(--muted-foreground))]">{formatDate(visitor.lastSeenAt, true)}</td></tr>)}</tbody></table><p className="mt-3 text-[11px] text-[hsl(var(--muted-foreground))]">Dados agregados; nenhum nome, endereço ou identificador pessoal é exibido.</p></div> : <div className="mt-5"><EmptyAnalytics label="Não há visitantes ativos neste momento." /></div>}
+        </AnalyticsCard>
+        <AnalyticsCard eyebrow="Downloads" title="Ritmo de downloads">
+          <div className="mt-5 grid grid-cols-2 divide-x divide-[hsl(var(--border))] rounded-xl bg-[hsl(var(--secondary)/.5)] py-3 text-center sm:grid-cols-4"><div><p className="mono text-lg">{formatCount(data.downloads.total)}</p><p className="mt-1 text-[11px] text-[hsl(var(--muted-foreground))]">No período</p></div><div><p className="mono text-lg">{formatCount(data.downloads.today)}</p><p className="mt-1 text-[11px] text-[hsl(var(--muted-foreground))]">Hoje</p></div><div><p className="mono text-lg">{formatCount(data.downloads.week)}</p><p className="mt-1 text-[11px] text-[hsl(var(--muted-foreground))]">7 dias</p></div><div><p className="mono text-lg">{formatCount(data.downloads.month)}</p><p className="mt-1 text-[11px] text-[hsl(var(--muted-foreground))]">30 dias</p></div></div>
+          {data.downloads.leaders.length ? <div className="mt-5 space-y-3">{data.downloads.leaders.slice(0, 5).map(leader => <div key={leader.title} className="flex items-center justify-between gap-4 text-sm"><span className="truncate">{leader.title}</span><span className="mono shrink-0 text-xs text-[hsl(var(--muted-foreground))]">{formatCount(leader.downloads)}</span></div>)}</div> : <div className="mt-5"><EmptyAnalytics label="Ainda não há downloads registrados." /></div>}
+        </AnalyticsCard>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[1.25fr_.75fr]">
+        <AnalyticsCard eyebrow="Conteúdo" title="Mais acessados">
+          {data.popularContent.length ? <div className="mt-5 divide-y divide-[hsl(var(--border))]">{data.popularContent.slice(0, 7).map(item => <div key={`${item.type}-${item.path}`} className="flex items-center gap-4 py-3 first:pt-0 last:pb-0"><span className="mono w-6 text-xs text-[hsl(var(--muted-foreground))]">{item.type === 'book' ? 'L' : item.type === 'video' ? 'V' : 'I'}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-medium">{item.title}</p><p className="mt-1 truncate text-xs text-[hsl(var(--muted-foreground))]">{item.path}</p></div><span className="mono text-xs text-[hsl(var(--muted-foreground))]">{formatCount(item.views)}</span></div>)}</div> : <div className="mt-5"><EmptyAnalytics label="Ainda não há conteúdo popular neste período." /></div>}
+        </AnalyticsCard>
+        <AnalyticsCard eyebrow="Origem" title="Fontes de tráfego"><SegmentList items={data.trafficSources} label="Ainda não há fontes de tráfego." /></AnalyticsCard>
+      </div>
+      <div className="grid gap-5 lg:grid-cols-2">
+        <AnalyticsCard eyebrow="Ambiente" title="Dispositivos"><SegmentList items={data.devices} label="Ainda não há dados de dispositivos." /></AnalyticsCard>
+        <AnalyticsCard eyebrow="Registro" title="Atividade recente">{data.recentActivity.length ? <div className="mt-5 divide-y divide-[hsl(var(--border))]">{data.recentActivity.slice(0, 7).map((item, index) => <div key={`${item.createdAt}-${index}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"><div className="min-w-0"><p className="truncate text-sm">{item.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{item.type}</p></div><time className="shrink-0 text-xs text-[hsl(var(--muted-foreground))]" dateTime={item.createdAt}>{formatDate(item.createdAt, true)}</time></div>)}</div> : <div className="mt-5"><EmptyAnalytics label="Ainda não há atividade recente." /></div>}</AnalyticsCard>
+      </div>
+    </> : <EmptyAnalytics label="Não há dados disponíveis para este período." />}
+  </div>;
+}
+
+function AdminCategories({ categories }: { categories: Category[] }) {
+  return <div>
+    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Organização</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Categorias</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Visão do conteúdo organizado por categoria.</p></div>
+    {categories.length === 0 ? <StateMessage title="Nenhuma categoria ainda" body="As categorias aparecem quando houver livros ou vídeos publicados." /> : <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{categories.map(category => <div key={category.name} className="flex items-center justify-between gap-4 border-b border-[hsl(var(--border))] p-5 last:border-0"><div><p className="font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">Conteúdo disponível no acervo</p></div><div className="flex gap-5 text-right text-xs text-[hsl(var(--muted-foreground))]"><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.bookCount)}</strong>livros</span><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.videoCount)}</strong>vídeos</span></div></div>)}</div>}
+  </div>;
+}
+
+function AdminSettings() {
+  return <div>
+    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Espaço privado</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Configurações</h2><p className="mt-2 max-w-xl text-sm leading-6 text-[hsl(var(--muted-foreground))]">Informações do painel e princípios de privacidade da biblioteca.</p></div>
+    <div className="grid gap-5 lg:grid-cols-2">
+      <AnalyticsCard eyebrow="Acesso" title="Conta administrativa"><div className="mt-5 rounded-xl bg-[hsl(var(--secondary)/.55)] p-4 text-sm leading-6 text-[hsl(var(--muted-foreground))]">O acesso ao painel é protegido pelo Clerk e limitado aos utilizadores Admin configurados para este projeto.</div></AnalyticsCard>
+      <AnalyticsCard eyebrow="Privacidade" title="Análises anónimas"><div className="mt-5 rounded-xl bg-[hsl(var(--secondary)/.55)] p-4 text-sm leading-6 text-[hsl(var(--muted-foreground))]">As análises guardam apenas dados agregados: caminhos públicos, dispositivo, país aproximado e um identificador com hash rotativo. Não guardamos nomes, emails, endereços exatos ou URLs de referência brutos.</div></AnalyticsCard>
+    </div>
+  </div>;
+}
+
 function Admin() {
-  const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images'>('overview');
+  const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images' | 'categories' | 'settings'>('overview');
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [imageEditor, setImageEditor] = useState<Image | 'new' | null>(null);
   const qc = useQueryClient();
-  const stats = useGetAdminStats();
   const books = useListBooks();
   const videos = useListVideos();
   const images = useListImages();
+  const categories = useListCategories();
   const delBook = useDeleteBook();
   const delVideo = useDeleteVideo();
   const delImage = useDeleteImage();
 
   const refresh = () => {
-    qc.invalidateQueries({ queryKey: getGetAdminStatsQueryKey() });
     qc.invalidateQueries({ queryKey: getListBooksQueryKey() });
     qc.invalidateQueries({ queryKey: getListVideosQueryKey() });
     qc.invalidateQueries({ queryKey: getListImagesQueryKey() });
@@ -833,8 +977,10 @@ function Admin() {
     if (kind === 'image') delImage.mutate({ id }, { onSuccess: refresh });
   };
 
-  const heading = tab === 'overview' ? 'A clear view of the library.' : tab === 'books' ? 'Books' : tab === 'videos' ? 'Videos' : 'Images';
-  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Workspace</p><button onClick={() => setTab('overview')} className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === 'overview' ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid="button-admin-overview"><BarChart3 size={17} /> Overview</button><button onClick={() => setTab('books')} className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === 'books' ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid="button-admin-books"><BookOpen size={17} /> Books</button><button onClick={() => setTab('videos')} className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === 'videos' ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid="button-admin-videos"><Film size={17} /> Videos</button><button onClick={() => setTab('images')} className={`flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === 'images' ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid="button-admin-images"><Images size={17} /> Images</button><div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Public library</Link></div></aside><div className="min-w-0 flex-1"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Catalog desk</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><main className="mx-auto max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <><div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{stats.isLoading ? [1,2,3,4].map(i => <div key={i} className="skeleton h-32 rounded-2xl" />) : <><StatCard label="Books" value={stats.data?.bookCount ?? 0} icon={<BookOpen size={16} />} /><StatCard label="Videos" value={stats.data?.videoCount ?? 0} icon={<Film size={16} />} /><StatCard label="Downloads" value={stats.data?.totalDownloads ?? 0} icon={<Download size={16} />} /><StatCard label="Views" value={stats.data?.totalViews ?? 0} icon={<BarChart3 size={16} />} /></>}</div><div className="mt-8 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6"><div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Collection shape</p><h2 className="serif mt-2 text-3xl">Category breakdown</h2></div><LayoutGrid className="text-[hsl(var(--muted-foreground))]" size={20} /></div><div className="mt-6 grid gap-3 sm:grid-cols-2">{(stats.data?.categoryBreakdown ?? []).map(c => <div key={c.name} className="flex items-center justify-between rounded-xl bg-[hsl(var(--secondary)/.6)] px-4 py-3 text-sm"><span>{c.name}</span><span className="mono text-xs text-[hsl(var(--muted-foreground))]">{c.bookCount} books · {c.videoCount} films</span></div>)}</div></div></> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}</Shell>;
+  const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'categories' ? 'Categorias' : 'Configurações';
+  const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
+  const renderNav = (mobile = false) => navItems.map(item => <button key={item.key} onClick={() => setTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
+  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}</Shell>;
 }
 
 function CatalogList({ tab, books, videos, onAdd, onEdit, onDelete }: { tab: 'books' | 'videos'; books: Book[]; videos: Video[]; onAdd: () => void; onEdit: (item: Book | Video) => void; onDelete: (id: number) => void }) {
@@ -851,6 +997,32 @@ function ClerkCacheInvalidator() {
     if (previousUser.current !== undefined && previousUser.current !== userId) qc.clear();
     previousUser.current = userId;
   }), [addListener, qc]);
+  return null;
+}
+
+function AnalyticsTracker() {
+  const [location] = useLocation();
+  useEffect(() => {
+    if (location.startsWith('/admin') || location.startsWith('/sign-in') || location.startsWith('/sign-up')) return;
+    let visitorId = window.localStorage.getItem('sunnah_visitor_id');
+    if (!visitorId) {
+      visitorId = window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      window.localStorage.setItem('sunnah_visitor_id', visitorId);
+    }
+    void fetch(`${basePath}/api/analytics/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        visitorId,
+        path: location,
+        title: document.title,
+        referrer: document.referrer || undefined,
+        eventType: 'pageview',
+      }),
+      keepalive: true,
+    }).catch(() => undefined);
+    trackEvent('page_view', { path: location });
+  }, [location]);
   return null;
 }
 
@@ -898,6 +1070,7 @@ function ClerkProviderWithRoutes() {
   >
     <QueryClientProvider client={queryClient}>
       <ClerkCacheInvalidator />
+      <AnalyticsTracker />
       <Router />
     </QueryClientProvider>
   </ClerkProvider>;

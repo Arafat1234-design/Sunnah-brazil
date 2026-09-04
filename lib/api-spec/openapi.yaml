@@ -439,6 +439,58 @@ paths:
                 $ref: "#/components/schemas/AdminStats"
         "401":
           $ref: "#/components/responses/Unauthorized"
+  /analytics/events:
+    post:
+      operationId: trackAnalyticsEvent
+      tags: [analytics]
+      summary: Record an anonymous pageview or content event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyticsEventInput"
+      responses:
+        "202":
+          description: Event accepted
+        "400":
+          description: Invalid analytics event
+  /admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      tags: [admin]
+      summary: Get privacy-conscious dashboard analytics
+      parameters:
+        - name: period
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [today, 7d, 30d, 90d, 12m, custom]
+            default: 7d
+        - name: start
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: end
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Dashboard analytics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminAnalytics"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
   /storage/uploads/request-url:
     post:
       operationId: requestUploadUrl
@@ -653,6 +705,115 @@ components:
         categoryBreakdown:
           type: array
           items: { $ref: "#/components/schemas/Category" }
+    AnalyticsEventInput:
+      type: object
+      required: [visitorId, path]
+      properties:
+        visitorId: { type: string, minLength: 16, maxLength: 128 }
+        path: { type: string, minLength: 1, maxLength: 240 }
+        title: { type: string, maxLength: 160 }
+        referrer: { type: string, maxLength: 300 }
+        eventType: { type: string, enum: [pageview, content_view], default: pageview }
+    AnalyticsPeriod:
+      type: object
+      required: [key, start, end]
+      properties:
+        key: { type: string }
+        start: { type: string, format: date-time }
+        end: { type: string, format: date-time }
+    AnalyticsSummary:
+      type: object
+      required: [bookCount, videoCount, imageCount, totalDownloads, totalVisitors, totalPageviews]
+      properties:
+        bookCount: { type: integer }
+        videoCount: { type: integer }
+        imageCount: { type: integer }
+        totalDownloads: { type: integer }
+        totalVisitors: { type: integer }
+        totalPageviews: { type: integer }
+    LiveVisitor:
+      type: object
+      required: [path, device, country, lastSeenAt]
+      properties:
+        path: { type: string }
+        device: { type: string }
+        country: { type: string }
+        lastSeenAt: { type: string, format: date-time }
+    TrafficPoint:
+      type: object
+      required: [date, visitors, pageviews]
+      properties:
+        date: { type: string, format: date }
+        visitors: { type: integer }
+        pageviews: { type: integer }
+    DownloadLeader:
+      type: object
+      required: [title, downloads]
+      properties:
+        title: { type: string }
+        downloads: { type: integer }
+    DownloadAnalytics:
+      type: object
+      required: [total, today, week, month, leaders]
+      properties:
+        total: { type: integer }
+        today: { type: integer }
+        week: { type: integer }
+        month: { type: integer }
+        leaders:
+          type: array
+          items: { $ref: "#/components/schemas/DownloadLeader" }
+    AnalyticsSegment:
+      type: object
+      required: [name, visitors]
+      properties:
+        name: { type: string }
+        visitors: { type: integer }
+    PopularContent:
+      type: object
+      required: [type, title, path, views]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        path: { type: string }
+        views: { type: integer }
+    RecentActivity:
+      type: object
+      required: [type, title, createdAt]
+      properties:
+        type: { type: string }
+        title: { type: string }
+        createdAt: { type: string, format: date-time }
+    AdminAnalytics:
+      type: object
+      required: [period, summary, liveVisitors, traffic, downloads, popularContent, trafficSources, devices, recentActivity]
+      properties:
+        period: { $ref: "#/components/schemas/AnalyticsPeriod" }
+        summary: { $ref: "#/components/schemas/AnalyticsSummary" }
+        liveVisitors:
+          type: object
+          required: [count, visitors]
+          properties:
+            count: { type: integer }
+            visitors:
+              type: array
+              items: { $ref: "#/components/schemas/LiveVisitor" }
+        traffic:
+          type: array
+          items: { $ref: "#/components/schemas/TrafficPoint" }
+        downloads: { $ref: "#/components/schemas/DownloadAnalytics" }
+        popularContent:
+          type: array
+          items: { $ref: "#/components/schemas/PopularContent" }
+        trafficSources:
+          type: array
+          items: { $ref: "#/components/schemas/AnalyticsSegment" }
+        devices:
+          type: array
+          items: { $ref: "#/components/schemas/AnalyticsSegment" }
+        recentActivity:
+          type: array
+          items: { $ref: "#/components/schemas/RecentActivity" }
     UploadRequest:
       type: object
       required: [name, size, contentType]
