@@ -1,0 +1,248 @@
+Before we migrate Sunnah Brasil to another hosting provider, I want you to inspect the ENTIRE project and give me a detailed migration report.
+
+IMPORTANT:
+DO NOT CHANGE ANY CODE.
+DO NOT INSTALL ANYTHING.
+DO NOT MODIFY THE DATABASE.
+DO NOT MODIFY THE ADMIN PANEL.
+DO NOT MODIFY THE WEBSITE.
+
+ONLY inspect the project and explain how everything currently works.
+
+I especially want you to analyze the ADMIN PANEL because I need to know whether I will still have full access to it after leaving Replit.
+
+==================================================
+1. WEBSITE
+==================================================
+
+Tell me:
+
+- What frontend framework is being used?
+- What backend framework/server is being used?
+- What programming languages are being used?
+- What build tools are being used?
+- What parts of the project are specifically dependent on Replit?
+
+==================================================
+2. ADMIN PANEL
+==================================================
+
+Analyze the entire Admin panel.
+
+Tell me:
+
+- Where is the Admin panel located in the code?
+- Is the Admin panel part of the actual website application?
+- Will the Admin panel work if I move the website from Replit to another host?
+- Does the Admin panel depend on Replit-specific services?
+- Does Admin authentication depend on Replit?
+- What database does Admin use?
+- What storage does Admin use?
+- What environment variables/secrets does Admin require?
+- What would need to be migrated for the Admin panel to continue working?
+- Can I access the Admin panel through my own domain after migration?
+- Can I continue adding books, videos, images and events from Admin after migration without Replit?
+
+MOST IMPORTANT QUESTION:
+
+If I completely stop using Replit and deploy this project somewhere else, can I still log into my Admin panel and manage the entire website?
+
+Give me a clear YES/NO answer and explain exactly why.
+
+==================================================
+3. BOOKS / PDFs
+==================================================
+
+Tell me:
+
+- Where book information is stored.
+- Where PDFs are stored.
+- Where book cover images are stored.
+- Whether PDFs are stored persistently.
+- Whether PDFs are stored in GitHub.
+- Whether PDFs are stored in Replit-specific storage.
+- What needs to be migrated so I don't lose any books or PDFs.
+
+==================================================
+4. VIDEOS
+==================================================
+
+Tell me:
+
+- Where video information is stored.
+- Where video files are stored.
+- Where thumbnails are stored.
+- Whether videos use external URLs or uploaded files.
+- Whether anything depends on Replit.
+- What needs to be migrated.
+
+==================================================
+5. IMAGES
+==================================================
+
+Tell me:
+
+- Where uploaded images are stored.
+- Whether they are persistent.
+- Whether they are stored in GitHub.
+- Whether they are stored in Replit-specific storage.
+- How the website references them.
+- What needs to be migrated.
+
+==================================================
+6. EVENTS
+==================================================
+
+Analyze the Events system.
+
+Tell me:
+
+- Where event information is stored.
+- How the countdown works.
+- How published events appear on the website.
+- What happens when an event becomes past.
+- Whether events depend on Replit.
+- What needs to be migrated.
+
+==================================================
+7. DATABASE
+==================================================
+
+Identify the exact database technology being used.
+
+Tell me:
+
+- Database type
+- Where the database is hosted
+- What tables/models exist
+- What important data is stored
+- Whether the database can be migrated
+- What would need to be exported/imported when changing hosting
+
+DO NOT modify the database.
+
+==================================================
+8. ANALYTICS
+==================================================
+
+Analyze the visitor and download tracking.
+
+Tell me:
+
+- How visitor tracking works.
+- How live visitors work.
+- How historical traffic is stored.
+- How downloads are counted.
+- Where analytics data is stored.
+- Whether analytics depends on Replit.
+- What needs to be migrated to preserve historical analytics.
+
+==================================================
+9. AUTHENTICATION & SECURITY
+==================================================
+
+Tell me:
+
+- How Admin login works.
+- Where authentication/session information is stored.
+- Whether it depends on Replit.
+- What secrets/environment variables are required.
+- What security considerations I need when moving to another host.
+
+DO NOT expose any passwords, API keys, tokens or secret values.
+
+Only tell me the names/purpose of required environment variables.
+
+==================================================
+10. GITHUB
+==================================================
+
+I have already connected this project to GitHub.
+
+Explain:
+
+- What is currently stored in GitHub.
+- Whether uploaded files are being stored in GitHub.
+- Whether secrets are being stored in GitHub.
+- Whether GitHub contains everything needed to deploy the application.
+
+==================================================
+11. REPLIT DEPENDENCIES
+==================================================
+
+Find every part of the application that depends specifically on Replit.
+
+For each one, tell me:
+
+Replit dependency:
+What it does:
+Can it be moved:
+What would replace it:
+What needs to be changed:
+
+==================================================
+12. MIGRATION CHECKLIST
+==================================================
+
+At the end, give me a simple checklist:
+
+MUST MOVE:
+- ...
+- ...
+- ...
+
+CAN STAY:
+- ...
+- ...
+- ...
+
+NEEDS TO BE REPLACED:
+- ...
+- ...
+- ...
+
+NOT READY FOR MIGRATION:
+- ...
+- ...
+- ...
+
+==================================================
+13. FINAL VERDICT
+==================================================
+
+Give me a simple final verdict:
+
+Is Sunnah Brasil currently ready to leave Replit?
+
+Choose one:
+
+🟢 READY
+🟡 MOSTLY READY — SOME THINGS NEED TO BE FIXED
+🔴 NOT READY
+
+Explain exactly what needs to be done before migration.
+
+MOST IMPORTANT:
+
+I am planning to eventually stop using Replit.
+
+I want my own hosting to run the website and Admin panel.
+
+I want to be able to visit:
+
+mydomain.com/admin
+
+log in, and continue managing:
+
+📚 Books
+🎥 Videos
+🖼️ Images
+📅 Events
+📊 Analytics
+📁 Categories
+
+without needing Replit.
+
+Tell me whether the current architecture supports this and what needs to be done to make it fully independent from Replit.
+
+DO NOT MAKE ANY CHANGES. ONLY INSPECT AND REPORT.
