@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, type ReactNode, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { ClerkProvider, SignIn, SignUp, useAuth, useClerk } from '@clerk/react';
@@ -430,10 +430,50 @@ function StatCard({ label, value, icon }: { label: string; value: number | strin
 }
 
 type EditorState = { kind: 'book' | 'video'; id?: number; title: string; author?: string; description: string; category: string; coverUrl?: string; fileUrl?: string; fileType?: BookInput['fileType']; fileSize?: number; duration?: string; thumbnailUrl?: string; videoUrl?: string; downloadEnabled?: boolean; featured?: boolean };
-const emptyBook: EditorState = { kind: 'book', title: '', author: '', description: '', category: '', coverUrl: '', fileUrl: '', fileType: 'PDF', fileSize: 0, featured: false };
+const emptyBook: EditorState = { kind: 'book', title: '', author: 'Autor não informado', description: 'Livro digital para leitura e estudo.', category: 'Islam', coverUrl: '', fileUrl: '', fileType: 'PDF', fileSize: 0, featured: false };
 const emptyVideo: EditorState = { kind: 'video', title: '', description: '', category: '', thumbnailUrl: '', videoUrl: '', duration: '', downloadEnabled: false, featured: false };
 
-function CatalogEditor({ state, setState, close, refresh }: { state: EditorState; setState: (s: EditorState) => void; close: () => void; refresh: () => void }) {
+const bookFileType = (name: string): BookInput['fileType'] => {
+  const extension = name.split('.').pop()?.toUpperCase();
+  return extension === 'EPUB' || extension === 'MOBI' || extension === 'TXT' ? extension : 'PDF';
+};
+
+const bookTitleFromFilename = (name: string) => {
+  const title = name.replace(/\.[^/.]+$/, '').replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return title || 'Livro sem título';
+};
+
+const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType'>> => {
+  const defaults = {
+    title: bookTitleFromFilename(file.name),
+    author: 'Autor não informado',
+    description: 'Livro digital para leitura e estudo.',
+    category: 'Islam',
+    fileType: bookFileType(file.name),
+  } satisfies Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType'>;
+
+  if (defaults.fileType !== 'PDF') return defaults;
+
+  try {
+    const pdf = await getDocument({ data: await file.arrayBuffer() }).promise;
+    const metadata = await pdf.getMetadata();
+    const info = metadata.info as Record<string, unknown>;
+    const value = (key: string) => typeof info[key] === 'string' && info[key] ? String(info[key]).trim() : '';
+    const title = value('Title');
+    const author = value('Author');
+    const subject = value('Subject');
+    return {
+      ...defaults,
+      title: title || defaults.title,
+      author: author || defaults.author,
+      description: subject || defaults.description,
+    };
+  } catch {
+    return defaults;
+  }
+};
+
+function CatalogEditor({ state, setState, close, refresh }: { state: EditorState; setState: (action: SetStateAction<EditorState>) => void; close: () => void; refresh: () => void }) {
   const createBook = useCreateBook();
   const updateBook = useUpdateBook();
   const createVideo = useCreateVideo();
@@ -442,12 +482,16 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
   const [uploading, setUploading] = useState<'cover' | 'file' | null>(null);
   const [uploadError, setUploadError] = useState('');
 
-  const patch = (key: keyof EditorState, value: string | boolean) => setState({ ...state, [key]: value });
+  const patch = (key: keyof EditorState, value: string | boolean) => setState(current => ({ ...current, [key]: value }));
 
   const uploadFile = async (file: File, field: 'coverUrl' | 'fileUrl') => {
     setUploadError('');
     setUploading(field === 'coverUrl' ? 'cover' : 'file');
     try {
+      if (field === 'fileUrl' && state.kind === 'book') {
+        const metadata = await extractBookMetadata(file);
+        setState(current => ({ ...current, ...metadata }));
+      }
       const result = await upload.mutateAsync({
         data: {
           name: file.name,
@@ -461,11 +505,11 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
         body: file,
       });
       if (!response.ok) throw new Error('Upload failed');
-      setState({
-        ...state,
+      setState(current => ({
+        ...current,
         [field]: `/api/storage${result.objectPath}`,
         ...(field === 'fileUrl' ? { fileSize: file.size } : {}),
-      });
+      }));
     } catch {
       setUploadError('Não foi possível enviar o arquivo. Tente novamente.');
     } finally {
