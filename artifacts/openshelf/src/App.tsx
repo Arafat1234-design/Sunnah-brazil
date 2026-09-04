@@ -565,13 +565,68 @@ const renderPdfCover = async (file: File): Promise<Blob> => {
   });
 };
 
+const formatVideoDuration = (seconds: number) => {
+  if (!Number.isFinite(seconds) || seconds <= 0) return '00:00';
+  const total = Math.round(seconds);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const remaining = total % 60;
+  return hours > 0 ? `${hours}:${String(minutes).padStart(2, '0')}:${String(remaining).padStart(2, '0')}` : `${minutes}:${String(remaining).padStart(2, '0')}`;
+};
+
+const extractVideoMetadata = async (file: File): Promise<{ title: string; duration: string }> => {
+  const source = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.preload = 'metadata';
+  video.src = source;
+  try {
+    const duration = await new Promise<number>((resolve, reject) => {
+      video.onloadedmetadata = () => resolve(video.duration);
+      video.onerror = () => reject(new Error('Could not read video metadata'));
+    });
+    return { title: bookTitleFromFilename(file.name), duration: formatVideoDuration(duration) };
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+};
+
+const renderVideoCover = async (file: File): Promise<Blob> => {
+  const source = URL.createObjectURL(file);
+  const video = document.createElement('video');
+  video.preload = 'metadata';
+  video.muted = true;
+  video.playsInline = true;
+  video.src = source;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      video.onloadedmetadata = () => {
+        video.currentTime = Math.min(1, Math.max(0, (video.duration || 1) / 2));
+      };
+      video.onseeked = () => resolve();
+      video.onerror = () => reject(new Error('Could not render video cover'));
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 1280;
+    canvas.height = video.videoHeight || 720;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Could not create cover canvas');
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return new Promise((resolve, reject) => {
+      canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not encode video cover')), 'image/jpeg', 0.88);
+    });
+  } finally {
+    URL.revokeObjectURL(source);
+  }
+};
+
 function CatalogEditor({ state, setState, close, refresh }: { state: EditorState; setState: (action: SetStateAction<EditorState>) => void; close: () => void; refresh: () => void }) {
   const createBook = useCreateBook();
   const updateBook = useUpdateBook();
   const createVideo = useCreateVideo();
   const updateVideo = useUpdateVideo();
   const upload = useRequestUploadUrl();
-  const [uploading, setUploading] = useState<'cover' | 'file' | null>(null);
+  const galleryImages = useListImages();
+  const [uploading, setUploading] = useState<'cover' | 'file' | 'video' | 'thumbnail' | null>(null);
   const [uploadError, setUploadError] = useState('');
 
   const patch = (key: keyof EditorState, value: string | boolean) => setState(current => ({ ...current, [key]: value }));
@@ -593,17 +648,22 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
     return result.objectPath;
   };
 
-  const uploadFile = async (file: File, field: 'coverUrl' | 'fileUrl') => {
+  const uploadFile = async (file: File, field: 'coverUrl' | 'fileUrl' | 'videoUrl' | 'thumbnailUrl') => {
     setUploadError('');
-    setUploading(field === 'coverUrl' ? 'cover' : 'file');
+    setUploading(field === 'coverUrl' || field === 'thumbnailUrl' ? 'cover' : field === 'videoUrl' ? 'video' : 'file');
     try {
-      let metadata: Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType'> | null = null;
+      let metadata: Partial<Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType' | 'duration'>> | null = null;
       if (field === 'fileUrl' && state.kind === 'book') {
         metadata = await extractBookMetadata(file);
+      }
+      if (field === 'videoUrl' && state.kind === 'video') {
+        const videoMetadata = await extractVideoMetadata(file);
+        metadata = { ...videoMetadata, description: 'Vídeo para aprendizagem, reflexão e benefício.', category: 'Islam' };
       }
       const objectPath = await uploadObject(file, file.name, file.type || 'application/octet-stream');
       let coverPath: string | null = null;
       const shouldGenerateCover = field === 'fileUrl' && state.kind === 'book' && !state.coverUrl && metadata?.fileType === 'PDF';
+      const shouldGenerateVideoCover = field === 'videoUrl' && state.kind === 'video' && !state.thumbnailUrl;
       if (shouldGenerateCover) {
         try {
           const coverBlob = await renderPdfCover(file);
@@ -612,12 +672,20 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
           setUploadError('Arquivo enviado, mas não foi possível gerar a capa automática.');
         }
       }
+      if (shouldGenerateVideoCover) {
+        try {
+          const coverBlob = await renderVideoCover(file);
+          coverPath = await uploadObject(coverBlob, `${file.name}.cover.jpg`, 'image/jpeg');
+        } catch {
+          setUploadError('Vídeo enviado, mas não foi possível gerar a capa automática. Você pode escolher uma capa da galeria.');
+        }
+      }
       setState(current => ({
         ...current,
         ...(metadata ?? {}),
         [field]: `/api/storage${objectPath}`,
         ...(field === 'fileUrl' ? { fileSize: file.size } : {}),
-        ...(coverPath ? { coverUrl: `/api/storage${coverPath}` } : {}),
+        ...(coverPath ? { [state.kind === 'video' ? 'thumbnailUrl' : 'coverUrl']: `/api/storage${coverPath}` } : {}),
       }));
     } catch {
       setUploadError('Não foi possível enviar o arquivo. Tente novamente.');
