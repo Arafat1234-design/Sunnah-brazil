@@ -434,11 +434,76 @@ const emptyBook: EditorState = { kind: 'book', title: '', author: '', descriptio
 const emptyVideo: EditorState = { kind: 'video', title: '', description: '', category: '', thumbnailUrl: '', videoUrl: '', duration: '', downloadEnabled: false, featured: false };
 
 function CatalogEditor({ state, setState, close, refresh }: { state: EditorState; setState: (s: EditorState) => void; close: () => void; refresh: () => void }) {
-  const createBook = useCreateBook(); const updateBook = useUpdateBook(); const createVideo = useCreateVideo(); const updateVideo = useUpdateVideo(); const upload = useRequestUploadUrl();
-  const submit = (e: FormEvent) => { e.preventDefault(); if (state.kind === 'book') { const data: BookInput = { title: state.title, author: state.author ?? '', description: state.description, category: state.category, coverUrl: state.coverUrl || null, fileUrl: state.fileUrl || null, fileType: state.fileType ?? 'PDF', fileSize: Number(state.fileSize) || 0, featured: state.featured }; const done = () => { refresh(); close(); }; state.id ? updateBook.mutate({ id: state.id, data }, { onSuccess: done }) : createBook.mutate({ data }, { onSuccess: done }); } else { const data: VideoInput = { title: state.title, description: state.description, category: state.category, thumbnailUrl: state.thumbnailUrl || null, videoUrl: state.videoUrl || null, duration: state.duration ?? '', downloadEnabled: state.downloadEnabled, featured: state.featured }; const done = () => { refresh(); close(); }; state.id ? updateVideo.mutate({ id: state.id, data }, { onSuccess: done }) : createVideo.mutate({ data }, { onSuccess: done }); } };
-  const busy = createBook.isPending || updateBook.isPending || createVideo.isPending || updateVideo.isPending;
+  const createBook = useCreateBook();
+  const updateBook = useUpdateBook();
+  const createVideo = useCreateVideo();
+  const updateVideo = useUpdateVideo();
+  const upload = useRequestUploadUrl();
+  const [uploading, setUploading] = useState<'cover' | 'file' | null>(null);
+  const [uploadError, setUploadError] = useState('');
+
   const patch = (key: keyof EditorState, value: string | boolean) => setState({ ...state, [key]: value });
-  return <div className="fixed inset-0 z-50 grid place-items-center bg-[hsl(193_25%_19%/.52)] p-4"><form onSubmit={submit} className="max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[hsl(var(--card))] p-6 shadow-xl"><div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">{state.id ? 'Edit item' : 'New item'}</p><h2 className="serif mt-1 text-3xl">{state.kind === 'book' ? 'Add a book' : 'Add a video'}</h2></div><button type="button" onClick={close} data-testid="button-close-editor"><X size={20} /></button></div><div className="mt-6 grid gap-4"><label className="text-sm font-semibold">Title<input required value={state.title} onChange={e => patch('title', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-title" /></label>{state.kind === 'book' && <label className="text-sm font-semibold">Author<input required value={state.author} onChange={e => patch('author', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-author" /></label>}<div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Category<input required value={state.category} onChange={e => patch('category', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-category" /></label>{state.kind === 'book' ? <label className="text-sm font-semibold">Format<select value={state.fileType} onChange={e => patch('fileType', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="select-editor-format"><option>PDF</option><option>EPUB</option><option>MOBI</option><option>TXT</option></select></label> : <label className="text-sm font-semibold">Duration<input required value={state.duration} onChange={e => patch('duration', e.target.value)} placeholder="38 min" className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-duration" /></label>}</div><label className="text-sm font-semibold">Description<textarea required rows={4} value={state.description} onChange={e => patch('description', e.target.value)} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-editor-description" /></label><label className="text-sm font-semibold">{state.kind === 'book' ? 'Cover URL' : 'Thumbnail URL'}<input value={(state.kind === 'book' ? state.coverUrl : state.thumbnailUrl) ?? ''} onChange={e => patch(state.kind === 'book' ? 'coverUrl' : 'thumbnailUrl', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-url" /></label><label className="text-sm font-semibold">{state.kind === 'book' ? 'File URL' : 'Video URL'}<input value={(state.kind === 'book' ? state.fileUrl : state.videoUrl) ?? ''} onChange={e => patch(state.kind === 'book' ? 'fileUrl' : 'videoUrl', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-media-url" /></label>{state.kind === 'book' && <div className="flex items-center gap-3"><input type="number" min="0" value={state.fileSize} onChange={e => patch('fileSize', e.target.value)} placeholder="File size in bytes" className="h-11 flex-1 rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-filesize" /><input type="file" className="max-w-[180px] text-xs" onChange={e => { const file = e.target.files?.[0]; if (file) upload.mutate({ data: { name: file.name, size: file.size, contentType: file.type || 'application/octet-stream' } }); }} data-testid="input-editor-upload" /></div>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={state.featured ?? false} onChange={e => patch('featured', e.target.checked)} data-testid="checkbox-editor-featured" /> Feature this item</label>{state.kind === 'video' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={state.downloadEnabled ?? false} onChange={e => patch('downloadEnabled', e.target.checked)} data-testid="checkbox-editor-download" /> Allow downloads</label>}</div><div className="mt-7 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={close}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save to catalog'}</Button></div></form></div>;
+
+  const uploadFile = async (file: File, field: 'coverUrl' | 'fileUrl') => {
+    setUploadError('');
+    setUploading(field === 'coverUrl' ? 'cover' : 'file');
+    try {
+      const result = await upload.mutateAsync({
+        data: {
+          name: file.name,
+          size: file.size,
+          contentType: file.type || 'application/octet-stream',
+        },
+      });
+      const response = await fetch(result.uploadURL, {
+        method: 'PUT',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+      });
+      if (!response.ok) throw new Error('Upload failed');
+      patch(field, `/api/storage${result.objectPath}`);
+      if (field === 'fileUrl') patch('fileSize', String(file.size));
+    } catch {
+      setUploadError('Não foi possível enviar o arquivo. Tente novamente.');
+    } finally {
+      setUploading(null);
+    }
+  };
+
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    if (state.kind === 'book') {
+      const data: BookInput = {
+        title: state.title,
+        author: state.author ?? '',
+        description: state.description,
+        category: state.category,
+        coverUrl: state.coverUrl || null,
+        fileUrl: state.fileUrl || null,
+        fileType: state.fileType ?? 'PDF',
+        fileSize: Number(state.fileSize) || 0,
+        featured: state.featured,
+      };
+      const done = () => { refresh(); close(); };
+      state.id ? updateBook.mutate({ id: state.id, data }, { onSuccess: done }) : createBook.mutate({ data }, { onSuccess: done });
+    } else {
+      const data: VideoInput = {
+        title: state.title,
+        description: state.description,
+        category: state.category,
+        thumbnailUrl: state.thumbnailUrl || null,
+        videoUrl: state.videoUrl || null,
+        duration: state.duration ?? '',
+        downloadEnabled: state.downloadEnabled,
+        featured: state.featured,
+      };
+      const done = () => { refresh(); close(); };
+      state.id ? updateVideo.mutate({ id: state.id, data }, { onSuccess: done }) : createVideo.mutate({ data }, { onSuccess: done });
+    }
+  };
+
+  const busy = createBook.isPending || updateBook.isPending || createVideo.isPending || updateVideo.isPending || uploading !== null;
+  return <div className="fixed inset-0 z-50 grid place-items-center bg-[hsl(193_25%_19%/.52)] p-4"><form onSubmit={submit} className="max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[hsl(var(--card))] p-6 shadow-xl"><div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">{state.id ? 'Edit item' : 'New item'}</p><h2 className="serif mt-1 text-3xl">{state.kind === 'book' ? 'Add a book' : 'Add a video'}</h2></div><button type="button" onClick={close} data-testid="button-close-editor"><X size={20} /></button></div><div className="mt-6 grid gap-4"><label className="text-sm font-semibold">Title<input required value={state.title} onChange={e => patch('title', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-title" /></label>{state.kind === 'book' && <label className="text-sm font-semibold">Author<input required value={state.author} onChange={e => patch('author', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-author" /></label>}<div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Category<input required value={state.category} onChange={e => patch('category', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-category" /></label>{state.kind === 'book' ? <label className="text-sm font-semibold">Format<select value={state.fileType} onChange={e => patch('fileType', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="select-editor-format"><option>PDF</option><option>EPUB</option><option>MOBI</option><option>TXT</option></select></label> : <label className="text-sm font-semibold">Duration<input required value={state.duration} onChange={e => patch('duration', e.target.value)} placeholder="38 min" className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-duration" /></label>}</div><label className="text-sm font-semibold">Description<textarea required rows={4} value={state.description} onChange={e => patch('description', e.target.value)} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-editor-description" /></label>{state.kind === 'book' ? <div className="grid gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.35)] p-4 sm:grid-cols-2"><label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Capa do livro</span><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'coverUrl'); }} data-testid="input-editor-cover-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'cover' ? 'Enviando capa…' : state.coverUrl ? 'Capa pronta para salvar' : 'JPG, PNG ou WebP'}</span></label><label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Arquivo do livro</span><input type="file" accept=".pdf,.epub,.mobi,.txt,application/pdf,application/epub+zip,text/plain" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'fileUrl'); }} data-testid="input-editor-file-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'file' ? 'Enviando arquivo…' : state.fileUrl ? 'Arquivo pronto para salvar' : 'PDF, EPUB, MOBI ou TXT'}</span></label></div> : <><label className="text-sm font-semibold">Thumbnail URL<input value={state.thumbnailUrl ?? ''} onChange={e => patch('thumbnailUrl', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-url" /></label><label className="text-sm font-semibold">Video URL<input value={state.videoUrl ?? ''} onChange={e => patch('videoUrl', e.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-media-url" /></label></>} {uploadError && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{uploadError}</p>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={state.featured ?? false} onChange={e => patch('featured', e.target.checked)} data-testid="checkbox-editor-featured" /> Feature this item</label>{state.kind === 'video' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={state.downloadEnabled ?? false} onChange={e => patch('downloadEnabled', e.target.checked)} data-testid="checkbox-editor-download" /> Allow downloads</label>}</div><div className="mt-7 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={close}>Cancel</Button><Button type="submit" disabled={busy}>{busy ? 'Saving…' : 'Save to catalog'}</Button></div></form></div>;
 }
 
 function Admin() {
