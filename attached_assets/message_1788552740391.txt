@@ -1,0 +1,168 @@
+I ONLY want you to add a new IMAGES / PHOTOS section to my existing Sunnah Brasil website.
+
+IMPORTANT:
+Do not redesign or change anything else on the website.
+
+KEEP EVERYTHING ELSE EXACTLY AS IT IS:
+- Header
+- Navigation
+- Logo
+- Homepage
+- Books
+- Videos
+- Categories
+- About page
+- How it works
+- Footer
+- Existing text
+- Existing buttons
+- Existing functionality
+- Existing layouts
+- Existing colors and fonts
+
+DO NOT modify the Admin panel.
+DO NOT modify the Book upload system.
+DO NOT modify the Video system.
+DO NOT modify the database unnecessarily.
+
+==================================================
+NEW SECTION: IMAGES / PHOTOS
+==================================================
+
+Add a new public page/section called:
+
+“Imagens”
+
+or
+
+“Fotos”
+
+This should be a beautiful Islamic image gallery where visitors can browse visual Islamic content.
+
+The purpose is to eventually display:
+- Islamic artwork
+- Islamic reminders
+- Qur'an-related artwork
+- Mosque imagery
+- Islamic educational graphics
+- Beautiful Islamic designs
+- Other beneficial Islamic images
+
+==================================================
+DESIGN
+==================================================
+
+The new Images page must match the EXISTING Sunnah Brasil website design.
+
+Use the same typography, spacing, buttons, rounded corners and overall design language that already exists.
+
+Do NOT create a completely different-looking page.
+
+Use the Islamic website background image that we previously added as the GLOBAL website background.
+
+The background should remain visible behind the Images page.
+
+Keep it subtle and make sure text remains readable.
+
+==================================================
+IMAGE GALLERY
+==================================================
+
+Create a clean responsive gallery/grid.
+
+Each image should be displayed in an elegant card.
+
+Example:
+
+[ IMAGE ]
+Image title
+Short description
+
+The gallery should look premium, peaceful and Islamic.
+
+Use:
+- rounded corners
+- subtle shadows
+- clean spacing
+- smooth hover effects
+- responsive layout
+
+Desktop:
+3–4 images per row depending on screen width.
+
+Tablet:
+2–3 images per row.
+
+Mobile:
+1–2 images per row.
+
+==================================================
+IMAGE VIEWER
+==================================================
+
+When a visitor clicks an image, open a clean larger image viewer/lightbox.
+
+Include:
+- Large image
+- Image title
+- Description if available
+- Close button
+
+The viewer should be simple and elegant.
+
+Allow the user to close it easily.
+
+==================================================
+SEARCH / FILTER
+==================================================
+
+If appropriate for the existing website design, add:
+
+Search images
+
+and category filtering.
+
+Possible categories:
+
+Qur'an
+Hadith
+Mosques
+Islamic Art
+Reminders
+Education
+
+Only use categories that make sense with the actual images/content.
+
+Keep this simple.
+
+==================================================
+IMPORTANT
+==================================================
+
+For now, this is ONLY the public Images page.
+
+Do NOT build an Admin image management system yet.
+
+Do NOT change how books are uploaded.
+
+Do NOT change how videos are uploaded.
+
+Do NOT change the existing Admin panel.
+
+Do NOT migrate storage.
+
+Do NOT change the database unless absolutely necessary for this new page.
+
+Use the existing project architecture and components wherever possible.
+
+==================================================
+FINAL REQUIREMENT
+==================================================
+
+Before making changes, inspect the existing website.
+
+Add ONLY the new Images page/section.
+
+Everything that currently works must continue working exactly as before.
+
+The final result should feel like it was always part of Sunnah Brasil.
