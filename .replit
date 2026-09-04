@@ -25,3 +25,11 @@ packages = ["freetype", "gumbo", "harfbuzz", "jbig2dec", "libjpeg_turbo", "mupdf
 
 [objectStorage]
 defaultBucketID = "replit-objstore-8877a0c6-d213-4d0a-8e00-37d43de7f921"
+
+[userenv]
+
+[userenv.development]
+CLERK_ADMIN_USER_IDS = "user_3Is4u3hAEGSGZDGrCgw970zAOqb"
+
+[userenv.production]
+CLERK_ADMIN_USER_IDS = "user_3Is4u3hAEGSGZDGrCgw970zAOqb"
