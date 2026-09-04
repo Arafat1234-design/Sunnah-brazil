@@ -473,6 +473,21 @@ const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title
   }
 };
 
+const renderPdfCover = async (file: File): Promise<Blob> => {
+  const pdf = await getDocument({ data: await file.arrayBuffer() }).promise;
+  const page = await pdf.getPage(1);
+  const viewport = page.getViewport({ scale: 1.5 });
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.ceil(viewport.width);
+  canvas.height = Math.ceil(viewport.height);
+  const context = canvas.getContext('2d');
+  if (!context) throw new Error('Could not create cover canvas');
+  await page.render({ canvas, canvasContext: context, viewport }).promise;
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Could not encode cover image')), 'image/jpeg', 0.88);
+  });
+};
+
 function CatalogEditor({ state, setState, close, refresh }: { state: EditorState; setState: (action: SetStateAction<EditorState>) => void; close: () => void; refresh: () => void }) {
   const createBook = useCreateBook();
   const updateBook = useUpdateBook();
@@ -484,31 +499,48 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
 
   const patch = (key: keyof EditorState, value: string | boolean) => setState(current => ({ ...current, [key]: value }));
 
+  const uploadObject = async (file: Blob, name: string, contentType: string) => {
+    const result = await upload.mutateAsync({
+      data: {
+        name,
+        size: file.size,
+        contentType,
+      },
+    });
+    const response = await fetch(result.uploadURL, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!response.ok) throw new Error('Upload failed');
+    return result.objectPath;
+  };
+
   const uploadFile = async (file: File, field: 'coverUrl' | 'fileUrl') => {
     setUploadError('');
     setUploading(field === 'coverUrl' ? 'cover' : 'file');
     try {
+      let metadata: Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType'> | null = null;
       if (field === 'fileUrl' && state.kind === 'book') {
-        const metadata = await extractBookMetadata(file);
-        setState(current => ({ ...current, ...metadata }));
+        metadata = await extractBookMetadata(file);
       }
-      const result = await upload.mutateAsync({
-        data: {
-          name: file.name,
-          size: file.size,
-          contentType: file.type || 'application/octet-stream',
-        },
-      });
-      const response = await fetch(result.uploadURL, {
-        method: 'PUT',
-        headers: { 'Content-Type': file.type || 'application/octet-stream' },
-        body: file,
-      });
-      if (!response.ok) throw new Error('Upload failed');
+      const objectPath = await uploadObject(file, file.name, file.type || 'application/octet-stream');
+      let coverPath: string | null = null;
+      const shouldGenerateCover = field === 'fileUrl' && state.kind === 'book' && !state.coverUrl && metadata?.fileType === 'PDF';
+      if (shouldGenerateCover) {
+        try {
+          const coverBlob = await renderPdfCover(file);
+          coverPath = await uploadObject(coverBlob, `${file.name}.cover.jpg`, 'image/jpeg');
+        } catch {
+          setUploadError('Arquivo enviado, mas não foi possível gerar a capa automática.');
+        }
+      }
       setState(current => ({
         ...current,
-        [field]: `/api/storage${result.objectPath}`,
+        ...(metadata ?? {}),
+        [field]: `/api/storage${objectPath}`,
         ...(field === 'fileUrl' ? { fileSize: file.size } : {}),
+        ...(coverPath ? { coverUrl: `/api/storage${coverPath}` } : {}),
       }));
     } catch {
       setUploadError('Não foi possível enviar o arquivo. Tente novamente.');
