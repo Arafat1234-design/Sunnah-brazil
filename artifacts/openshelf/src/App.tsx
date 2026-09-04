@@ -376,7 +376,7 @@ function GalleryPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('Todos');
   const [selected, setSelected] = useState<GalleryItem | null>(null);
-  const imagesQuery = useListImages();
+  const imagesQuery = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const downloadName = (item: GalleryItem) => {
     const extension = item.src.split('?')[0].match(/\.([a-zA-Z0-9]+)$/)?.[1] ?? 'jpg';
     const safeTitle = item.title.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-|-$/g, '').toLowerCase() || `imagem-${item.id}`;
@@ -398,7 +398,7 @@ function GalleryPage() {
       const matchesSearch = !query || `${item.title} ${item.description} ${item.category}`.toLocaleLowerCase('pt-BR').includes(query);
       return matchesCategory && matchesSearch;
     });
-  }, [category, search]);
+  }, [category, galleryItems, search]);
 
   useEffect(() => {
     if (!selected) return;
@@ -770,7 +770,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
   const createVideo = useCreateVideo();
   const updateVideo = useUpdateVideo();
   const upload = useRequestUploadUrl();
-  const galleryImages = useListImages();
+  const galleryImages = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const [uploading, setUploading] = useState<'cover' | 'file' | 'video' | 'thumbnail' | null>(null);
   const [uploadError, setUploadError] = useState('');
 
@@ -947,7 +947,7 @@ function ImageEditor({ image, close, refresh }: { image?: Image; close: () => vo
 
 function EventEditor({ event, close, refresh }: { event?: CatalogEvent; close: () => void; refresh: () => void }) {
   const [draft, setDraft] = useState<EventDraft>(event ? { id: event.id, title: event.title, shortDescription: event.shortDescription, fullDescription: event.fullDescription, eventDate: event.eventDate, startTime: event.startTime, endTime: event.endTime ?? '', timezone: event.timezone, imageId: event.imageId, venue: event.venue, city: event.city, address: event.address, mapsUrl: event.mapsUrl, externalUrl: event.externalUrl ?? '', published: event.published } : emptyEvent);
-  const images = useListImages();
+  const images = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const create = useCreateEvent();
   const update = useUpdateEvent();
   const [error, setError] = useState('');
@@ -1132,7 +1132,7 @@ function Admin() {
   const qc = useQueryClient();
   const books = useListBooks();
   const videos = useListVideos();
-  const images = useListImages();
+  const images = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const events = useListAdminEvents();
   const categories = useListCategories();
   const delBook = useDeleteBook();

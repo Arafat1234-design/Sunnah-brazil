@@ -2,3 +2,4 @@
 - [Anonymous analytics boundary](analytics-privacy.md) — persist only salted visitor hashes, coarse device/country, categorized referrers, and public paths; exclude Admin/auth routes.
 - [Admin access](admin-access.md) — protect the private Admin workspace with the Replit Secret-backed password and a signed short-lived session.
 - [Events scheduling](events-scheduling.md) — preserve date-only values and derive UTC event instants from the selected IANA timezone.
+- [Production data publishing](production-data-publishing.md) — normal publishes preserve live Admin data; never reinitialize production from development after launch.

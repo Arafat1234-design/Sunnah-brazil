@@ -41,6 +41,7 @@ function parseId(value: unknown): number | null {
 }
 
 router.get("/images", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   const parsed = ListImagesQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: "Invalid search or category" });
