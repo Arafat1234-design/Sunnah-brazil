@@ -12,6 +12,7 @@ import {
   Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2, HeartHandshake,
   BookMarked, Compass, UsersRound, PlayCircle, ArrowUpRight,
+  Images, Maximize2,
 } from 'lucide-react';
 import {
   getGetAdminStatsQueryKey, getGetBookDownloadQueryKey, getGetBookQueryKey,
@@ -112,7 +113,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const [search, setSearch] = useState('');
-  const items = [['Livros', '/books'], ['Vídeos', '/videos'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
+  const items = [['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
@@ -142,7 +143,7 @@ function Footer() {
   return <footer className="mt-24 border-t border-[#dbe4e2] bg-[#f5f8f7]">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
       <div><Logo /><p className="mt-4 max-w-[290px] text-sm leading-6 text-[#607274]">Conhecimento que atravessa fronteiras. Uma biblioteca digital pública, simples e acessível.</p></div>
-      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/categories">Categorias</Link><Link href="/#como-funciona">Como funciona</Link></div></div>
+      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/categories">Categorias</Link><Link href="/#como-funciona">Como funciona</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Sunnah Brasil</p><div className="grid gap-2 text-sm"><Link href="/about">Sobre</Link><Link href="/contact">Contato e direitos</Link><Link href="/content-policy">Política de privacidade</Link><Link href="/terms">Termos de uso</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Transparência</p><p className="text-sm leading-6 text-[#607274]">Se você acredita que algum conteúdo viola seus direitos autorais, entre em contato conosco para análise.</p><Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#075C45]">Falar com a equipe <ArrowUpRight size={14} /></Link></div>
     </div><div className="mx-auto max-w-[1240px] border-t border-[#dbe4e2] px-5 py-5 text-xs text-[#607274] lg:px-8">© 2026 Sunnah Brasil · Acesso gratuito ao conhecimento</div>
@@ -265,6 +266,82 @@ function Videos() {
   const params = useMemo(() => ({ ...(search ? { search } : {}), ...(category ? { category } : {}) }), [search, category]);
   const q = useListVideos(params); const cats = useListCategories();
   return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-16 pt-14 lg:px-8"><div className="mb-10"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">The screening room</p><h1 className="serif mt-3 text-5xl tracking-[-.04em] md:text-6xl">Watch with intent.</h1><p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">Independent films, patient conversations, and moving images with a point of view.</p></div><LibraryToolbar kind="videos" search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={cats.data ?? []} /><div className="mt-8">{q.isLoading ? <LoadingGrid kind="video" /> : q.isError ? <StateMessage error title="The screening room is quiet" body="Try again in a little while." retry={q.refetch} /> : !q.data?.length ? <StateMessage title="No film matches that search" body="Try another phrase or browse every category." /> : <div className="grid gap-x-5 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">{q.data.map(video => <VideoCard key={video.id} video={video} />)}</div>}</div></main></Shell>;
+}
+
+type GalleryItem = { id: string; title: string; description: string; category: string; src: string; alt: string };
+
+const galleryItems: GalleryItem[] = [
+  { id: 'luz-do-alcorao', title: 'Luz no caminho', description: 'Uma lembrança sobre buscar clareza e direção no conhecimento.', category: 'Reflexão', src: `${basePath}/gallery/luz-do-alcorão.svg`, alt: 'Lua crescente sobre um fundo verde com padrões geométricos' },
+  { id: 'tempo-de-oracao', title: 'Um tempo para voltar', description: 'A oração como pausa, presença e retorno ao que importa.', category: 'Adoração', src: `${basePath}/gallery/tempo-de-oracao.svg`, alt: 'Mesquita ao entardecer sob um céu estrelado' },
+  { id: 'cuidado-com-o-proximo', title: 'Cuidar também é fé', description: 'Pequenos gestos de cuidado que aproximam os corações.', category: 'Convivência', src: `${basePath}/gallery/cuidado-com-o-proximo.svg`, alt: 'Coração estilizado dentro de um arco em tons quentes' },
+  { id: 'pegadas-de-conhecimento', title: 'Uma jornada de conhecimento', description: 'Aprender é caminhar com paciência, curiosidade e propósito.', category: 'Caminho', src: `${basePath}/gallery/pegadas-de-conhecimento.svg`, alt: 'Caminho pontilhado seguindo por uma paisagem geométrica' },
+  { id: 'amanhecer', title: 'Começar de novo', description: 'Todo amanhecer traz uma oportunidade de renovar a intenção.', category: 'Reflexão', src: `${basePath}/gallery/amanhecer.svg`, alt: 'Sol nascente atrás de uma paisagem azul e terracota' },
+  { id: 'paz-no-lar', title: 'A paz começa em casa', description: 'Um lar sereno é feito de escuta, gentileza e lembrança.', category: 'Convivência', src: `${basePath}/gallery/paz-no-lar.svg`, alt: 'Interior sereno com arco central e janelas geométricas' },
+];
+
+function GalleryPage() {
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('Todos');
+  const [selected, setSelected] = useState<GalleryItem | null>(null);
+  const categories = ['Todos', ...Array.from(new Set(galleryItems.map(item => item.category)))];
+  const filteredItems = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase('pt-BR');
+    return galleryItems.filter(item => {
+      const matchesCategory = category === 'Todos' || item.category === category;
+      const matchesSearch = !query || `${item.title} ${item.description} ${item.category}`.toLocaleLowerCase('pt-BR').includes(query);
+      return matchesCategory && matchesSearch;
+    });
+  }, [category, search]);
+
+  useEffect(() => {
+    if (!selected) return;
+    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(null); };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [selected]);
+
+  return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 lg:px-8">
+    <section className="relative overflow-hidden rounded-[2rem] border border-[#dbe4e2] bg-[#e7f0eb] px-6 py-12 md:px-12 md:py-16">
+      <div className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border-[34px] border-[#b6d2c3]/50" />
+      <div className="pointer-events-none absolute -bottom-36 right-40 h-64 w-64 rounded-full border-[24px] border-[#d6b680]/30" />
+      <div className="relative max-w-2xl">
+        <p className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">A sala das imagens</p>
+        <h1 className="serif mt-3 text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-7xl">Lembretes para guardar.</h1>
+        <p className="mt-5 max-w-xl text-base leading-7 text-[#53666b] md:text-lg">Uma coleção de imagens para contemplar, compartilhar e levar consigo. Entre com calma.</p>
+      </div>
+      <div className="relative mt-9 flex items-center gap-2 text-sm font-semibold text-[#075C45]"><Images size={18} />{filteredItems.length} {filteredItems.length === 1 ? 'imagem disponível' : 'imagens disponíveis'}</div>
+    </section>
+
+    <section className="mt-10" aria-label="Buscar e filtrar imagens">
+      <div className="flex flex-col gap-4 border-b border-[#dbe4e2] pb-5 md:flex-row md:items-center md:justify-between">
+        <div className="relative w-full max-w-[460px]">
+          <Search size={17} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#607274]" />
+          <input value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar uma lembrança..." aria-label="Buscar imagens" data-testid="input-images-search" className="h-12 w-full rounded-full border border-[#dbe4e2] bg-[#fffdf8] pl-11 pr-4 text-sm outline-none transition focus:border-[#075C45] focus:ring-4 focus:ring-[#075C45]/10" />
+        </div>
+        <div className="flex items-center gap-2 overflow-x-auto pb-1" role="group" aria-label="Filtrar por categoria">
+          {categories.map(itemCategory => <button key={itemCategory} onClick={() => setCategory(itemCategory)} aria-pressed={category === itemCategory} data-testid={`button-images-filter-${itemCategory.toLowerCase()}`} className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition-colors ${category === itemCategory ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55] hover:bg-[#d5e6dd]'}`}>{itemCategory}</button>)}
+        </div>
+      </div>
+    </section>
+
+    <section className="mt-8" aria-live="polite">
+      {filteredItems.length === 0 ? <div className="rounded-2xl border border-[#dbe4e2] bg-[#fffdf8] px-6 py-16 text-center" data-testid="state-images-empty"><div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-[#e9f3ef] text-[#075C45]"><Search size={19} /></div><h2 className="serif text-2xl text-[#071B2C]">Nenhuma imagem encontrada</h2><p className="mx-auto mt-2 max-w-sm text-sm text-[#607274]">Tente outra palavra ou escolha uma categoria diferente.</p><button onClick={() => { setSearch(''); setCategory('Todos'); }} data-testid="button-images-clear-filters" className="mt-5 rounded-full border border-[#dbe4e2] px-4 py-2 text-sm font-semibold text-[#075C45] transition hover:border-[#075C45]">Limpar filtros</button></div> : <div className="grid auto-rows-[180px] grid-cols-1 gap-4 sm:grid-cols-2 md:auto-rows-[200px] lg:grid-cols-4">
+        {filteredItems.map((item, index) => <button key={item.id} onClick={() => setSelected(item)} data-testid={`card-image-${item.id}`} aria-label={`Abrir imagem: ${item.title}`} className={`group relative overflow-hidden rounded-2xl border border-[#dbe4e2] bg-[#dfeae4] text-left shadow-[0_5px_16px_rgba(7,27,44,.05)] transition duration-300 hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.12)] focus:outline-none focus:ring-4 focus:ring-[#075C45]/20 ${index === 0 ? 'sm:row-span-2 lg:col-span-2 lg:row-span-2' : index === 3 ? 'lg:col-span-2' : ''}`}>
+          <img src={item.src} alt={item.alt} className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]" />
+          <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#071b2c]/80 via-[#071b2c]/35 to-transparent px-5 pb-4 pt-12 text-white"><span className="mono block text-[9px] uppercase tracking-[.18em] text-[#d6e6d9]">{item.category}</span><span className="mt-1 block font-semibold">{item.title}</span></span>
+          <span className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-[#fffdf8]/90 text-[#075C45] opacity-0 shadow-sm transition-opacity group-hover:opacity-100 group-focus:opacity-100"><Maximize2 size={15} /></span>
+        </button>)}
+      </div>}
+    </section>
+  </main>
+  {selected && <div className="fixed inset-0 z-50 grid place-items-center bg-[#071b2c]/75 p-4 backdrop-blur-sm" role="presentation" onClick={() => setSelected(null)}>
+    <div role="dialog" aria-modal="true" aria-labelledby="gallery-dialog-title" aria-describedby="gallery-dialog-description" className="relative grid max-h-[92dvh] w-full max-w-4xl overflow-hidden rounded-2xl bg-[#fffdf8] shadow-2xl md:grid-cols-[1.2fr_.8fr]" onClick={event => event.stopPropagation()}>
+      <button onClick={() => setSelected(null)} aria-label="Fechar imagem" data-testid="button-images-close-lightbox" className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-[#fffdf8]/90 text-[#071B2C] shadow-sm transition hover:bg-white"><X size={20} /></button>
+      <div className="min-h-[280px] bg-[#e7f0eb] md:min-h-[520px]"><img src={selected.src} alt={selected.alt} className="h-full w-full object-cover" /></div>
+      <div className="flex flex-col justify-center p-7 md:p-10"><span className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">{selected.category}</span><h2 id="gallery-dialog-title" className="serif mt-3 text-4xl leading-tight tracking-[-.04em] text-[#071B2C]">{selected.title}</h2><p id="gallery-dialog-description" className="mt-4 text-sm leading-7 text-[#607274]">{selected.description}</p><p className="mt-8 border-t border-[#dbe4e2] pt-5 text-xs leading-5 text-[#607274]">Abra espaço para uma pausa. Às vezes, uma imagem é o começo de uma reflexão.</p><button onClick={() => setSelected(null)} data-testid="button-images-lightbox-done" className="mt-7 inline-flex w-fit items-center gap-2 rounded-full bg-[#075C45] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110">Voltar à galeria <ArrowLeft size={15} /></button></div>
+    </div>
+  </div>}
+  </Shell>;
 }
 
 function BookDetail() {
@@ -629,7 +706,7 @@ function Router() {
   const [location] = useLocation();
   return <ErrorBoundary resetKey={location}><Switch>
     <Route path="/" component={Home} /><Route path="/books" component={Books} /><Route path="/books/:id/read" component={BookReader} /><Route path="/books/:id" component={BookDetail} />
-    <Route path="/videos" component={Videos} /><Route path="/videos/:id" component={VideoDetail} /><Route path="/categories" component={Categories} />
+    <Route path="/videos" component={Videos} /><Route path="/videos/:id" component={VideoDetail} /><Route path="/images" component={GalleryPage} /><Route path="/categories" component={Categories} />
     <Route path="/about" component={About} /><Route path="/contact" component={Contact} /><Route path="/terms"><LegalPage type="terms" /></Route><Route path="/content-policy"><LegalPage type="policy" /></Route>
     <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={AdminRoute} />
     <Route path="/sign-in/*?" component={() => <ClerkSignInPage />} /><Route path="/sign-up/*?" component={() => <ClerkSignInPage signUp />} />

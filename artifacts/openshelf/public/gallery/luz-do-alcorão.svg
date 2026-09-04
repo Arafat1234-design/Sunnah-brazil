@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100">
+  <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#173f3e"/><stop offset="1" stop-color="#286b5b"/></linearGradient><pattern id="p" width="72" height="72" patternUnits="userSpaceOnUse"><path d="M36 5 67 36 36 67 5 36Z" fill="none" stroke="#d8c49a" stroke-opacity=".22" stroke-width="2"/><circle cx="36" cy="36" r="8" fill="none" stroke="#d8c49a" stroke-opacity=".2"/></pattern></defs>
+  <rect width="900" height="1100" fill="url(#g)"/><rect width="900" height="1100" fill="url(#p)"/>
+  <circle cx="450" cy="390" r="220" fill="#d8c49a" fill-opacity=".12"/><path d="M450 220c-94 0-170 76-170 170s76 170 170 170c-45-33-69-83-69-141 0-91 69-166 159-177-28-14-58-22-90-22Z" fill="#f5e8c9"/>
+  <path d="M275 790h350M315 835h270" stroke="#f5e8c9" stroke-opacity=".7" stroke-width="3"/><text x="450" y="710" fill="#f5e8c9" font-family="Georgia,serif" font-size="42" text-anchor="middle">Luz no caminho</text>
+</svg>

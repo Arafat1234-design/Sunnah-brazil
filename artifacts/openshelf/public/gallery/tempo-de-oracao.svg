@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 850">
+  <defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#eadcc5"/><stop offset=".58" stop-color="#c8b592"/><stop offset="1" stop-color="#466a60"/></linearGradient><pattern id="stars" width="90" height="90" patternUnits="userSpaceOnUse"><circle cx="14" cy="20" r="2" fill="#fff5d9" opacity=".6"/><circle cx="68" cy="60" r="1.5" fill="#fff5d9" opacity=".6"/></pattern></defs>
+  <rect width="1200" height="850" fill="url(#sky)"/><rect width="1200" height="520" fill="url(#stars)"/><circle cx="850" cy="190" r="74" fill="#fff2c9" fill-opacity=".8"/>
+  <path d="M0 675c240-74 340-55 525 0 190 56 410 18 675-18v193H0Z" fill="#244f49"/><path d="M380 678V430h440v248M420 430c22-134 99-212 180-212s158 78 180 212M485 678V500h230v178" fill="#173f3e" stroke="#f0dfbb" stroke-width="6"/><path d="M480 470h240" stroke="#d0b778" stroke-width="12"/><text x="80" y="120" fill="#244f49" font-family="Georgia,serif" font-size="38">Um tempo para voltar</text>
+</svg>
