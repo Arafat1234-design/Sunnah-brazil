@@ -1,0 +1,326 @@
+I want to clean up and improve the visual design of my EXISTING ADMIN PANEL for Sunnah Brasil.
+
+IMPORTANT:
+Do NOT change or break the existing functionality.
+
+The Books, Videos, Images, Categories and existing admin features already work. Keep their functionality exactly as it is.
+
+This task is primarily about:
+1. Making the Admin panel cleaner and easier to use.
+2. Creating a professional Dashboard/home screen.
+3. Adding website analytics/statistics.
+
+==================================================
+ADMIN DASHBOARD
+==================================================
+
+Create a clean Dashboard as the first page I see when entering Admin.
+
+Use the existing Sunnah Brasil visual identity:
+- Deep forest green
+- Cream/off-white
+- Dark navy
+- Subtle gold accents
+- Clean rounded cards
+- Minimal Islamic aesthetic
+- Lots of whitespace
+- Professional typography
+
+Do NOT make it overly decorative.
+
+Sidebar:
+
+Dashboard
+Books
+Videos
+Images
+Categories
+Settings
+
+Keep any existing Admin sections that already exist.
+
+==================================================
+TOP STATISTICS
+==================================================
+
+At the top of Dashboard show cards for:
+
+📚 Total Books
+🎥 Total Videos
+🖼️ Total Images
+⬇️ Total Downloads
+👥 Total Visitors
+
+Each card should show:
+- Current total
+- Small icon
+- Optional percentage/change compared with previous period if the data is available
+
+Do NOT use fake statistics.
+
+If the database currently does not have historical data, show the real available data and build the tracking system needed to collect it going forward.
+
+==================================================
+LIVE VISITORS
+==================================================
+
+Add a section:
+
+“Visitantes agora”
+
+Show the number of people currently visiting the website.
+
+Example:
+
+🟢 7 visitantes agora
+
+Also show useful information if available:
+- Current page
+- Device
+- Approximate location/country
+- Time active
+
+IMPORTANT:
+Use privacy-conscious analytics.
+
+Do not collect unnecessary personal information.
+
+Do not display names, email addresses, exact addresses or other personally identifiable information.
+
+==================================================
+TRAFFIC OVERVIEW
+==================================================
+
+Create a large analytics chart:
+
+“Tráfego do site”
+
+Allow me to switch between:
+
+Últimos 7 dias
+Últimos 30 dias
+Últimos 90 dias
+Últimos 12 meses
+
+Show:
+- Visitors
+- Page views
+
+Use a clean line/area chart.
+
+I want to easily understand whether website traffic is increasing or decreasing.
+
+==================================================
+DOWNLOAD ANALYTICS
+==================================================
+
+Create a section:
+
+“Downloads”
+
+Show:
+
+Total downloads
+Downloads today
+Downloads this week
+Downloads this month
+
+Also show:
+
+“Livros mais baixados”
+
+Rank the books by real download count.
+
+Example structure:
+
+1. Book name — 2,841 downloads
+2. Book name — 1,932 downloads
+3. Book name — 1,205 downloads
+
+Use the actual database information.
+
+If download tracking does not currently exist, implement proper download-event tracking without breaking the existing download functionality.
+
+==================================================
+POPULAR CONTENT
+==================================================
+
+Add:
+
+“Conteúdo mais visto”
+
+Show the most visited:
+- Books
+- Videos
+- Images/pages if applicable
+
+Use real data.
+
+==================================================
+TRAFFIC SOURCES
+==================================================
+
+If technically possible with the current application architecture, show:
+
+“De onde vêm os visitantes”
+
+Examples:
+- Google/search
+- Direct
+- Social media
+- Referral
+- Other
+
+Do not invent data.
+
+If this information cannot currently be collected, build the appropriate privacy-conscious analytics tracking needed for future data.
+
+==================================================
+VISITORS BY DEVICE
+==================================================
+
+Show a simple breakdown:
+
+Telemóvel
+Computador
+Tablet
+
+Use a small chart.
+
+==================================================
+RECENT ACTIVITY
+==================================================
+
+Add a section:
+
+“Atividade recente”
+
+Show useful admin activity such as:
+
+Novo livro adicionado
+Novo vídeo adicionado
+Nova imagem adicionada
+Novo download
+etc.
+
+Include timestamps such as:
+
+há 5 minutos
+há 2 horas
+
+Use actual events from the system where possible.
+
+==================================================
+DATE FILTER
+==================================================
+
+Add a date selector at the top:
+
+Hoje
+Últimos 7 dias
+Últimos 30 dias
+Últimos 90 dias
+Personalizado
+
+All dashboard statistics and charts should update based on the selected period.
+
+==================================================
+ADMIN DESIGN
+==================================================
+
+Make the Admin panel feel like a professional CMS.
+
+Use:
+
+- Clean sidebar
+- Clear section headings
+- Consistent cards
+- Consistent buttons
+- Consistent spacing
+- Responsive tables
+- Search where useful
+- Simple icons
+- Subtle hover effects
+
+Avoid:
+- clutter
+- excessive animations
+- huge cards
+- unnecessary colors
+- overly complicated interfaces
+
+==================================================
+IMPORTANT — DO NOT CHANGE CONTENT MANAGEMENT
+==================================================
+
+The existing Books upload system is already simple and works exactly how I want.
+
+DO NOT CHANGE IT.
+
+Do not modify:
+- Add Book form
+- PDF upload
+- Book cover upload
+- Book fields
+- Book editing
+- Book deletion
+- Existing book database structure
+
+Same for the existing Videos and Images systems unless a change is absolutely necessary to collect analytics.
+
+The main goal is to improve the Dashboard and analytics, NOT rebuild my existing content-management systems.
+
+==================================================
+PRIVACY
+==================================================
+
+Analytics must be privacy-conscious.
+
+Do not collect:
+- names
+- emails
+- passwords
+- exact addresses
+- unnecessary personal information
+
+Use anonymous/aggregated visitor statistics where possible.
+
+==================================================
+REAL DATA ONLY
+==================================================
+
+VERY IMPORTANT:
+
+Do not put fake numbers into the dashboard just to make it look complete.
+
+If there is currently no historical analytics data, start collecting real data from this point forward.
+
+Clearly handle “no data yet” states.
+
+==================================================
+PERFORMANCE
+==================================================
+
+Do not make analytics tracking slow down the public website.
+
+Analytics should run efficiently in the background.
+
+Do not break the existing website.
+
+==================================================
+FINAL RESULT
+==================================================
+
+The Admin dashboard should feel similar to a professional modern analytics/CMS dashboard while still matching the Sunnah Brasil brand.
+
+The main dashboard should let me understand the health of the website in a few seconds:
+
+How many people are visiting?
+How many are online right now?
+How many downloads do I have?
+Which books are most popular?
+Which content is getting the most attention?
+Is traffic increasing?
+Where are visitors coming from?
+
+Keep the rest of my existing Admin panel and all existing functionality intact.
