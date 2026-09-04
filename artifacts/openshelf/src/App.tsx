@@ -141,7 +141,7 @@ function Header() {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
   };
-  return <header className="sticky top-0 z-30 border-b border-[#e3e9e7] bg-[#eee6da]/95 backdrop-blur-md">
+  return <header className="sticky top-0 z-40 border-b border-[#e3e9e7] bg-[#eee6da]/95 backdrop-blur-md">
     <div className="mx-auto flex min-h-[72px] max-w-[1240px] items-center justify-between gap-5 px-5 lg:px-8">
       <Logo />
       <nav className="hidden items-center gap-0.5 lg:flex">{items.map(([label, href]) =>
@@ -268,7 +268,7 @@ function EventCard({ event }: { event: CatalogEvent }) {
 }
 
 function NextEventBanner({ event }: { event: CatalogEvent }) {
-  return <section className="sticky top-2 z-30 mx-auto -mb-5 max-w-[1240px] px-4 pt-2 lg:px-8">
+  return <section className="sticky top-[76px] z-20 mx-auto -mb-5 max-w-[1240px] px-4 pt-2 lg:px-8">
     <div className="relative overflow-hidden rounded-2xl border border-[#dbe4e2] bg-transparent text-[#163d3a]">
       <div className="relative grid gap-3 p-3 md:grid-cols-[1fr_auto] md:items-center md:p-4">
         <div>
