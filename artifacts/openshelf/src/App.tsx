@@ -461,8 +461,11 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
         body: file,
       });
       if (!response.ok) throw new Error('Upload failed');
-      patch(field, `/api/storage${result.objectPath}`);
-      if (field === 'fileUrl') patch('fileSize', String(file.size));
+      setState({
+        ...state,
+        [field]: `/api/storage${result.objectPath}`,
+        ...(field === 'fileUrl' ? { fileSize: file.size } : {}),
+      });
     } catch {
       setUploadError('Não foi possível enviar o arquivo. Tente novamente.');
     } finally {
