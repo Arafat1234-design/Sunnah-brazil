@@ -1,0 +1,94 @@
+Quero melhorar a página inicial do meu website "Nur Al-Sunnah", inspirado na organização, elegância e experiência visual da referência anexada, mas SEM copiar o design e SEM adicionar conteúdos que ainda não existem no meu banco de dados.
+
+Objetivo:
+- Fazer a homepage parecer mais completa, profissional e moderna.
+- Manter a identidade visual do projeto (tons claros, verde islâmico, branco, dourado suave e detalhes geométricos islâmicos).
+- Dar mais espaçamento, melhor hierarquia visual e aparência premium.
+
+REGRAS IMPORTANTES:
+- NÃO invente livros, vídeos, categorias, autores ou qualquer outro conteúdo.
+- Utilize APENAS os conteúdos que já existem no banco de dados.
+- Se alguma seção não possuir conteúdo suficiente, esconda a seção ou mostre um estado elegante de "Em breve", sem criar dados falsos.
+- Não altere a lógica do backend nem do banco de dados.
+- Apenas reorganize e melhore a interface.
+
+Melhorias desejadas:
+
+1. Hero Section
+- Banner grande e elegante.
+- Fundo islâmico discreto.
+- Título chamativo.
+- Pequena descrição.
+- Botão principal "Explorar Biblioteca".
+- Botão secundário "Ver Vídeos" apenas se existirem vídeos.
+
+2. Cards de Destaque
+Criar uma seção de destaque utilizando os conteúdos existentes.
+Exibir automaticamente os itens mais recentes ou marcados como destaque.
+
+3. Categorias
+Mostrar apenas categorias existentes.
+Usar ícones minimalistas.
+Grid bonito e responsivo.
+
+4. Vídeos
+Caso existam vídeos, mostrar uma seção semelhante à referência.
+Caso não existam, esconder automaticamente.
+
+5. Livros
+Melhorar os cards:
+- capa maior
+- sombra suave
+- cantos arredondados
+- efeito hover
+- botão "Ler"
+
+6. Estatísticas
+Criar uma pequena faixa mostrando apenas dados reais:
+- número de livros
+- número de vídeos
+- número de categorias
+Nunca utilizar números fictícios.
+
+7. Layout
+Mais espaços em branco.
+Tipografia elegante.
+Bordas arredondadas.
+Sombras suaves.
+Animações leves.
+Transições suaves.
+
+8. Responsividade
+Melhorar completamente para celular.
+No mobile:
+- menu limpo
+- cards empilhados
+- botões maiores
+- melhor espaçamento.
+
+9. Rodapé
+Rodapé moderno contendo apenas:
+- logo
+- links existentes
+- redes sociais existentes
+- copyright.
+
+10. Performance
+Não adicionar bibliotecas pesadas.
+Reutilizar componentes existentes.
+Código limpo.
+
+11. Tema
+Inspirar-se na sensação de uma biblioteca islâmica moderna:
+- elegante
+- limpa
+- premium
+- minimalista
+- acolhedora
+- sem exageros.
+
+IMPORTANTE:
+Não copie a referência.
+Apenas utilize a organização, espaçamento e experiência visual como inspiração.
+Todo o conteúdo deve ser carregado dinamicamente a partir do banco de dados existente.
+Nenhum conteúdo fictício deve ser criado.

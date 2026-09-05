@@ -343,6 +343,9 @@ function Home() {
     }).slice(0, 6);
   }, [featuredBooks, featuredVideos, summary?.recentlyAdded]);
   const nextEvent = events.data?.find(event => event.status === 'upcoming');
+  const showHighlights = isLoading || isError || highlightedItems.length > 0;
+  const showCategories = categories.isLoading || (!categories.isError && (categories.data?.length ?? 0) > 0);
+  const showStats = Boolean(summary) && !isLoading && !isError && !categories.isLoading && !categories.isError;
   const categoryIcon = (name: string) => {
     const normalized = name.toLowerCase();
     if (normalized.includes('educ')) return <GraduationCap size={24} />;
