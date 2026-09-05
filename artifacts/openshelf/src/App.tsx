@@ -8,7 +8,7 @@ import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy, type PDFPagePr
 import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound,
-  Download, FileText, Film, Headphones, Heart, Info, LockKeyhole,
+  Download, FileText, Film, Headphones, Heart, Info,
   Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2, HeartHandshake,
   BookMarked, Compass, UsersRound, PlayCircle, ArrowUpRight,
@@ -319,11 +319,6 @@ function Home() {
             <div className="flex flex-col items-center gap-2 text-center"><BookMarked className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Bem selecionado</strong>Conteúdo organizado</span></div>
           </div>
         </div>
-      </div>
-    </section>
-    <section className="bg-[#163d3a] text-white">
-      <div className="mx-auto grid max-w-[1240px] divide-y divide-white/15 px-5 py-5 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:px-8">
-        {[[<ShieldCheck size={27} />, 'Conteúdo confiável', 'Materiais organizados e selecionados.'], [<Globe2 size={27} />, 'Acesso livre', 'Disponível gratuitamente para todos.'], [<LockKeyhole size={27} />, 'Privacidade respeitada', 'Não exigimos cadastro para navegar.'], [<Heart size={27} />, 'Feito para você', 'Uma biblioteca simples e acessível.']].map(([icon, title, body], index) => <div key={index} className="flex items-center gap-4 py-4 sm:px-5 lg:py-3 first:sm:pl-0 last:sm:pr-0"><span className="text-[#75b79f]">{icon}</span><span><strong className="block text-sm">{title}</strong><small className="mt-1 block leading-5 text-white/65">{body}</small></span></div>)}
       </div>
     </section>
     <section className="mx-auto max-w-[1240px] px-5 pb-2 pt-16 lg:px-8">
