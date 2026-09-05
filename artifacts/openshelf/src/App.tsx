@@ -181,8 +181,11 @@ function Shell({ children, admin = false }: { children: ReactNode; admin?: boole
 
 function useScrollReveal() {
   useEffect(() => {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+    if (!elements.length) return;
+
     if (!('IntersectionObserver' in window)) {
-      document.querySelectorAll<HTMLElement>('[data-reveal]').forEach(element => element.classList.add('is-visible'));
+      elements.forEach(element => element.classList.add('is-visible'));
       return;
     }
 
@@ -195,17 +198,8 @@ function useScrollReveal() {
       });
     }, { threshold: 0.12, rootMargin: '0px 0px -36px' });
 
-    const observeRevealElements = () => {
-      document.querySelectorAll<HTMLElement>('[data-reveal]:not(.is-visible)').forEach(element => observer.observe(element));
-    };
-    observeRevealElements();
-
-    const mutations = new MutationObserver(observeRevealElements);
-    mutations.observe(document.body, { childList: true, subtree: true });
-    return () => {
-      observer.disconnect();
-      mutations.disconnect();
-    };
+    elements.forEach(element => observer.observe(element));
+    return () => observer.disconnect();
   }, []);
 }
 
@@ -369,27 +363,20 @@ function Home() {
            <h1 className="serif rise-in delay-1 mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
            <p className="rise-in delay-2 mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
             <div className="rise-in delay-3 mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
-              <Button href="/books" className="depth-button whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar Biblioteca <BookOpen size={16} /></Button>
-              {!isLoading && (summary?.videoCount ?? 0) > 0 && <Button href="/videos" variant="primary" className="depth-button whitespace-nowrap !bg-[#071B2C] !px-4 !py-2.5 !text-[13px] !text-white hover:!bg-[#102d43] sm:!px-5 sm:!text-sm">Ver Vídeos <PlayCircle size={17} /></Button>}
+             <Button href="/books" className="depth-button whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar livros <BookOpen size={16} /></Button>
+             <Button href="/videos" variant="primary" className="depth-button whitespace-nowrap !bg-[#071B2C] !px-4 !py-2.5 !text-[13px] !text-white hover:!bg-[#102d43] sm:!px-5 sm:!text-sm">Assistir vídeos <PlayCircle size={17} /></Button>
           </div>
         </div>
       </div>
-     </section>
-      {showStats && <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pt-8 sm:pt-10 lg:px-8" aria-label="Estatísticas da biblioteca">
-        <div className="grid grid-cols-3 divide-x divide-[#dbe4e2] rounded-2xl border border-[#dbe4e2] bg-white/60 py-4 shadow-[0_8px_24px_rgba(7,27,44,.04)] sm:py-5">
-          <div className="flex flex-col items-center gap-1 px-2 text-center"><BookOpen className="text-[#075C45]" size={18} /><strong className="mono text-xl text-[#071B2C]">{summary?.bookCount.toLocaleString('pt-BR') ?? '0'}</strong><span className="text-[10px] uppercase tracking-[.12em] text-[#607274] sm:text-xs">Livros</span></div>
-          <div className="flex flex-col items-center gap-1 px-2 text-center"><PlayCircle className="text-[#075C45]" size={18} /><strong className="mono text-xl text-[#071B2C]">{summary?.videoCount.toLocaleString('pt-BR') ?? '0'}</strong><span className="text-[10px] uppercase tracking-[.12em] text-[#607274] sm:text-xs">Vídeos</span></div>
-          <div className="flex flex-col items-center gap-1 px-2 text-center"><BookMarked className="text-[#075C45]" size={18} /><strong className="mono text-xl text-[#071B2C]">{(categories.data?.length ?? 0).toLocaleString('pt-BR')}</strong><span className="text-[10px] uppercase tracking-[.12em] text-[#607274] sm:text-xs">Categorias</span></div>
-        </div>
-      </section>}
-      {showHighlights && <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
+    </section>
+      <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
       <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Descubra algo novo</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Conteúdos em destaque</h2><p className="mt-2 text-sm text-[#607274]">Descubra alguns dos conteúdos disponíveis na nossa biblioteca.</p></div><Button href="/books" variant="ghost" className="hidden sm:inline-flex">Ver biblioteca <ArrowRight size={15} /></Button></div>
-         {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3">{highlightedItems.map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card relative mx-auto block w-full max-w-[205px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-book-${item.id}`}><Cover book={item} /><span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-full bg-[#075C45] px-3 py-1.5 text-xs font-semibold text-white opacity-100 shadow-lg transition-opacity sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">Ler <ArrowUpRight size={12} /></span></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
-     </section>}
-      {showCategories && <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
+        {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3">{highlightedItems.map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card mx-auto block w-full max-w-[205px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
+    </section>
+     <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
       <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
       {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group depth-card rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer}><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
-     </section>}
+    </section>
      <section data-reveal id="como-funciona" className="reveal-on-scroll mx-auto max-w-[1240px] px-5 py-20 lg:px-8">
       <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14">
         <div className="mx-auto max-w-4xl">
