@@ -1,0 +1,68 @@
+Improve the visual design and organization of my existing Sunnah Brasil Admin Panel, but DO NOT make any major changes.
+
+IMPORTANT:
+- Do NOT rebuild the Admin Panel.
+- Do NOT remove any existing features.
+- Do NOT change how Books are uploaded, edited, or managed.
+- Do NOT change the existing Books, Videos, Images, Events, Categories, or Settings functionality.
+- Do NOT change the database structure unless absolutely necessary.
+- Do NOT change authentication/login.
+- Do NOT change existing routes or URLs.
+- Do NOT change the public website.
+- Do NOT change any existing functionality or workflows.
+
+I only want a CLEANER and more polished visual organization.
+
+Keep the current dark navy sidebar, cream/white background, navy typography, and green Sunnah Brasil accents.
+
+Small improvements I would like:
+
+1. Add a simple "Quick Actions" area near the top of the dashboard:
+   - Adicionar livro
+   - Adicionar vídeo
+   - Adicionar imagem
+   - Adicionar evento
+
+These buttons should simply link to the EXISTING upload/create pages. Do not create a new upload system.
+
+2. Improve the dashboard statistic cards so they look cleaner and more consistent with the Sunnah Brasil design.
+
+3. Keep the existing statistics:
+   - Livros no acervo
+   - Vídeos no acervo
+   - Imagens no acervo
+   - Próximos eventos
+   - Downloads totais
+   - Visitantes no período
+   - Visualizações de páginas
+
+4. Keep the existing traffic chart and active visitor section.
+
+5. Add a small "Atividade recente" section only if this can be done using the EXISTING data. Do not create a complicated new analytics system.
+
+6. Improve spacing, typography, alignment, borders, icons and card hierarchy.
+
+7. Make the Admin responsive and comfortable to use on both desktop and smaller screens.
+
+MOST IMPORTANT:
+This is a visual cleanup, NOT a redesign or rebuild.
+
+Before changing anything, inspect the existing Admin Panel and understand how every section currently works.
+
+Preserve all existing functionality exactly as it is.
+
+After making the changes, test:
+- Admin login
+- Books
+- Book upload
+- Videos
+- Images
+- Events
+- Categories
+- Settings
+- Dashboard statistics
+- Existing navigation
+
+If a proposed visual change could affect functionality, DO NOT make that change.
+
+Keep the Admin Panel recognizable and very similar to the current version, just cleaner, more professional and easier to use.
