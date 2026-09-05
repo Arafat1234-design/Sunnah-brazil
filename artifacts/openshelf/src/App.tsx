@@ -351,8 +351,8 @@ function Home() {
            <h1 className="serif rise-in delay-1 mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
            <p className="rise-in delay-2 mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
             <div className="rise-in delay-3 mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
-             <Button href="/books" className="depth-button whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar livros <BookOpen size={16} /></Button>
-             <Button href="/videos" variant="primary" className="depth-button whitespace-nowrap !bg-[#071B2C] !px-4 !py-2.5 !text-[13px] !text-white hover:!bg-[#102d43] sm:!px-5 sm:!text-sm">Assistir vídeos <PlayCircle size={17} /></Button>
+              <Button href="/books" className="depth-button whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar livros</Button>
+              <Button href="/videos" variant="primary" className="depth-button whitespace-nowrap !bg-[#071B2C] !px-4 !py-2.5 !text-[13px] !text-white hover:!bg-[#102d43] sm:!px-5 sm:!text-sm">Assistir vídeos</Button>
           </div>
         </div>
       </div>
