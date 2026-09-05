@@ -304,21 +304,21 @@ function Home() {
      {nextEvent && <NextEventBanner event={nextEvent} />}
     <section className="relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
-      <div className="relative mx-auto max-w-[1240px] px-5 pb-16 pt-12 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
+       <div className="relative mx-auto max-w-[1240px] px-5 pb-10 pt-10 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
         <div className="mx-auto max-w-[780px] text-center">
           <div className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
           <h1 className="serif mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
           <p className="mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Button href="/books" className="bg-[#075C45] px-5">Explorar livros <BookOpen size={16} /></Button>
-            <Button href="/videos" variant="primary" className="!bg-[#071B2C] !text-white hover:!bg-[#102d43]">Assistir vídeos <PlayCircle size={17} /></Button>
+           <div className="mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
+             <Button href="/books" className="whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar livros <BookOpen size={16} /></Button>
+             <Button href="/videos" variant="primary" className="whitespace-nowrap !bg-[#071B2C] !px-4 !py-2.5 !text-[13px] !text-white hover:!bg-[#102d43] sm:!px-5 sm:!text-sm">Assistir vídeos <PlayCircle size={17} /></Button>
           </div>
         </div>
       </div>
     </section>
-    <section className="mx-auto max-w-[1240px] px-5 pb-2 pt-16 lg:px-8">
+     <section className="mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
       <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Descubra algo novo</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Conteúdos em destaque</h2><p className="mt-2 text-sm text-[#607274]">Descubra alguns dos conteúdos disponíveis na nossa biblioteca.</p></div><Button href="/books" variant="ghost" className="hidden sm:inline-flex">Ver biblioteca <ArrowRight size={15} /></Button></div>
-       {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">{[...featuredBooks.slice(0, 2), ...featuredVideos.slice(0, 1)].map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group mx-auto block w-full max-w-[220px] sm:max-w-[240px]" data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group mx-auto block w-full max-w-[220px] sm:max-w-[240px]" data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
+       {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{[...featuredBooks.slice(0, 2), ...featuredVideos.slice(0, 1)].map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group mx-auto block w-full max-w-[205px] sm:max-w-[240px]" data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group mx-auto block w-full max-w-[220px] sm:max-w-[240px]" data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
     </section>
     <section className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
       <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>

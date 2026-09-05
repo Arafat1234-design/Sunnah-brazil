@@ -112,7 +112,7 @@
 .serif { font-family: var(--app-font-serif); }
 .mono { font-family: var(--app-font-mono); }
 .site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
-.site-public { position: relative; }
+.site-public { position: relative; width: 100%; max-width: 100%; overflow-x: clip; }
 .site-public > * { position: relative; z-index: 1; }
 .book-cover { position: relative; overflow: hidden; background: linear-gradient(145deg, hsl(174 37% 31%), hsl(190 27% 22%)); }
 .book-cover::after { content: ''; position: absolute; inset: 0; opacity: .18; background: repeating-linear-gradient(117deg, transparent 0 17px, hsl(38 42% 97% / .2) 18px 19px); mix-blend-mode: screen; }
@@ -133,7 +133,7 @@ label:has(> input[data-testid="input-editor-cover-upload"]) { display: none; }
   }
 
   .site-public.site-home {
-    background-image: url('/sunnah-mobile-home.png');
+    background-image: linear-gradient(rgba(255, 253, 248, .18), rgba(255, 253, 248, .18)), url('/sunnah-mobile-home.png');
   }
 
   .site-public.site-inner {
