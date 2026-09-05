@@ -174,7 +174,9 @@ function Footer() {
 }
 
 function Shell({ children, admin = false }: { children: ReactNode; admin?: boolean }) {
-  return admin ? <div className="min-h-[100dvh] bg-[hsl(var(--background))]">{children}</div> : <div className="site-grain min-h-[100dvh]"><Header />{children}<Footer /></div>;
+  const [location] = useLocation();
+  const publicPageClass = stripBase(location) === '/' ? 'site-home' : 'site-inner';
+  return admin ? <div className="min-h-[100dvh] bg-[hsl(var(--background))]">{children}</div> : <div className={`site-grain site-public ${publicPageClass} min-h-[100dvh]`}><Header />{children}<Footer /></div>;
 }
 
 function LoadingGrid({ kind = 'book' }: { kind?: 'book' | 'video' }) {

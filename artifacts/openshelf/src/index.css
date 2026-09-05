@@ -112,6 +112,8 @@
 .serif { font-family: var(--app-font-serif); }
 .mono { font-family: var(--app-font-mono); }
 .site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
+.site-public { position: relative; }
+.site-public > * { position: relative; z-index: 1; }
 .book-cover { position: relative; overflow: hidden; background: linear-gradient(145deg, hsl(174 37% 31%), hsl(190 27% 22%)); }
 .book-cover::after { content: ''; position: absolute; inset: 0; opacity: .18; background: repeating-linear-gradient(117deg, transparent 0 17px, hsl(38 42% 97% / .2) 18px 19px); mix-blend-mode: screen; }
 .hover-lift { transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease; }
@@ -120,3 +122,21 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 
 /* Book covers use the automatic title fallback; only the book file is selected in Admin. */
 label:has(> input[data-testid="input-editor-cover-upload"]) { display: none; }
+
+@media (max-width: 767px) {
+  .site-public.site-home,
+  .site-public.site-inner {
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  .site-public.site-home {
+    background-image: url('/sunnah-mobile-home.png');
+  }
+
+  .site-public.site-inner {
+    background-image: url('/sunnah-mobile-inner.png');
+  }
+}
