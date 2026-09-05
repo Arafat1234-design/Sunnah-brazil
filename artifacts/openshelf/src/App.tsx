@@ -357,7 +357,6 @@ function Home() {
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
        <div className="hero-content relative z-10 mx-auto max-w-[1240px] px-5 pb-10 pt-10 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
         <div className="mx-auto max-w-[780px] text-center">
-           <div className="rise-in mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
            <h1 className="serif rise-in delay-1 mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
            <p className="rise-in delay-2 mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
             <div className="rise-in delay-3 mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
