@@ -328,7 +328,6 @@ function NextEventBanner({ event }: { event: CatalogEvent }) {
 
 function Home() {
   const { data: summary, isLoading, isError, refetch } = useGetLibrarySummary();
-  const categories = useListCategories();
   const events = useListEvents({ query: { queryKey: getListEventsQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   useScrollReveal();
   const featuredBooks = summary?.featuredBooks ?? [];
@@ -343,14 +342,6 @@ function Home() {
     }).slice(0, 6);
   }, [featuredBooks, featuredVideos, summary?.recentlyAdded]);
   const nextEvent = events.data?.find(event => event.status === 'upcoming');
-  const categoryIcon = (name: string) => {
-    const normalized = name.toLowerCase();
-    if (normalized.includes('educ')) return <GraduationCap size={24} />;
-    if (normalized.includes('fam')) return <UsersRound size={24} />;
-    if (normalized.includes('hist')) return <BookMarked size={24} />;
-    if (normalized.includes('desenv')) return <Compass size={24} />;
-    return <BookOpen size={24} />;
-  };
   return <Shell><main className="overflow-x-clip">
      {nextEvent && <NextEventBanner event={nextEvent} />}
     <section className="home-hero relative border-b border-[#dbe4e2] bg-transparent">
@@ -369,10 +360,6 @@ function Home() {
       <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
       <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Descubra algo novo</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Conteúdos em destaque</h2><p className="mt-2 text-sm text-[#607274]">Descubra alguns dos conteúdos disponíveis na nossa biblioteca.</p></div><Button href="/books" variant="ghost" className="hidden sm:inline-flex">Ver biblioteca <ArrowRight size={15} /></Button></div>
         {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3">{highlightedItems.map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card mx-auto block w-full max-w-[205px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
-    </section>
-     <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
-      <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
-      {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group depth-card rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer}><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
     </section>
       <section data-reveal id="como-funciona" className="reveal-on-scroll mx-auto max-w-[1240px] px-5 py-24 lg:px-8">
        <div className="rounded-3xl bg-[#f1f6f4] px-7 py-12 md:px-16 md:py-16">
