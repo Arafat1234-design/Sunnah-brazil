@@ -105,6 +105,7 @@
 }
 
 @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes hero-drift { 0%, 100% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-18px, 10px, 0) scale(1.06); } }
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 .rise-in { animation: rise .55s cubic-bezier(.2,.8,.2,1) both; }
 .delay-1 { animation-delay: .08s; } .delay-2 { animation-delay: .16s; } .delay-3 { animation-delay: .24s; }
@@ -115,6 +116,9 @@
 .site-public { position: relative; width: 100%; max-width: 100%; overflow-x: clip; }
 .site-public > * { position: relative; z-index: 1; }
 .depth-card {
+  --depth-rotate-x: 0deg;
+  --depth-rotate-y: 0deg;
+  --depth-shift-x: 0px;
   transform: perspective(900px) translateZ(0);
   transform-style: preserve-3d;
   transition: transform .28s cubic-bezier(.2,.8,.2,1), box-shadow .28s ease;
@@ -125,9 +129,24 @@
   box-shadow: 0 8px 18px rgba(7, 27, 44, .12);
   transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
 }
+.home-hero {
+  overflow: hidden;
+}
+.home-hero::before {
+  content: '';
+  position: absolute;
+  top: 8%;
+  right: -7rem;
+  width: 22rem;
+  height: 22rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, hsl(var(--accent) / .11), transparent 68%);
+  pointer-events: none;
+  animation: hero-drift 9s ease-in-out infinite;
+}
 @media (hover: hover) and (pointer: fine) {
   .depth-card:hover {
-    transform: perspective(900px) translateY(-5px) rotateX(1.5deg) rotateY(-1deg);
+    transform: perspective(900px) translate3d(var(--depth-shift-x), -5px, 0) rotateX(var(--depth-rotate-x)) rotateY(var(--depth-rotate-y));
     box-shadow: 0 16px 28px rgba(7, 27, 44, .12);
   }
   .depth-card:hover > .book-cover,
@@ -152,6 +171,7 @@
   outline-offset: 4px;
 }
 @media (prefers-reduced-motion: reduce) {
+  .home-hero::before,
   .depth-card,
   .depth-button,
   .depth-card > .book-cover,

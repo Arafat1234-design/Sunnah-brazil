@@ -1,4 +1,4 @@
-import { type FormEvent, type ReactNode, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
+import { type FormEvent, type PointerEvent as ReactPointerEvent, type ReactNode, type SetStateAction, useEffect, useMemo, useRef, useState } from 'react';
 import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/react-query';
 import { Link, Redirect, Route, Router as WouterRouter, Switch, useLocation, useParams } from 'wouter';
 import { ClerkProvider, SignIn, SignUp, useAuth, useClerk } from '@clerk/react';
@@ -187,6 +187,23 @@ function StateMessage({ error = false, title, body, retry }: { error?: boolean; 
   return <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-6 py-16 text-center" data-testid={error ? 'state-error' : 'state-empty'}><div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-[hsl(var(--secondary))]">{error ? <Info size={19} /> : <BookOpen size={19} />}</div><h3 className="serif text-xl">{title}</h3><p className="mx-auto mt-2 max-w-sm text-sm text-[hsl(var(--muted-foreground))]">{body}</p>{retry && <Button onClick={retry} variant="outline" className="mt-5">Try again</Button>}</div>;
 }
 
+function handleDepthPointerMove(event: ReactPointerEvent<HTMLElement>) {
+  const element = event.currentTarget;
+  const bounds = element.getBoundingClientRect();
+  const x = ((event.clientX - bounds.left) / bounds.width - 0.5) * 2;
+  const y = ((event.clientY - bounds.top) / bounds.height - 0.5) * 2;
+  element.style.setProperty('--depth-rotate-x', `${(-y * 3).toFixed(2)}deg`);
+  element.style.setProperty('--depth-rotate-y', `${(x * 3).toFixed(2)}deg`);
+  element.style.setProperty('--depth-shift-x', `${(x * 2).toFixed(1)}px`);
+}
+
+function resetDepthPointer(event: ReactPointerEvent<HTMLElement>) {
+  const element = event.currentTarget;
+  element.style.setProperty('--depth-rotate-x', '0deg');
+  element.style.setProperty('--depth-rotate-y', '0deg');
+  element.style.setProperty('--depth-shift-x', '0px');
+}
+
 function Cover({ book, large = false }: { book: Book; large?: boolean }) {
   return <div className={`book-cover ${large ? 'aspect-[3/4] max-w-[280px] rounded-2xl' : 'aspect-[3/4] rounded-[14px]'} shadow-sm`}>
     {book.coverUrl ? <img src={book.coverUrl} alt={book.title} className="relative z-[1] h-full w-full object-cover" /> : <div className="relative z-[1] flex h-full flex-col justify-between p-5 text-[hsl(var(--primary-foreground))]"><span className="mono text-[10px] uppercase tracking-[.15em] opacity-75">OpenShelf edition</span><div><h3 className={`serif leading-[1.02] ${large ? 'text-3xl' : 'text-xl'}`}>{book.title}</h3><p className="mt-2 text-xs opacity-75">{book.author}</p></div></div>}
@@ -198,11 +215,11 @@ function VideoThumb({ video, large = false }: { video: Video; large?: boolean })
 }
 
 function BookCard({ book }: { book: Book }) {
-  return <Link href={`/books/${book.id}`} className="group depth-card block" data-testid={`card-book-${book.id}`}><Cover book={book} /><div className="px-1 pt-3"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{book.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{book.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{book.author}</p></div></Link>;
+  return <Link href={`/books/${book.id}`} className="group depth-card block" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-book-${book.id}`}><Cover book={book} /><div className="px-1 pt-3"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{book.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{book.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{book.author}</p></div></Link>;
 }
 
 function VideoCard({ video }: { video: Video }) {
-  return <Link href={`/videos/${video.id}`} className="group depth-card block" data-testid={`card-video-${video.id}`}><VideoThumb video={video} /><div className="px-1 pt-3"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{video.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{video.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{video.viewCount.toLocaleString()} views</p></div></Link>;
+  return <Link href={`/videos/${video.id}`} className="group depth-card block" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-video-${video.id}`}><VideoThumb video={video} /><div className="px-1 pt-3"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{video.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{video.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{video.viewCount.toLocaleString()} views</p></div></Link>;
 }
 
 function SectionHeading({ eyebrow, title, href, action = 'See the shelf' }: { eyebrow: string; title: string; href?: string; action?: string }) {
@@ -302,14 +319,14 @@ function Home() {
   };
   return <Shell><main className="overflow-x-clip">
      {nextEvent && <NextEventBanner event={nextEvent} />}
-    <section className="relative border-b border-[#dbe4e2] bg-transparent">
+    <section className="home-hero relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
-       <div className="relative mx-auto max-w-[1240px] px-5 pb-10 pt-10 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
+       <div className="hero-content relative z-10 mx-auto max-w-[1240px] px-5 pb-10 pt-10 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
         <div className="mx-auto max-w-[780px] text-center">
-          <div className="mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
-          <h1 className="serif mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
-          <p className="mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
-           <div className="mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
+           <div className="rise-in mb-5 inline-flex items-center gap-2 text-[11px] font-bold tracking-[.16em] text-[#075C45]"><span className="grid h-5 w-5 place-items-center rounded bg-[#e6f0ec]"><Globe2 size={13} /></span>BIBLIOTECA DIGITAL PÚBLICA</div>
+           <h1 className="serif rise-in delay-1 mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
+           <p className="rise-in delay-2 mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
+            <div className="rise-in delay-3 mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
              <Button href="/books" className="depth-button whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar livros <BookOpen size={16} /></Button>
              <Button href="/videos" variant="primary" className="depth-button whitespace-nowrap !bg-[#071B2C] !px-4 !py-2.5 !text-[13px] !text-white hover:!bg-[#102d43] sm:!px-5 sm:!text-sm">Assistir vídeos <PlayCircle size={17} /></Button>
           </div>
@@ -318,11 +335,11 @@ function Home() {
     </section>
      <section className="mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
       <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Descubra algo novo</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Conteúdos em destaque</h2><p className="mt-2 text-sm text-[#607274]">Descubra alguns dos conteúdos disponíveis na nossa biblioteca.</p></div><Button href="/books" variant="ghost" className="hidden sm:inline-flex">Ver biblioteca <ArrowRight size={15} /></Button></div>
-        {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{[...featuredBooks.slice(0, 2), ...featuredVideos.slice(0, 1)].map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card mx-auto block w-full max-w-[205px] sm:max-w-[240px]" data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
+        {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{[...featuredBooks.slice(0, 2), ...featuredVideos.slice(0, 1)].map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card mx-auto block w-full max-w-[205px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
     </section>
     <section className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
       <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
-      {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group depth-card rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]"><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
+      {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group depth-card rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer}><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
     </section>
     <section id="como-funciona" className="mx-auto max-w-[1240px] px-5 py-20 lg:px-8">
       <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14">
