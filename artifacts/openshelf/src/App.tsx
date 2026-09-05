@@ -179,6 +179,30 @@ function Shell({ children, admin = false }: { children: ReactNode; admin?: boole
   return admin ? <div className="min-h-[100dvh] bg-[hsl(var(--background))]">{children}</div> : <div className={`site-grain site-public ${publicPageClass} min-h-[100dvh]`}><Header />{children}<Footer /></div>;
 }
 
+function useScrollReveal() {
+  useEffect(() => {
+    const elements = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'));
+    if (!elements.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach(element => element.classList.add('is-visible'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12, rootMargin: '0px 0px -36px' });
+
+    elements.forEach(element => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+}
+
 function LoadingGrid({ kind = 'book' }: { kind?: 'book' | 'video' }) {
   return <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-5">{[1, 2, 3, 4, 5].map(i => <div key={i} className="animate-pulse" data-testid={`skeleton-${kind}-${i}`}><div className={`skeleton aspect-[3/4] rounded-[14px] ${kind === 'video' ? 'aspect-video' : ''}`} /><div className="skeleton mt-3 h-4 w-4/5 rounded" /><div className="skeleton mt-2 h-3 w-2/5 rounded" /></div>)}</div>;
 }
@@ -306,6 +330,7 @@ function Home() {
   const { data: summary, isLoading, isError, refetch } = useGetLibrarySummary();
   const categories = useListCategories();
   const events = useListEvents({ query: { queryKey: getListEventsQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
+  useScrollReveal();
   const featuredBooks = summary?.featuredBooks ?? [];
   const featuredVideos = summary?.featuredVideos ?? [];
   const nextEvent = events.data?.find(event => event.status === 'upcoming');
@@ -333,15 +358,15 @@ function Home() {
         </div>
       </div>
     </section>
-     <section className="mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
+      <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pb-8 pt-12 sm:pb-2 sm:pt-16 lg:px-8">
       <div className="mb-8 flex items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Descubra algo novo</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Conteúdos em destaque</h2><p className="mt-2 text-sm text-[#607274]">Descubra alguns dos conteúdos disponíveis na nossa biblioteca.</p></div><Button href="/books" variant="ghost" className="hidden sm:inline-flex">Ver biblioteca <ArrowRight size={15} /></Button></div>
         {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{[...featuredBooks.slice(0, 2), ...featuredVideos.slice(0, 1)].map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card mx-auto block w-full max-w-[205px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
     </section>
-    <section className="mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
+     <section data-reveal className="reveal-on-scroll mx-auto max-w-[1240px] px-5 pt-20 lg:px-8">
       <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
       {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group depth-card rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer}><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
     </section>
-    <section id="como-funciona" className="mx-auto max-w-[1240px] px-5 py-20 lg:px-8">
+     <section data-reveal id="como-funciona" className="reveal-on-scroll mx-auto max-w-[1240px] px-5 py-20 lg:px-8">
       <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14">
         <div className="mx-auto max-w-4xl">
           <p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Sobre Nós</p>

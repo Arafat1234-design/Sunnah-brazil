@@ -115,6 +115,15 @@
 .site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
 .site-public { position: relative; width: 100%; max-width: 100%; overflow-x: clip; }
 .site-public > * { position: relative; z-index: 1; }
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity .65s ease, transform .65s cubic-bezier(.2,.8,.2,1);
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
 .depth-card {
   --depth-rotate-x: 0deg;
   --depth-rotate-y: 0deg;
@@ -172,11 +181,20 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .home-hero::before,
+  .reveal-on-scroll,
   .depth-card,
   .depth-button,
   .depth-card > .book-cover,
   .depth-card > .relative {
     transition: none;
+  }
+  .home-hero::before {
+    animation: none;
+  }
+  .reveal-on-scroll,
+  .reveal-on-scroll.is-visible {
+    opacity: 1;
+    transform: none;
   }
   .depth-card:hover,
   .depth-button:hover,
