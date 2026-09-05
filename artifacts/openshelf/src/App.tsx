@@ -343,9 +343,6 @@ function Home() {
     }).slice(0, 6);
   }, [featuredBooks, featuredVideos, summary?.recentlyAdded]);
   const nextEvent = events.data?.find(event => event.status === 'upcoming');
-  const showHighlights = isLoading || isError || highlightedItems.length > 0;
-  const showCategories = categories.isLoading || (!categories.isError && (categories.data?.length ?? 0) > 0);
-  const showStats = Boolean(summary) && !isLoading && !isError && !categories.isLoading && !categories.isError;
   const categoryIcon = (name: string) => {
     const normalized = name.toLowerCase();
     if (normalized.includes('educ')) return <GraduationCap size={24} />;
@@ -377,11 +374,11 @@ function Home() {
       <div className="mb-8 text-center"><p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Encontre seu próximo assunto</p><h2 className="mt-2 text-3xl font-bold tracking-[-.04em] text-[#071B2C] md:text-4xl">Explore por categoria</h2><p className="mx-auto mt-2 max-w-lg text-sm text-[#607274]">Navegue por temas e descubra livros e vídeos para aprender no seu ritmo.</p></div>
       {categories.isLoading ? <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{[1, 2, 3, 4].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}</div> : <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{(categories.data ?? []).map(category => <Link href={`/books?category=${encodeURIComponent(category.name)}`} key={category.name} className="group depth-card rounded-2xl border border-[#dbe4e2] bg-white p-5 transition-all hover:border-[#75b79f] hover:shadow-[0_10px_24px_rgba(7,27,44,.08)]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer}><div className="mb-7 grid h-10 w-10 place-items-center rounded-xl bg-[#e9f3ef] text-[#075C45]">{categoryIcon(category.name)}</div><div className="flex items-end justify-between gap-2"><div><h3 className="font-bold text-[#071B2C] group-hover:text-[#075C45]">{category.name}</h3><p className="mt-1 text-xs text-[#607274]">{category.bookCount + category.videoCount} itens disponíveis</p></div><ArrowRight className="text-[#075C45]" size={16} /></div></Link>)}</div>}
     </section>
-     <section data-reveal id="como-funciona" className="reveal-on-scroll mx-auto max-w-[1240px] px-5 py-20 lg:px-8">
-      <div className="rounded-3xl bg-[#f1f6f4] px-6 py-10 md:px-12 md:py-14">
-        <div className="mx-auto max-w-4xl">
-          <p className="text-xs font-bold uppercase tracking-[.18em] text-[#075C45]">Sobre Nós</p>
-          <div className="mt-6 space-y-5 text-sm leading-7 text-[#53666b] md:text-base">
+      <section data-reveal id="como-funciona" className="reveal-on-scroll mx-auto max-w-[1240px] px-5 py-24 lg:px-8">
+       <div className="rounded-3xl bg-[#f1f6f4] px-7 py-12 md:px-16 md:py-16">
+         <div className="mx-auto max-w-5xl">
+           <p className="text-sm font-bold uppercase tracking-[.18em] text-[#075C45]">Sobre Nós</p>
+           <div className="mt-7 space-y-6 text-sm leading-7 text-[#53666b] md:text-lg md:leading-8">
             <p>A Sunnah Brasil, fundada por Sheikh Jumma Momade Anli, é uma plataforma digital dedicada à divulgação e ao acesso ao conhecimento islâmico. O seu objetivo é tornar conteúdos de benefício mais acessíveis, reunindo num só espaço livros, vídeos, áudios, artigos, palestras, aulas e outros materiais islâmicos.</p>
             <p>A plataforma foi criada para proporcionar um ambiente simples e organizado, onde qualquer pessoa possa aprender, estudar, pesquisar e aprofundar os seus conhecimentos sobre o Islão, independentemente da sua localização.</p>
             <p>Através da tecnologia, a Sunnah Brasil procura preservar, organizar e divulgar o conhecimento islâmico, aproximando as pessoas de conteúdos que possam contribuir para a aprendizagem, reflexão e compreensão da religião.</p>
