@@ -437,16 +437,11 @@ function GalleryPage() {
   }, [selected]);
 
   return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 lg:px-8">
-    <section className="relative overflow-hidden rounded-[2rem] border border-[#dbe4e2] bg-[#e7f0eb] px-6 py-12 md:px-12 md:py-16">
-      <div className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border-[34px] border-[#b6d2c3]/50" />
-      <div className="pointer-events-none absolute -bottom-36 right-40 h-64 w-64 rounded-full border-[24px] border-[#d6b680]/30" />
-      <div className="relative max-w-2xl">
-        <p className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">A sala das imagens</p>
-        <h1 className="serif mt-3 text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-7xl">Lembretes para guardar.</h1>
-        <p className="mt-5 max-w-xl text-base leading-7 text-[#53666b] md:text-lg">Uma coleção de imagens para contemplar, compartilhar e levar consigo. Entre com calma.</p>
-      </div>
-      <div className="relative mt-9 flex items-center gap-2 text-sm font-semibold text-[#075C45]"><Images size={18} />{filteredItems.length} {filteredItems.length === 1 ? 'imagem disponível' : 'imagens disponíveis'}</div>
-    </section>
+    <div className="mb-10">
+      <p className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">A sala das imagens</p>
+      <h1 className="serif mt-3 text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-6xl">Imagens para contemplar.</h1>
+      <p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">Uma coleção de imagens para contemplar, compartilhar e levar consigo.</p>
+    </div>
 
     <section className="mt-10" aria-label="Buscar e filtrar imagens">
       <div className="flex flex-col gap-4 border-b border-[#dbe4e2] pb-5 md:flex-row md:items-center md:justify-between">
