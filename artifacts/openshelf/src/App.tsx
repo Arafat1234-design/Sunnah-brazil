@@ -10,7 +10,7 @@ import {
   ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound,
   Download, FileText, Film, Headphones, Heart, Info,
   Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
-  Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2, HeartHandshake,
+  Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2,
   BookMarked, Compass, UsersRound, PlayCircle, ArrowUpRight,
   Images, Maximize2, CalendarDays, Clock3, MapPin, ExternalLink, Copy, Eye, EyeOff,
 } from 'lucide-react';
@@ -312,11 +312,6 @@ function Home() {
           <div className="mt-8 flex flex-wrap justify-center gap-3">
             <Button href="/books" className="bg-[#075C45] px-5">Explorar livros <BookOpen size={16} /></Button>
             <Button href="/videos" variant="primary" className="!bg-[#071B2C] !text-white hover:!bg-[#102d43]">Assistir vídeos <PlayCircle size={17} /></Button>
-          </div>
-          <div className="mx-auto mt-9 grid max-w-[560px] gap-4 border-t border-[#e2e9e7] pt-5 text-xs text-[#53666b] sm:grid-cols-3">
-            <div className="flex flex-col items-center gap-2 text-center"><HeartHandshake className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">100% gratuito</strong>Sem cadastro necessário</span></div>
-            <div className="flex flex-col items-center gap-2 text-center"><ShieldCheck className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Acesso aberto</strong>Para todos, sempre</span></div>
-            <div className="flex flex-col items-center gap-2 text-center"><BookMarked className="text-[#075C45]" size={19} /><span><strong className="block text-[#071B2C]">Bem selecionado</strong>Conteúdo organizado</span></div>
           </div>
         </div>
       </div>
