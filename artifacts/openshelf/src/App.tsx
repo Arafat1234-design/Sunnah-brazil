@@ -138,7 +138,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const [search, setSearch] = useState('');
-   const items = [['Início', '/'], ['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
+   const items = [['Início', '/'], ['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about']];
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
@@ -168,7 +168,7 @@ function Footer() {
   return <footer className="mt-24 border-t border-[#dbe4e2] bg-[#f5f8f7]">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
       <div><Logo /><p className="mt-4 max-w-[290px] text-sm leading-6 text-[#607274]">Conhecimento que atravessa fronteiras. Uma biblioteca digital pública, simples e acessível.</p></div>
-       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/events">Eventos</Link><Link href="/categories">Categorias</Link><Link href="/#como-funciona">Como funciona</Link></div></div>
+      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/events">Eventos</Link><Link href="/categories">Categorias</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Sunnah Brasil</p><div className="grid gap-2 text-sm"><Link href="/about">Sobre</Link><Link href="/contact">Contato e direitos</Link><Link href="/content-policy">Política de privacidade</Link><Link href="/terms">Termos de uso</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Transparência</p><p className="text-sm leading-6 text-[#607274]">Se você acredita que algum conteúdo viola seus direitos autorais, entre em contato conosco para análise.</p><Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#075C45]">Falar com a equipe <ArrowUpRight size={14} /></Link></div>
     </div><div className="mx-auto max-w-[1240px] border-t border-[#dbe4e2] px-5 py-5 text-xs text-[#607274] lg:px-8">© 2026 Sunnah Brasil · Acesso gratuito ao conhecimento</div>
