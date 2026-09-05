@@ -169,9 +169,9 @@ function Footer() {
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
       <div><Logo /><p className="mt-4 max-w-[290px] text-sm leading-6 text-[#607274]">Conhecimento que atravessa fronteiras. Uma biblioteca digital pública, simples e acessível.</p></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/events">Eventos</Link><Link href="/categories">Categorias</Link></div></div>
-      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Sunnah Brasil</p><div className="grid gap-2 text-sm"><Link href="/about">Sobre</Link><Link href="/contact">Contato e direitos</Link><Link href="/content-policy">Política de privacidade</Link><Link href="/terms">Termos de uso</Link></div></div>
+      <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Sunnah Brasil</p><div className="grid gap-2 text-sm"><Link href="/about">Sobre</Link><Link href="/contact">Contato e direitos</Link><Link href="/content-policy">Política de conteúdo</Link><Link href="/terms">Termos de uso</Link></div></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Transparência</p><p className="text-sm leading-6 text-[#607274]">Se você acredita que algum conteúdo viola seus direitos autorais, entre em contato conosco para análise.</p><Link href="/contact" className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-[#075C45]">Falar com a equipe <ArrowUpRight size={14} /></Link></div>
-    </div><div className="mx-auto max-w-[1240px] border-t border-[#dbe4e2] px-5 py-5 text-xs text-[#607274] lg:px-8">© 2026 Sunnah Brasil · Acesso gratuito ao conhecimento</div>
+    </div><div className="mx-auto max-w-[1240px] border-t border-[#dbe4e2] px-5 py-5 text-xs text-[#607274] lg:px-8">© {new Date().getFullYear()} Sunnah Brasil · Acesso gratuito ao conhecimento</div>
   </footer>;
 }
 
@@ -368,9 +368,7 @@ function Home() {
          <div className="mx-auto max-w-5xl">
            <p className="text-sm font-bold uppercase tracking-[.18em] text-[#075C45]">Sobre Nós</p>
            <div className="mt-5 space-y-5 text-sm leading-7 text-[#53666b] md:mt-7 md:space-y-6 md:text-lg md:leading-8">
-            <p>A Sunnah Brasil, fundada por Sheikh Jumma Momade Anli, é uma plataforma digital dedicada à divulgação e ao acesso ao conhecimento islâmico. O seu objetivo é tornar conteúdos de benefício mais acessíveis, reunindo num só espaço livros, vídeos, áudios, artigos, palestras, aulas e outros materiais islâmicos.</p>
-            <p>A plataforma foi criada para proporcionar um ambiente simples e organizado, onde qualquer pessoa possa aprender, estudar, pesquisar e aprofundar os seus conhecimentos sobre o Islão, independentemente da sua localização.</p>
-            <p>Através da tecnologia, a Sunnah Brasil procura preservar, organizar e divulgar o conhecimento islâmico, aproximando as pessoas de conteúdos que possam contribuir para a aprendizagem, reflexão e compreensão da religião.</p>
+            <p>A Sunnah Brasil reúne conhecimento islâmico em um espaço simples e acessível, com livros, vídeos, imagens e eventos para aprender, estudar e aprofundar seus conhecimentos.</p>
             <p className="border-t border-[#cbdcd5] pt-5 font-semibold text-[#075C45]">Sunnah Brasil — Conhecimento, Sunnah e orientação para todos.</p>
           </div>
         </div>
