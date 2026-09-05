@@ -77,6 +77,7 @@
     "zod": "catalog:"
   },
   "dependencies": {
+    "@clerk/localizations": "^4.16.0",
     "pdfjs-dist": "^6.3.289"
   }
 }
