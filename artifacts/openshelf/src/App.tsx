@@ -480,11 +480,11 @@ function EventsPage() {
   const [view, setView] = useState<'upcoming' | 'past'>('upcoming');
   const events = (eventsQuery.data ?? []).filter(event => event.status === view);
   return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 lg:px-8">
-    <section className="rounded-[2rem] border border-[#dbe4e2] bg-[#e7f0eb] px-6 py-12 md:px-12 md:py-16">
+    <div className="mb-10">
       <p className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">Agenda Sunnah Brasil</p>
-      <h1 className="serif mt-3 max-w-3xl text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-7xl">Encontros para aprender e partilhar.</h1>
-      <p className="mt-5 max-w-xl text-base leading-7 text-[#53666b] md:text-lg">Acompanhe palestras, aulas e encontros islâmicos publicados pela Sunnah Brasil.</p>
-    </section>
+      <h1 className="serif mt-3 max-w-3xl text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-6xl">Encontros para aprender e partilhar.</h1>
+      <p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">Acompanhe palestras, aulas e encontros islâmicos publicados pela Sunnah Brasil.</p>
+    </div>
     <div className="mt-10 flex flex-wrap items-center gap-2 border-b border-[#dbe4e2] pb-4">
       <button onClick={() => setView('upcoming')} className={`rounded-full px-4 py-2.5 text-sm font-semibold ${view === 'upcoming' ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55]'}`} data-testid="button-events-upcoming">Próximos</button>
       <button onClick={() => setView('past')} className={`rounded-full px-4 py-2.5 text-sm font-semibold ${view === 'past' ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55]'}`} data-testid="button-events-past">Realizados</button>
