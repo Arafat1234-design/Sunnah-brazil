@@ -136,7 +136,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const [search, setSearch] = useState('');
-   const items = [['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
+   const items = [['Início', '/'], ['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about'], ['Como funciona', '/#como-funciona']];
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
