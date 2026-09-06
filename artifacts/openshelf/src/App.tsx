@@ -80,8 +80,8 @@ const clerkAppearance = {
     colorInput: 'hsl(38 42% 97%)',
     colorInputForeground: 'hsl(193 25% 19%)',
     colorNeutral: 'hsl(38 18% 82%)',
-    fontFamily: 'DM Sans, sans-serif',
-    borderRadius: '0.75rem',
+    fontFamily: 'Inter, sans-serif',
+    borderRadius: '0.875rem',
   },
   elements: {
     rootBox: 'w-full flex justify-center',
@@ -98,8 +98,8 @@ const clerkAppearance = {
     identityPreviewEditButton: 'text-[#23645f]',
     formFieldSuccessText: 'text-[#23645f]',
     alertText: 'text-[#8f342b]',
-    logoBox: 'h-10',
-    logoImage: 'h-10 w-10',
+    logoBox: 'h-12',
+    logoImage: 'h-12 w-[110px] object-contain',
     socialButtonsBlockButton: 'border-[#d8d0c2] bg-[#fffdf8]',
     formButtonPrimary: 'bg-[#23645f] hover:bg-[#19383b]',
     formFieldInput: 'border-[#d8d0c2] bg-[#fffdf8] text-[#19383b]',
@@ -109,6 +109,24 @@ const clerkAppearance = {
     otpCodeFieldInput: 'border-[#d8d0c2] bg-[#fffdf8] text-[#19383b]',
     formFieldRow: 'text-[#19383b]',
     main: 'bg-transparent',
+  },
+};
+
+const clerkLocalization = {
+  ...ptBR,
+  signIn: {
+    ...ptBR.signIn,
+    start: {
+      ...(ptBR.signIn?.start ?? {}),
+      subtitle: 'para continuar em Nur Al-Sunnah',
+    },
+  },
+  signUp: {
+    ...ptBR.signUp,
+    start: {
+      ...(ptBR.signUp?.start ?? {}),
+      subtitle: 'crie o seu espaço na biblioteca Nur Al-Sunnah',
+    },
   },
 };
 
@@ -123,7 +141,7 @@ function Button({ children, onClick, href, variant = 'primary', className = '', 
     outline: 'border border-[hsl(var(--border))] bg-[hsl(var(--card))] hover:border-[hsl(var(--primary))] hover:text-[hsl(var(--primary))]',
     danger: 'bg-[hsl(var(--destructive))] text-[hsl(var(--destructive-foreground))] hover:brightness-110',
   };
-  const cls = `inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`;
+  const cls = `inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition-all duration-200 focus-visible:ring-4 focus-visible:ring-[hsl(var(--accent)/.18)] disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`;
   return href ? <Link href={href} className={cls} data-testid={`link-${href.replace(/\//g, '').replace(':', '-')}`}>{children}</Link> :
     <button type={type} onClick={onClick} disabled={disabled} className={cls} data-testid="button-action">{children}</button>;
 }
@@ -143,21 +161,21 @@ function Header() {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
   };
-  return <header className="sticky top-0 z-40 border-b border-[#e3e9e7] bg-[#eee6da]/95 backdrop-blur-md">
-    <div className="mx-auto flex min-h-[72px] max-w-[1240px] items-center justify-between gap-5 px-5 lg:px-8">
+  return <header className="site-header sticky top-0 z-40 border-b border-[#e3e9e7] bg-[#eee6da]/95 backdrop-blur-md">
+    <div className="mx-auto flex min-h-[80px] max-w-[1240px] items-center justify-between gap-5 px-5 lg:px-8">
       <Logo />
       <nav className="hidden items-center gap-0.5 lg:flex">{items.map(([label, href]) =>
-        <Link key={href} href={href} data-testid={`link-nav-${label.toLowerCase().replace(/\s/g, '-')}`} className={`rounded-full px-3 py-2 text-[13px] transition-colors ${location === href ? 'bg-[hsl(var(--secondary))] font-semibold text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]'}`}>{label}</Link>)}</nav>
+        <Link key={href} href={href} data-testid={`link-nav-${label.toLowerCase().replace(/\s/g, '-')}`} className={`rounded-lg px-3 py-2 text-[13px] transition-colors ${location === href ? 'bg-[hsl(var(--secondary))] font-semibold text-[hsl(var(--foreground))]' : 'text-[hsl(var(--muted-foreground))] hover:bg-white/45 hover:text-[hsl(var(--foreground))]'}`}>{label}</Link>)}</nav>
       <div className="hidden items-center gap-2 md:flex">
         <form onSubmit={submitSearch} className="relative hidden xl:block">
           <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" />
-          <input aria-label="Buscar livros e vídeos" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar livros, vídeos..." className="h-10 w-[190px] rounded-full border border-[hsl(var(--border))] bg-white pl-9 pr-3 text-xs outline-none transition focus:border-[#075C45]" />
+          <input aria-label="Buscar livros e vídeos" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar livros, vídeos..." className="h-10 w-[210px] rounded-lg border border-[hsl(var(--border))] bg-white/70 pl-9 pr-3 text-xs outline-none transition focus:border-[#075C45]" />
         </form>
         <Button href="/books" className="bg-[#075C45] px-4">Explorar biblioteca</Button>
       </div>
       <button onClick={() => setOpen(!open)} className="rounded-full p-2 lg:hidden" data-testid="button-mobile-menu" aria-label={open ? 'Fechar menu' : 'Abrir menu'}>{open ? <X size={22} /> : <Menu size={22} />}</button>
     </div>
-    {open && <div className="border-t border-[hsl(var(--border))] px-5 pb-5 pt-4 lg:hidden">
+     {open && <div className="border-t border-[hsl(var(--border))] bg-[#eee6da]/96 px-5 pb-5 pt-4 shadow-lg lg:hidden">
       <form onSubmit={submitSearch} className="relative mb-3"><Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" /><input aria-label="Buscar livros e vídeos" value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar livros, vídeos..." className="h-12 w-full rounded-full border border-[hsl(var(--border))] bg-white pl-10 pr-4 text-sm outline-none focus:border-[#075C45]" /></form>
       {items.map(([label, href]) => <Link onClick={() => setOpen(false)} key={href} href={href} className="block border-b border-[hsl(var(--border)/.55)] py-3 text-sm" data-testid={`link-mobile-${label.toLowerCase().replace(/\s/g, '-')}`}>{label}</Link>)}<Button href="/books" className="mt-4 w-full bg-[#075C45]">Explorar biblioteca</Button>
     </div>}
@@ -165,7 +183,7 @@ function Header() {
 }
 
 function Footer() {
-  return <footer className="mt-24 border-t border-[#dbe4e2] bg-[#f5f8f7]">
+  return <footer className="site-footer mt-24 border-t border-[#dbe4e2] bg-[#f5f8f7]/88">
     <div className="mx-auto grid max-w-[1240px] gap-10 px-5 py-12 md:grid-cols-[1.5fr_1fr_1fr_1fr] lg:px-8">
       <div><Logo /><p className="mt-4 max-w-[290px] text-sm leading-6 text-[#607274]">Conhecimento que atravessa fronteiras. Uma biblioteca digital pública, simples e acessível.</p></div>
       <div><p className="mono mb-3 text-[10px] uppercase tracking-[.18em] text-[#075C45]">Explorar</p><div className="grid gap-2 text-sm"><Link href="/books">Livros</Link><Link href="/videos">Vídeos</Link><Link href="/images" data-testid="link-footer-images">Imagens</Link><Link href="/events">Eventos</Link><Link href="/categories">Categorias</Link></div></div>
@@ -210,7 +228,7 @@ function LoadingGrid({ kind = 'book' }: { kind?: 'book' | 'video' }) {
 }
 
 function StateMessage({ error = false, title, body, retry }: { error?: boolean; title: string; body: string; retry?: () => void }) {
-  return <div className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] px-6 py-16 text-center" data-testid={error ? 'state-error' : 'state-empty'}><div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-[hsl(var(--secondary))]">{error ? <Info size={19} /> : <BookOpen size={19} />}</div><h3 className="serif text-xl">{title}</h3><p className="mx-auto mt-2 max-w-sm text-sm text-[hsl(var(--muted-foreground))]">{body}</p>{retry && <Button onClick={retry} variant="outline" className="mt-5">Tentar novamente</Button>}</div>;
+  return <div className="surface-card rounded-2xl px-6 py-16 text-center" data-testid={error ? 'state-error' : 'state-empty'}><div className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full bg-[hsl(var(--secondary))]">{error ? <Info size={19} /> : <BookOpen size={19} />}</div><h3 className="serif text-xl">{title}</h3><p className="mx-auto mt-2 max-w-sm text-sm text-[hsl(var(--muted-foreground))]">{body}</p>{retry && <Button onClick={retry} variant="outline" className="mt-5">Tentar novamente</Button>}</div>;
 }
 
 function handleDepthPointerMove(event: ReactPointerEvent<HTMLElement>) {
@@ -241,11 +259,11 @@ function VideoThumb({ video, large = false }: { video: Video; large?: boolean })
 }
 
 function BookCard({ book }: { book: Book }) {
-  return <Link href={`/books/${book.id}`} className="group depth-card block" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-book-${book.id}`}><Cover book={book} /><div className="px-1 pt-3"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{book.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{book.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{book.author}</p></div></Link>;
+  return <Link href={`/books/${book.id}`} className="surface-card group depth-card block rounded-2xl p-2.5" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-book-${book.id}`}><Cover book={book} /><div className="px-1 pt-3 pb-1"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{book.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{book.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{book.author}</p></div></Link>;
 }
 
 function VideoCard({ video }: { video: Video }) {
-  return <Link href={`/videos/${video.id}`} className="group depth-card block" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-video-${video.id}`}><VideoThumb video={video} /><div className="px-1 pt-3"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{video.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{video.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{video.viewCount.toLocaleString()} visualizações</p></div></Link>;
+  return <Link href={`/videos/${video.id}`} className="surface-card group depth-card block rounded-2xl p-2.5" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-video-${video.id}`}><VideoThumb video={video} /><div className="px-1 pt-3 pb-1"><p className="mono text-[10px] uppercase tracking-[.12em] text-[hsl(var(--muted-foreground))]">{video.category}</p><h3 className="mt-1 line-clamp-2 text-[15px] font-semibold leading-snug group-hover:text-[hsl(var(--primary))]">{video.title}</h3><p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">{video.viewCount.toLocaleString()} visualizações</p></div></Link>;
 }
 
 function SectionHeading({ eyebrow, title, href, action = 'Ver a estante' }: { eyebrow: string; title: string; href?: string; action?: string }) {
@@ -301,7 +319,7 @@ function EventImage({ event, className = '' }: { event: CatalogEvent; className?
 
 function EventCard({ event }: { event: CatalogEvent }) {
   const isUpcoming = event.status === 'upcoming';
-  return <Link href={`/events/${event.id}`} className="group block overflow-hidden rounded-2xl border border-[#dbe4e2] bg-white transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.1)]" data-testid={`card-event-${event.id}`}>
+  return <Link href={`/events/${event.id}`} className="surface-card group block overflow-hidden rounded-2xl transition-all hover:-translate-y-1 hover:border-[#75b79f] hover:shadow-[0_14px_30px_rgba(7,27,44,.1)]" data-testid={`card-event-${event.id}`}>
     <EventImage event={event} className="aspect-[16/9]" />
     <div className="p-5">
       <div className="flex items-center justify-between gap-3"><span className={`mono text-[10px] uppercase tracking-[.15em] ${isUpcoming ? 'text-[#075C45]' : 'text-[#8a6e4b]'}`}>{isUpcoming ? 'Próximo evento' : 'Evento realizado'}</span><CalendarDays size={15} className="text-[#075C45]" /></div>
@@ -314,7 +332,7 @@ function EventCard({ event }: { event: CatalogEvent }) {
 
 function NextEventBanner({ event }: { event: CatalogEvent }) {
   return <section className="sticky top-[76px] z-20 mx-auto -mb-5 max-w-[1240px] px-4 pt-2 lg:px-8">
-    <div className="relative overflow-hidden rounded-2xl border border-[#dbe4e2] bg-transparent text-[#163d3a]">
+    <div className="surface-card relative overflow-hidden rounded-2xl text-[#163d3a]">
       <div className="relative grid gap-3 p-3 md:grid-cols-[1fr_auto] md:items-center md:p-4">
         <div>
           <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[.16em] text-[#075C45]"><CalendarDays size={12} /> Próximo evento</div>
@@ -364,7 +382,7 @@ function Home() {
         {isLoading ? <LoadingGrid /> : isError ? <StateMessage error title="A biblioteca está indisponível" body="Não conseguimos carregar os conteúdos agora." retry={refetch} /> : <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3">{highlightedItems.map(item => 'author' in item ? <Link href={`/books/${item.id}`} key={`book-${item.id}`} className="group depth-card mx-auto block w-full max-w-[205px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-book-${item.id}`}><Cover book={item} /></Link> : <Link href={`/videos/${item.id}`} key={`video-${item.id}`} className="group depth-card mx-auto block w-full max-w-[220px] sm:max-w-[240px]" onPointerMove={handleDepthPointerMove} onPointerLeave={resetDepthPointer} data-testid={`card-featured-video-${item.id}`}><VideoThumb video={item} /></Link>)}</div>}
     </section>
       <section data-reveal id="como-funciona" className="reveal-on-scroll mx-auto max-w-[1240px] px-5 py-16 md:py-24 lg:px-8">
-       <div className="rounded-3xl bg-[#f1f6f4] px-5 py-8 md:px-16 md:py-16">
+        <div className="glass-panel rounded-3xl px-5 py-8 md:px-16 md:py-16">
          <div className="mx-auto max-w-5xl">
            <p className="text-sm font-bold uppercase tracking-[.18em] text-[#075C45]">Sobre Nós</p>
            <div className="mt-5 space-y-5 text-sm leading-7 text-[#53666b] md:mt-7 md:space-y-6 md:text-lg md:leading-8">
@@ -378,11 +396,11 @@ function Home() {
 }
 
 function SearchBar({ value, onChange, placeholder = 'Buscar na coleção' }: { value: string; onChange: (v: string) => void; placeholder?: string }) {
-  return <div className="relative w-full max-w-[440px]"><Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" /><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} data-testid="input-search" className="h-12 w-full rounded-full border border-[hsl(var(--border))] bg-[hsl(var(--card))] pl-11 pr-4 text-sm outline-none transition focus:border-[hsl(var(--primary))] focus:ring-4 focus:ring-[hsl(var(--primary)/.1)]" /></div>;
+  return <div className="relative w-full max-w-[440px]"><Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[hsl(var(--muted-foreground))]" /><input value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} data-testid="input-search" className="h-12 w-full rounded-lg border border-[hsl(var(--border))] bg-[hsl(var(--card)/.76)] pl-11 pr-4 text-sm outline-none transition focus:border-[hsl(var(--primary))] focus:ring-4 focus:ring-[hsl(var(--primary)/.1)]" /></div>;
 }
 
 function LibraryToolbar({ kind, search, setSearch, category, setCategory, categories }: { kind: 'books' | 'videos'; search: string; setSearch: (v: string) => void; category: string; setCategory: (v: string) => void; categories: Category[] }) {
-  return <div className="flex flex-col gap-3 border-y border-[hsl(var(--border))] py-4 sm:flex-row sm:items-center sm:justify-between"><SearchBar value={search} onChange={setSearch} placeholder={`Buscar ${kind === 'books' ? 'livros' : 'vídeos'}`} /><div className="flex items-center gap-2 overflow-x-auto"><SlidersHorizontal size={16} className="shrink-0 text-[hsl(var(--muted-foreground))]" /><button onClick={() => setCategory('')} className={`shrink-0 rounded-full px-3 py-2 text-xs ${!category ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}`} data-testid="button-filter-all">Todos</button>{categories.map(c => <button key={c.name} onClick={() => setCategory(c.name)} className={`shrink-0 rounded-full px-3 py-2 text-xs ${category === c.name ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--border))]'}`} data-testid={`button-filter-${c.name.toLowerCase().replace(/\s/g, '-')}`}>{c.name}</button>)}</div></div>;
+  return <div className="toolbar-surface flex flex-col gap-3 rounded-2xl border-y px-4 py-4 sm:flex-row sm:items-center sm:justify-between"><SearchBar value={search} onChange={setSearch} placeholder={`Buscar ${kind === 'books' ? 'livros' : 'vídeos'}`} /><div className="flex items-center gap-2 overflow-x-auto"><SlidersHorizontal size={16} className="shrink-0 text-[hsl(var(--muted-foreground))]" /><button onClick={() => setCategory('')} className={`shrink-0 rounded-lg px-3 py-2 text-xs ${!category ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}`} data-testid="button-filter-all">Todos</button>{categories.map(c => <button key={c.name} onClick={() => setCategory(c.name)} className={`shrink-0 rounded-lg px-3 py-2 text-xs ${category === c.name ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))] hover:bg-[hsl(var(--border))]'}`} data-testid={`button-filter-${c.name.toLowerCase().replace(/\s/g, '-')}`}>{c.name}</button>)}</div></div>;
 }
 
 function Books() {
@@ -485,9 +503,9 @@ function EventsPage() {
       <h1 className="serif mt-3 max-w-3xl text-5xl leading-[.98] tracking-[-.05em] text-[#071B2C] md:text-6xl">Encontros para aprender e partilhar.</h1>
       <p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">Acompanhe palestras, aulas e encontros islâmicos publicados pela plataforma Nur Al-Sunnah.</p>
     </div>
-    <div className="mt-10 flex flex-wrap items-center gap-2 border-b border-[#dbe4e2] pb-4">
-      <button onClick={() => setView('upcoming')} className={`rounded-full px-4 py-2.5 text-sm font-semibold ${view === 'upcoming' ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55]'}`} data-testid="button-events-upcoming">Próximos</button>
-      <button onClick={() => setView('past')} className={`rounded-full px-4 py-2.5 text-sm font-semibold ${view === 'past' ? 'bg-[#075C45] text-white' : 'bg-[#e9f3ef] text-[#315b55]'}`} data-testid="button-events-past">Realizados</button>
+     <div className="toolbar-surface mt-10 flex flex-wrap items-center gap-2 rounded-2xl border p-2">
+       <button onClick={() => setView('upcoming')} className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${view === 'upcoming' ? 'bg-[#075C45] text-white' : 'text-[#315b55] hover:bg-[#e9f3ef]'}`} data-testid="button-events-upcoming">Próximos</button>
+       <button onClick={() => setView('past')} className={`rounded-lg px-4 py-2.5 text-sm font-semibold ${view === 'past' ? 'bg-[#075C45] text-white' : 'text-[#315b55] hover:bg-[#e9f3ef]'}`} data-testid="button-events-past">Realizados</button>
     </div>
     <section className="mt-8" aria-live="polite">
       {eventsQuery.isLoading ? <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{[1, 2, 3].map(item => <div key={item} className="skeleton h-96 rounded-2xl" />)}</div> : eventsQuery.isError ? <StateMessage error title="Os eventos estão indisponíveis" body="Tente novamente em alguns instantes." retry={eventsQuery.refetch} /> : events.length === 0 ? <StateMessage title={view === 'upcoming' ? 'Ainda não há próximos eventos' : 'Ainda não há eventos realizados'} body={view === 'upcoming' ? 'Volte em breve para acompanhar a próxima agenda.' : 'Os eventos concluídos aparecerão aqui.'} /> : <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">{events.map(event => <EventCard key={event.id} event={event} />)}</div>}
@@ -637,7 +655,7 @@ function VideoDetail() {
 
 function Categories() {
   const q = useListCategories();
-  return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-16 pt-14 lg:px-8"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Formas de entrar</p><h1 className="serif mt-3 text-5xl tracking-[-.04em] md:text-6xl">Siga um caminho.</h1><p className="mt-5 max-w-xl text-[hsl(var(--muted-foreground))]">Comece por um assunto e veja onde ele leva. Cada categoria reúne livros e vídeos.</p><div className="mt-12">{q.isLoading ? <div className="grid gap-4 md:grid-cols-2">{[1,2,3,4].map(i => <div className="skeleton h-36 rounded-2xl" key={i} />)}</div> : q.isError ? <StateMessage error title="As categorias estão indisponíveis" body="Tente novamente daqui a pouco." retry={q.refetch} /> : <div className="grid gap-4 md:grid-cols-2">{(q.data ?? []).map((c, i) => <div key={c.name} className="hover-lift group flex items-end justify-between rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6" data-testid={`card-category-${c.name}`}><div><span className="mono text-xs text-[hsl(var(--accent))]">0{i + 1}</span><h2 className="serif mt-5 text-3xl">{c.name}</h2></div><div className="flex gap-2"><Button href={`/books?category=${encodeURIComponent(c.name)}`} variant="soft">{c.bookCount} livros</Button><Button href={`/videos?category=${encodeURIComponent(c.name)}`} variant="ghost">{c.videoCount} vídeos <ArrowRight size={14} /></Button></div></div>)}</div>}</div></main></Shell>;
+  return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-16 pt-14 lg:px-8"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Formas de entrar</p><h1 className="serif mt-3 text-5xl tracking-[-.04em] md:text-6xl">Siga um caminho.</h1><p className="mt-5 max-w-xl text-[hsl(var(--muted-foreground))]">Comece por um assunto e veja onde ele leva. Cada categoria reúne livros e vídeos.</p><div className="mt-12">{q.isLoading ? <div className="grid gap-4 md:grid-cols-2">{[1,2,3,4].map(i => <div className="skeleton h-36 rounded-2xl" key={i} />)}</div> : q.isError ? <StateMessage error title="As categorias estão indisponíveis" body="Tente novamente daqui a pouco." retry={q.refetch} /> : <div className="grid gap-4 md:grid-cols-2">{(q.data ?? []).map((c, i) => <div key={c.name} className="surface-card hover-lift group flex items-end justify-between rounded-2xl p-6" data-testid={`card-category-${c.name}`}><div><span className="mono text-xs text-[hsl(var(--accent))]">0{i + 1}</span><h2 className="serif mt-5 text-3xl">{c.name}</h2></div><div className="flex gap-2"><Button href={`/books?category=${encodeURIComponent(c.name)}`} variant="soft">{c.bookCount} livros</Button><Button href={`/videos?category=${encodeURIComponent(c.name)}`} variant="ghost">{c.videoCount} vídeos <ArrowRight size={14} /></Button></div></div>)}</div>}</div></main></Shell>;
 }
 
 function About() {
@@ -659,16 +677,16 @@ function About() {
 
 function AuthPage({ signUp = false }: { signUp?: boolean }) {
   const [submitted, setSubmitted] = useState(false);
-  return <div className="grid min-h-[100dvh] bg-[hsl(var(--background))] md:grid-cols-[.85fr_1.15fr]"><div className="hidden bg-[hsl(var(--primary))] p-10 text-[hsl(var(--primary-foreground))] md:flex md:flex-col md:justify-between"><Logo /><div><p className="mono text-[10px] uppercase tracking-[.2em] opacity-70">Uma estante só sua</p><p className="serif mt-4 max-w-md text-5xl leading-tight">Guarde os bons.</p><p className="mt-5 max-w-sm text-sm leading-7 opacity-70">Reserve um canto tranquilo na plataforma Nur Al-Sunnah para os livros e vídeos aos quais você quer voltar.</p></div><p className="text-xs opacity-60">Nur Al-Sunnah · Biblioteca digital</p></div><div className="flex items-center justify-center p-5"><div className="w-full max-w-[390px]"><div className="mb-10 md:hidden"><Logo /></div>{submitted ? <div className="text-center"><Check className="mx-auto text-[hsl(var(--primary))]" size={30} /><h1 className="serif mt-5 text-4xl">{signUp ? 'Você está na lista.' : 'Bem-vindo de volta.'}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">A autenticação está pronta para se conectar à sua conta Clerk.</p><Button href="/" className="mt-7 w-full">Voltar à biblioteca</Button></div> : <><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{signUp ? 'Entrar na biblioteca' : 'Acesso de membro'}</p><h1 className="serif mt-3 text-5xl">{signUp ? 'Crie um espaço para isso.' : 'Bom ver você.'}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">{signUp ? 'Crie uma conta para guardar títulos e montar sua própria lista de leitura.' : 'Entre para continuar de onde parou.'}</p><form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="mt-8"><label className="text-sm font-semibold">Endereço de e-mail<input required type="email" className="mt-2 h-12 w-full rounded-lg border bg-[hsl(var(--card))] px-3 outline-none focus:border-[hsl(var(--primary))]" data-testid="input-auth-email" /></label><label className="mt-4 block text-sm font-semibold">Palavra-passe<input required type="password" className="mt-2 h-12 w-full rounded-lg border bg-[hsl(var(--card))] px-3 outline-none focus:border-[hsl(var(--primary))]" data-testid="input-auth-password" /></label><Button type="submit" className="mt-6 w-full">{signUp ? 'Criar conta' : 'Entrar'} <ArrowRight size={15} /></Button></form><p className="mt-6 text-center text-sm text-[hsl(var(--muted-foreground))]">{signUp ? 'Já tem uma conta? ' : 'É novo na biblioteca Nur Al-Sunnah? '}<Link href={signUp ? '/sign-in' : '/sign-up'} className="font-semibold text-[hsl(var(--primary))]" data-testid="link-auth-switch">{signUp ? 'Entrar' : 'Criar uma conta'}</Link></p></>}</div></div></div>;
+  return <div className="auth-shell grid min-h-[100dvh] bg-[hsl(var(--background))] md:grid-cols-[.85fr_1.15fr]"><div className="hidden bg-[hsl(var(--primary))] p-10 text-[hsl(var(--primary-foreground))] md:flex md:flex-col md:justify-between"><Logo /><div><p className="mono text-[10px] uppercase tracking-[.2em] opacity-70">Uma estante só sua</p><p className="serif mt-4 max-w-md text-5xl leading-tight">Guarde os bons.</p><p className="mt-5 max-w-sm text-sm leading-7 opacity-70">Reserve um canto tranquilo na plataforma Nur Al-Sunnah para os livros e vídeos aos quais você quer voltar.</p></div><p className="text-xs opacity-60">Nur Al-Sunnah · Biblioteca digital</p></div><div className="flex items-center justify-center p-5 md:p-10"><div className="auth-form-panel w-full max-w-[390px]"><div className="mb-10 md:hidden"><Logo /></div>{submitted ? <div className="text-center"><Check className="mx-auto text-[hsl(var(--primary))]" size={30} /><h1 className="serif mt-5 text-4xl">{signUp ? 'Você está na lista.' : 'Bem-vindo de volta.'}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">A autenticação está pronta para se conectar à sua conta Clerk.</p><Button href="/" className="mt-7 w-full">Voltar à biblioteca</Button></div> : <><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{signUp ? 'Entrar na biblioteca' : 'Acesso de membro'}</p><h1 className="serif mt-3 text-5xl">{signUp ? 'Crie um espaço para isso.' : 'Bom ver você.'}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">{signUp ? 'Crie uma conta para guardar títulos e montar sua própria lista de leitura.' : 'Entre para continuar de onde parou.'}</p><form onSubmit={e => { e.preventDefault(); setSubmitted(true); }} className="mt-8"><label className="text-sm font-semibold">Endereço de e-mail<input required type="email" className="mt-2 h-12 w-full rounded-lg border bg-[hsl(var(--card))] px-3 outline-none focus:border-[hsl(var(--primary))]" data-testid="input-auth-email" /></label><label className="mt-4 block text-sm font-semibold">Palavra-passe<input required type="password" className="mt-2 h-12 w-full rounded-lg border bg-[hsl(var(--card))] px-3 outline-none focus:border-[hsl(var(--primary))]" data-testid="input-auth-password" /></label><Button type="submit" className="mt-6 w-full">{signUp ? 'Criar conta' : 'Entrar'} <ArrowRight size={15} /></Button></form><p className="mt-6 text-center text-sm text-[hsl(var(--muted-foreground))]">{signUp ? 'Já tem uma conta? ' : 'É novo na biblioteca Nur Al-Sunnah? '}<Link href={signUp ? '/sign-in' : '/sign-up'} className="font-semibold text-[hsl(var(--primary))]" data-testid="link-auth-switch">{signUp ? 'Entrar' : 'Criar uma conta'}</Link></p></>}</div></div></div>;
 }
 
 function AdminLogin() {
   const { isSignedIn } = useAuth();
-  return <div className="flex min-h-[100dvh] items-center justify-center bg-[hsl(var(--sidebar))] px-5"><div className="w-full max-w-[420px] rounded-3xl bg-[hsl(var(--card))] p-7 shadow-xl md:p-10"><Logo /><p className="mono mt-12 text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Acesso da equipe</p><h1 className="serif mt-3 text-4xl">Por trás da estante.</h1><p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">O catálogo é destinado aos colaboradores da plataforma Nur Al-Sunnah. Entre com sua conta autorizada para continuar.</p><Button href={isSignedIn ? '/admin' : '/sign-in'} className="mt-8 w-full">{isSignedIn ? 'Entrar no painel' : 'Continuar para o acesso seguro'} <ArrowRight size={15} /></Button><Link href="/" className="mt-6 block text-center text-xs text-[hsl(var(--muted-foreground))]" data-testid="link-admin-back">Voltar à biblioteca pública</Link></div></div>;
+  return <div className="admin-gate flex min-h-[100dvh] items-center justify-center bg-[hsl(var(--sidebar))] px-5"><div className="surface-card w-full max-w-[420px] rounded-3xl p-7 shadow-xl md:p-10"><Logo /><p className="mono mt-12 text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Acesso da equipe</p><h1 className="serif mt-3 text-4xl">Por trás da estante.</h1><p className="mt-3 text-sm leading-6 text-[hsl(var(--muted-foreground))]">O catálogo é destinado aos colaboradores da plataforma Nur Al-Sunnah. Entre com sua conta autorizada para continuar.</p><Button href={isSignedIn ? '/admin' : '/sign-in'} className="mt-8 w-full">{isSignedIn ? 'Entrar no painel' : 'Continuar para o acesso seguro'} <ArrowRight size={15} /></Button><Link href="/" className="mt-6 block text-center text-xs text-[hsl(var(--muted-foreground))]" data-testid="link-admin-back">Voltar à biblioteca pública</Link></div></div>;
 }
 
 function StatCard({ label, value, icon }: { label: string; value: number | string; icon: ReactNode }) {
-  return <div className="rounded-xl border border-[hsl(var(--border))] bg-white p-5 shadow-[var(--shadow-sm)] transition-all hover:border-[hsl(var(--primary)/.4)] hover:shadow-md">
+  return <div className="surface-card rounded-xl p-5 transition-all hover:border-[hsl(var(--primary)/.4)] hover:shadow-md">
     <div className="flex items-center gap-2 text-[hsl(var(--muted-foreground))]">
       <span className="text-[hsl(var(--primary))]">
         {icon}
@@ -1046,7 +1064,7 @@ function AnalyticsSkeleton() {
 }
 
 function AnalyticsCard({ eyebrow, title, children, className = '' }: { eyebrow?: string; title: string; children: ReactNode; className?: string }) {
-  return <section className={`min-w-0 max-w-full rounded-xl border border-[hsl(var(--border))] bg-white p-5 shadow-sm transition-all hover:shadow-[var(--shadow-sm)] md:p-6 ${className}`}>
+  return <section className={`surface-card min-w-0 max-w-full rounded-xl p-5 transition-all hover:shadow-[var(--shadow-sm)] md:p-6 ${className}`}>
     <div className="flex items-start justify-between gap-4">
       <div>{eyebrow && <p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--primary))]">{eyebrow}</p>}<h2 className="serif mt-1 text-xl font-medium tracking-[-.02em]">{title}</h2></div>
     </div>
@@ -1219,7 +1237,7 @@ function Admin() {
   const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'events' ? 'Eventos' : tab === 'categories' ? 'Categorias' : 'Configurações';
   const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'events', label: 'Eventos', icon: <CalendarDays size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
   const renderNav = (mobile = false) => navItems.map(item => <button key={item.key} onClick={() => setTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
-  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
+  return <Shell admin><div className="admin-shell flex min-h-[100dvh]"><aside className="admin-sidebar hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="admin-topbar flex h-[80px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
 }
 
 function CatalogList({ tab, books, videos, onAdd, onEdit, onDelete }: { tab: 'books' | 'videos'; books: Book[]; videos: Video[]; onAdd: () => void; onEdit: (item: Book | Video) => void; onDelete: (id: number) => void }) {
@@ -1366,7 +1384,7 @@ function ClerkProviderWithRoutes() {
     appearance={clerkAppearance}
     signInUrl={`${basePath}/sign-in`}
     signUpUrl={`${basePath}/sign-up`}
-    localization={ptBR}
+    localization={clerkLocalization}
     routerPush={(to) => setLocation(stripBase(to))}
     routerReplace={(to) => setLocation(stripBase(to))}
   >
