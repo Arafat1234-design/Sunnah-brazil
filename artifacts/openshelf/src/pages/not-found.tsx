@@ -9,7 +9,7 @@ export default function NotFound() {
         <p className="mono mt-8 text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Corredor vazio</p>
         <h1 className="serif mt-3 text-5xl">Nada nesta página.</h1>
         <p className="mt-4 text-sm leading-7 text-[hsl(var(--muted-foreground))]">O link pode estar desatualizado. Ainda há muitos bons lugares para explorar.</p>
-        <Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))] px-5 py-3 text-sm font-semibold text-[hsl(var(--primary-foreground))]" data-testid="link-not-found-home"><ArrowLeft size={15} /> Voltar à Sunnah Brasil</Link>
+        <Link href="/" className="mt-7 inline-flex items-center gap-2 rounded-full bg-[hsl(var(--primary))] px-5 py-3 text-sm font-semibold text-[hsl(var(--primary-foreground))]" data-testid="link-not-found-home"><ArrowLeft size={15} /> Voltar à biblioteca Nur Al-Sunnah</Link>
       </div>
     </div>
   );
