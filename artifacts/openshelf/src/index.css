@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap');
 @layer theme, base, clerk, components, utilities;
 @import 'tailwindcss';
 @import '@clerk/themes/shadcn.css';
@@ -62,12 +62,12 @@
   --sidebar-accent: 209 50% 17%;
   --sidebar-accent-foreground: 0 0% 100%;
   --sidebar-ring: 163 86% 30%;
-  --app-font-sans: 'Inter', sans-serif;
-  --app-font-serif: 'Plus Jakarta Sans', sans-serif;
+  --app-font-sans: 'DM Sans', sans-serif;
+  --app-font-serif: 'Playfair Display', serif;
   --app-font-mono: 'DM Mono', monospace;
-  --radius: 1rem;
-  --shadow-sm: 0 8px 24px hsl(209 73% 10% / .07);
-  --shadow-md: 0 18px 42px hsl(209 73% 10% / .12);
+  --radius: 0.75rem;
+  --shadow-sm: 0 5px 16px hsl(209 73% 10% / .06);
+  --shadow-md: 0 12px 30px hsl(209 73% 10% / .10);
 }
 
 .dark {
@@ -115,79 +115,6 @@
 .site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
 .site-public { position: relative; width: 100%; max-width: 100%; overflow-x: clip; }
 .site-public > * { position: relative; z-index: 1; }
-.site-public .serif {
-  font-family: var(--app-font-serif);
-  font-weight: 700;
-  letter-spacing: -0.035em;
-}
-.site-header {
-  box-shadow: 0 1px 0 hsl(203 22% 88% / .72), 0 10px 28px hsl(209 73% 10% / .05);
-}
-.site-header a,
-.site-header button,
-.site-header input {
-  transition: border-color .2s ease, background-color .2s ease, color .2s ease, box-shadow .2s ease, transform .2s ease;
-}
-.site-public :is(input, select, textarea) {
-  border-radius: .875rem;
-  border-color: hsl(var(--border) / .9);
-  background: hsl(var(--card) / .72);
-  box-shadow: 0 1px 2px hsl(209 73% 10% / .03);
-}
-.site-public :is(input, select, textarea)::placeholder {
-  color: hsl(var(--muted-foreground) / .72);
-}
-.site-public :is(input, select, textarea):focus {
-  border-color: hsl(var(--primary) / .62);
-  box-shadow: 0 0 0 4px hsl(var(--primary) / .1), 0 4px 12px hsl(209 73% 10% / .05);
-}
-.surface-card {
-  border: 1px solid hsl(var(--border) / .82);
-  background: hsl(var(--card) / .7);
-  box-shadow: var(--shadow-sm);
-  backdrop-filter: blur(12px);
-}
-.glass-panel {
-  border: 1px solid hsl(0 0% 100% / .68);
-  background: hsl(158 28% 93% / .62);
-  box-shadow: 0 18px 44px hsl(163 43% 20% / .08);
-  backdrop-filter: blur(14px);
-}
-.toolbar-surface {
-  border-color: hsl(var(--border) / .76);
-  background: hsl(var(--card) / .52);
-  backdrop-filter: blur(12px);
-}
-.site-footer {
-  box-shadow: 0 -12px 34px hsl(209 73% 10% / .045);
-  backdrop-filter: blur(14px);
-}
-.site-footer a {
-  transition: color .2s ease, transform .2s ease;
-}
-.site-footer a:hover {
-  color: hsl(var(--primary));
-  transform: translateX(2px);
-}
-.auth-form-panel {
-  padding: 2.25rem;
-  border: 1px solid hsl(var(--border) / .72);
-  border-radius: 1.5rem;
-  background: hsl(var(--card) / .7);
-  box-shadow: var(--shadow-md);
-  backdrop-filter: blur(16px);
-}
-.admin-gate .surface-card {
-  border-color: hsl(0 0% 100% / .16);
-  background: hsl(var(--card) / .96);
-}
-.admin-sidebar {
-  box-shadow: 12px 0 32px hsl(209 73% 10% / .08);
-}
-.admin-topbar {
-  background: hsl(var(--card) / .8);
-  backdrop-filter: blur(14px);
-}
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(24px);
