@@ -6,9 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
-export interface Category {
-  id: number;
+export interface CategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
   name: string;
-  bookCount: number;
-  videoCount: number;
 }

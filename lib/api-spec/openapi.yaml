@@ -556,6 +556,51 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [admin]
+      summary: Add a content category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Invalid category name
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
+        "409":
+          description: A category with this name already exists
+  /categories/{id}:
+    delete:
+      operationId: deleteCategory
+      tags: [admin]
+      summary: Delete a content category
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "204":
+          description: Category deleted
+        "400":
+          description: Invalid category id
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: The category is still used by books or videos
   /admin/stats:
     get:
       operationId: getAdminStats
@@ -894,11 +939,17 @@ components:
       required: []
     Category:
       type: object
-      required: [name, bookCount, videoCount]
+      required: [id, name, bookCount, videoCount]
       properties:
+        id: { type: integer }
         name: { type: string }
         bookCount: { type: integer }
         videoCount: { type: integer }
+    CategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
     DownloadResponse:
       type: object
       required: [url]

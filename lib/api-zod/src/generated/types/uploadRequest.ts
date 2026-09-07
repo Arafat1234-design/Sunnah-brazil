@@ -9,7 +9,11 @@
 export interface UploadRequest {
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
+  /**
+     * Maximum 80 MiB
+     * @minimum 1
+     * @maximum 83886080
+     */
   size: number;
   /** @minLength 1 */
   contentType: string;

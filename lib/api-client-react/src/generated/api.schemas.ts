@@ -194,9 +194,18 @@ export interface EventInput {
 export type EventUpdate = EventInput;
 
 export interface Category {
+  id: number;
   name: string;
   bookCount: number;
   videoCount: number;
+}
+
+export interface CategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
 }
 
 export interface DownloadResponse {
@@ -336,7 +345,11 @@ export interface AdminAnalytics {
 export interface UploadRequest {
   /** @minLength 1 */
   name: string;
-  /** @minimum 1 */
+  /**
+     * Maximum 80 MiB
+     * @minimum 1
+     * @maximum 83886080
+     */
   size: number;
   /** @minLength 1 */
   contentType: string;
