@@ -582,6 +582,35 @@ paths:
         "409":
           description: A category with this name already exists
   /categories/{id}:
+    patch:
+      operationId: updateCategory
+      tags: [admin]
+      summary: Rename a content category
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "200":
+          description: Updated category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Invalid category name or id
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: A category with this name already exists
     delete:
       operationId: deleteCategory
       tags: [admin]

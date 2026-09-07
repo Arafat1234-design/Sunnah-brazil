@@ -13,6 +13,9 @@ import {
 import {
   CreateCategoryBody,
   CreateCategoryResponse,
+  UpdateCategoryBody,
+  UpdateCategoryParams,
+  UpdateCategoryResponse,
   CreateBookBody,
   CreateVideoBody,
   DeleteCategoryParams,
@@ -484,6 +487,64 @@ router.post("/categories", async (req, res): Promise<void> => {
 
   const [category] = await db.insert(categoriesTable).values({ name }).returning();
   res.status(201).json(CreateCategoryResponse.parse({ id: category.id, name: category.name, bookCount: 0, videoCount: 0, imageCount: 0 }));
+});
+
+router.patch("/categories/:id", async (req, res): Promise<void> => {
+  if (!requireAdmin(req, res)) return;
+  const params = UpdateCategoryParams.safeParse(req.params);
+  const parsed = UpdateCategoryBody.safeParse(req.body);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const name = parsed.data.name.trim();
+  if (!name) {
+    res.status(400).json({ error: "Category name is required" });
+    return;
+  }
+
+  const [category] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, params.data.id));
+  if (!category) {
+    res.status(404).json({ error: "Category not found" });
+    return;
+  }
+
+  const [existing] = await db.select({ id: categoriesTable.id }).from(categoriesTable).where(eq(categoriesTable.name, name));
+  if (existing && existing.id !== category.id) {
+    res.status(409).json({ error: "A category with this name already exists" });
+    return;
+  }
+
+  const [bookUsage, videoUsage, imageUsage] = await Promise.all([
+    db.select({ value: count() }).from(booksTable).where(eq(booksTable.category, category.name)),
+    db.select({ value: count() }).from(videosTable).where(eq(videosTable.category, category.name)),
+    db.select({ value: count() }).from(imagesTable).where(eq(imagesTable.category, category.name)),
+  ]);
+
+  const [updated] = await db.transaction(async (tx) => {
+    const [nextCategory] = await tx.update(categoriesTable).set({ name }).where(eq(categoriesTable.id, category.id)).returning();
+    if (name !== category.name) {
+      await Promise.all([
+        tx.update(booksTable).set({ category: name }).where(eq(booksTable.category, category.name)),
+        tx.update(videosTable).set({ category: name }).where(eq(videosTable.category, category.name)),
+        tx.update(imagesTable).set({ category: name }).where(eq(imagesTable.category, category.name)),
+      ]);
+    }
+    return [nextCategory];
+  });
+
+  res.json(UpdateCategoryResponse.parse({
+    id: updated.id,
+    name: updated.name,
+    bookCount: Number(bookUsage[0]?.value ?? 0),
+    videoCount: Number(videoUsage[0]?.value ?? 0),
+    imageCount: Number(imageUsage[0]?.value ?? 0),
+  }));
 });
 
 router.delete("/categories/:id", async (req, res): Promise<void> => {
