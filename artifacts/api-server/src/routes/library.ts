@@ -3,6 +3,14 @@ import { Router, type IRouter, type Request, type Response } from "express";
 import { ObjectStorageService } from "../lib/objectStorage";
 import { requireAdmin } from "../lib/adminAuth";
 import {
+  assertMp4Signature,
+  isManagedObjectUrl,
+  MAX_DOWNLOAD_BYTES,
+  normalizeManagedObjectPath,
+  prepareBookContent,
+  UnsafeDownloadError,
+} from "../lib/downloadSafety";
+import {
   CreateBookBody,
   CreateVideoBody,
   GetBookDownloadParams,
@@ -62,11 +70,10 @@ function parseId(value: unknown): number | null {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-const MAX_DOWNLOAD_BYTES = 80 * 1024 * 1024;
-
 async function readContent(value: string): Promise<Buffer> {
-  if (value.startsWith("/objects/")) {
-    const file = await objectStorageService.getObjectEntityFile(value);
+  const objectPath = normalizeManagedObjectPath(value);
+  if (objectPath) {
+    const file = await objectStorageService.getObjectEntityFile(objectPath);
     const chunks: Buffer[] = [];
     let total = 0;
     for await (const chunk of file.createReadStream()) {
@@ -78,85 +85,9 @@ async function readContent(value: string): Promise<Buffer> {
     return Buffer.concat(chunks);
   }
 
-  const url = new URL(value);
-  if (!["http:", "https:"].includes(url.protocol)) {
-    throw new Error("Unsupported download URL");
-  }
-  const response = await fetch(url, { signal: AbortSignal.timeout(30_000) });
-  if (!response.ok) throw new Error(`Source returned ${response.status}`);
-  const contentLength = Number(response.headers.get("content-length") ?? 0);
-  if (contentLength > MAX_DOWNLOAD_BYTES) throw new Error("Download is too large");
-  const content = Buffer.from(await response.arrayBuffer());
-  if (content.length > MAX_DOWNLOAD_BYTES) throw new Error("Download is too large");
-  return content;
-}
-
-function pdfEscape(value: string): string {
-  return value.replace(/[^\x20-\x7e]/g, "?").replace(/([\\()])/g, "\\$1");
-}
-
-function textToPdf(text: string): Buffer {
-  const lines = text.replace(/\r\n?/g, "\n").split("\n").flatMap((line) => {
-    if (!line) return [""];
-    const wrapped: string[] = [];
-    let remaining = line;
-    while (remaining.length > 96) {
-      const breakAt = remaining.lastIndexOf(" ", 96);
-      const splitAt = breakAt > 20 ? breakAt : 96;
-      wrapped.push(remaining.slice(0, splitAt));
-      remaining = remaining.slice(splitAt).trimStart();
-    }
-    wrapped.push(remaining);
-    return wrapped;
-  });
-  const pageLines = 52;
-  const pages = Array.from({ length: Math.max(1, Math.ceil(lines.length / pageLines)) }, (_, index) =>
-    lines.slice(index * pageLines, (index + 1) * pageLines),
+  throw new UnsafeDownloadError(
+    "Only files stored in the managed library storage can be downloaded",
   );
-  const objects: string[] = [];
-  const addObject = (body: string) => {
-    objects.push(body);
-    return objects.length;
-  };
-  const catalogId = addObject("");
-  const pagesId = addObject("");
-  const fontId = addObject("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>");
-  const pageIds: number[] = [];
-
-  for (const page of pages) {
-    const pageId = addObject("");
-    const content = [
-      "BT",
-      "/F1 10 Tf",
-      "54 760 Td",
-      "12 TL",
-      ...page.map((line, index) => `(${pdfEscape(line)}) Tj${index === page.length - 1 ? "" : " T*"}`),
-      "ET",
-    ].join("\n");
-    const contentId = addObject(`<< /Length ${Buffer.byteLength(content, "ascii")} >>\nstream\n${content}\nendstream`);
-    objects[pageId - 1] = `<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${fontId} 0 R >> >> /Contents ${contentId} 0 R >>`;
-    pageIds.push(pageId);
-  }
-
-  objects[catalogId - 1] = `<< /Type /Catalog /Pages ${pagesId} 0 R >>`;
-  objects[pagesId - 1] = `<< /Type /Pages /Kids [${pageIds.map((id) => `${id} 0 R`).join(" ")}] /Count ${pageIds.length} >>`;
-
-  const chunks = ["%PDF-1.4\n%\xE2\xE3\xCF\xD3\n"];
-  const offsets = [0];
-  let length = Buffer.byteLength(chunks[0], "binary");
-  objects.forEach((object, index) => {
-    offsets.push(length);
-    const chunk = `${index + 1} 0 obj\n${object}\nendobj\n`;
-    chunks.push(chunk);
-    length += Buffer.byteLength(chunk, "binary");
-  });
-  const xrefOffset = length;
-  let xref = `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
-  for (let index = 1; index < offsets.length; index++) {
-    xref += `${String(offsets[index]).padStart(10, "0")} 00000 n \n`;
-  }
-  chunks.push(`${xref}trailer\n<< /Size ${objects.length + 1} /Root ${catalogId} 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`);
-  return Buffer.from(chunks.join(""), "binary");
 }
 
 function downloadFilename(title: string, extension: string): string {
@@ -258,15 +189,21 @@ router.get("/books/:id/read/file", async (req, res) => {
 
   try {
     const source = await readContent(book.fileUrl);
-    const isPdf = book.fileType === "PDF" || book.fileType === "TXT";
-    const output = book.fileType === "TXT" ? textToPdf(source.toString("utf8")) : source;
-    const extension = isPdf ? "pdf" : book.fileType.toLowerCase();
-    res.setHeader("Content-Type", isPdf ? "application/pdf" : "application/octet-stream");
-    res.setHeader("Content-Disposition", `inline; filename="${downloadFilename(book.title, extension)}"`);
-    res.setHeader("Content-Length", output.length);
+    const prepared = await prepareBookContent(book.fileType, source);
+    res.setHeader("Content-Type", prepared.contentType);
+    res.setHeader("Content-Disposition", `inline; filename="${downloadFilename(book.title, prepared.extension)}"`);
+    res.setHeader("Content-Length", prepared.output.length);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "sandbox");
+    res.setHeader("X-Download-Options", "noopen");
     res.setHeader("Cache-Control", "no-store, max-age=0");
-    res.end(output);
+    res.end(prepared.output);
   } catch (error) {
+    if (error instanceof UnsafeDownloadError) {
+      req.log.warn({ bookId: book.id, reason: error.message }, "Blocked unsafe book reader file");
+      res.status(422).json({ error: "The book file did not pass the security check" });
+      return;
+    }
     req.log.error({ err: error, bookId: book.id }, "Error preparing book reader file");
     res.status(502).json({ error: "Could not prepare the book for reading" });
   }
@@ -287,17 +224,23 @@ router.get("/books/:id/download/file", async (req, res) => {
 
   try {
     const source = await readContent(book.fileUrl);
-    const isPdf = book.fileType === "PDF" || book.fileType === "TXT";
-    const output = book.fileType === "TXT" ? textToPdf(source.toString("utf8")) : source;
-    const extension = isPdf ? "pdf" : book.fileType.toLowerCase();
+    const prepared = await prepareBookContent(book.fileType, source);
     await db.update(booksTable).set({ downloadCount: sql`${booksTable.downloadCount} + 1` }).where(eq(booksTable.id, book.id));
     await db.insert(downloadEventsTable).values({ contentType: "book", contentId: book.id });
-    res.setHeader("Content-Type", isPdf ? "application/pdf" : "application/octet-stream");
-    res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(book.title, extension)}"`);
-    res.setHeader("Content-Length", output.length);
+    res.setHeader("Content-Type", prepared.contentType);
+    res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(book.title, prepared.extension)}"`);
+    res.setHeader("Content-Length", prepared.output.length);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "sandbox");
+    res.setHeader("X-Download-Options", "noopen");
     res.setHeader("Cache-Control", "no-store, max-age=0");
-    res.end(output);
+    res.end(prepared.output);
   } catch (error) {
+    if (error instanceof UnsafeDownloadError) {
+      req.log.warn({ bookId: book.id, reason: error.message }, "Blocked unsafe book download");
+      res.status(422).json({ error: "The book file did not pass the security check" });
+      return;
+    }
     req.log.error({ err: error, bookId: book.id }, "Error preparing book download");
     res.status(502).json({ error: "Could not prepare the book download" });
   }
@@ -310,6 +253,10 @@ router.post("/books", async (req, res) => {
     res.status(400).json({ error: "Invalid book details" });
     return;
   }
+  if (parsed.data.fileUrl && !isManagedObjectUrl(parsed.data.fileUrl)) {
+    res.status(400).json({ error: "Book files must use managed storage" });
+    return;
+  }
   const [book] = await db.insert(booksTable).values(parsed.data).returning();
   res.status(201).json(toBook(book, req));
 });
@@ -320,6 +267,10 @@ router.patch("/books/:id", async (req, res) => {
   const body = UpdateBookBody.safeParse(req.body);
   if (!params.success || !body.success) {
     res.status(400).json({ error: "Invalid book details" });
+    return;
+  }
+  if (body.data.fileUrl && !isManagedObjectUrl(body.data.fileUrl)) {
+    res.status(400).json({ error: "Book files must use managed storage" });
     return;
   }
   const [book] = await db.update(booksTable).set(body.data).where(eq(booksTable.id, params.data.id)).returning();
@@ -414,14 +365,23 @@ router.get("/videos/:id/download/file", async (req, res) => {
 
   try {
     const mp4 = await readContent(video.videoUrl);
+    assertMp4Signature(mp4);
     await db.update(videosTable).set({ downloadCount: sql`${videosTable.downloadCount} + 1` }).where(eq(videosTable.id, video.id));
     await db.insert(downloadEventsTable).values({ contentType: "video", contentId: video.id });
     res.setHeader("Content-Type", "video/mp4");
     res.setHeader("Content-Disposition", `attachment; filename="${downloadFilename(video.title, "mp4")}"`);
     res.setHeader("Content-Length", mp4.length);
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("Content-Security-Policy", "sandbox");
+    res.setHeader("X-Download-Options", "noopen");
     res.setHeader("Cache-Control", "no-store, max-age=0");
     res.end(mp4);
   } catch (error) {
+    if (error instanceof UnsafeDownloadError) {
+      req.log.warn({ videoId: video.id, reason: error.message }, "Blocked unsafe video download");
+      res.status(422).json({ error: "The video file did not pass the security check" });
+      return;
+    }
     req.log.error({ err: error, videoId: video.id }, "Error preparing video download");
     res.status(502).json({ error: "Could not prepare the MP4 download" });
   }
@@ -434,6 +394,10 @@ router.post("/videos", async (req, res) => {
     res.status(400).json({ error: "Invalid video details" });
     return;
   }
+  if (parsed.data.videoUrl && !isManagedObjectUrl(parsed.data.videoUrl)) {
+    res.status(400).json({ error: "Video files must use managed storage" });
+    return;
+  }
   const [video] = await db.insert(videosTable).values(parsed.data).returning();
   res.status(201).json(toVideo(video, req));
 });
@@ -444,6 +408,10 @@ router.patch("/videos/:id", async (req, res) => {
   const body = UpdateVideoBody.safeParse(req.body);
   if (!params.success || !body.success) {
     res.status(400).json({ error: "Invalid video details" });
+    return;
+  }
+  if (body.data.videoUrl && !isManagedObjectUrl(body.data.videoUrl)) {
+    res.status(400).json({ error: "Video files must use managed storage" });
     return;
   }
   const [video] = await db.update(videosTable).set(body.data).where(eq(videosTable.id, params.data.id)).returning();

@@ -173,6 +173,8 @@ paths:
                 format: binary
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          description: The managed PDF failed the security validation or sanitization
         "502":
           description: The source file could not be prepared
   /books/{id}/download/file:
@@ -192,6 +194,8 @@ paths:
                 format: binary
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          description: The managed PDF failed the security validation or sanitization
         "502":
           description: The source file could not be prepared
   /videos:
@@ -534,6 +538,8 @@ paths:
           description: Downloads are disabled
         "404":
           $ref: "#/components/responses/NotFound"
+        "422":
+          description: The managed MP4 failed the security validation
         "502":
           description: The source video could not be prepared
   /categories:
@@ -683,9 +689,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/UploadResponse"
         "400":
-          description: Invalid or unsupported file
+          description: Invalid, unsupported, or oversized file (maximum 80 MB)
         "401":
           $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
   /images/upload-url:
     post:
       operationId: requestImageUploadUrl
@@ -1049,7 +1057,7 @@ components:
       required: [name, size, contentType]
       properties:
         name: { type: string, minLength: 1 }
-        size: { type: integer, minimum: 1 }
+        size: { type: integer, minimum: 1, maximum: 83886080, description: Maximum 80 MiB }
         contentType: { type: string, minLength: 1 }
     UploadResponse:
       type: object
