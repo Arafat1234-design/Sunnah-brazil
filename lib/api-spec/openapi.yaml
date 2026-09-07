@@ -600,7 +600,7 @@ paths:
         "404":
           $ref: "#/components/responses/NotFound"
         "409":
-          description: The category is still used by books or videos
+          description: The category is still used by books, videos, or images
   /admin/stats:
     get:
       operationId: getAdminStats
@@ -939,12 +939,13 @@ components:
       required: []
     Category:
       type: object
-      required: [id, name, bookCount, videoCount]
+      required: [id, name, bookCount, videoCount, imageCount]
       properties:
         id: { type: integer }
         name: { type: string }
         bookCount: { type: integer }
         videoCount: { type: integer }
+        imageCount: { type: integer }
     CategoryInput:
       type: object
       required: [name]

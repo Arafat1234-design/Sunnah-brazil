@@ -33,6 +33,7 @@ import {
   booksTable,
   categoriesTable,
   downloadEventsTable,
+  imagesTable,
   videosTable,
 } from "@workspace/db";
 
@@ -443,16 +444,18 @@ router.delete("/videos/:id", async (req, res) => {
 
 router.get("/categories", async (_req, res) => {
   await ensureSeedData();
-  const [books, videos, categories] = await Promise.all([
+  const [books, videos, images, categories] = await Promise.all([
     db.select({ name: booksTable.category, value: count() }).from(booksTable).groupBy(booksTable.category),
     db.select({ name: videosTable.category, value: count() }).from(videosTable).groupBy(videosTable.category),
+    db.select({ name: imagesTable.category, value: count() }).from(imagesTable).groupBy(imagesTable.category),
     db.select().from(categoriesTable).orderBy(asc(categoriesTable.id)),
   ]);
-  const counts = new Map<string, { bookCount: number; videoCount: number }>();
-  for (const category of categories) counts.set(category.name, { bookCount: 0, videoCount: 0 });
-  for (const item of books) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), bookCount: Number(item.value) });
-  for (const item of videos) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), videoCount: Number(item.value) });
-  const response = categories.map(category => ({ id: category.id, name: category.name, ...(counts.get(category.name) || { bookCount: 0, videoCount: 0 }) }));
+  const counts = new Map<string, { bookCount: number; videoCount: number; imageCount: number }>();
+  for (const category of categories) counts.set(category.name, { bookCount: 0, videoCount: 0, imageCount: 0 });
+  for (const item of books) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0, imageCount: 0 }), bookCount: Number(item.value) });
+  for (const item of videos) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0, imageCount: 0 }), videoCount: Number(item.value) });
+  for (const item of images) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0, imageCount: 0 }), imageCount: Number(item.value) });
+  const response = categories.map(category => ({ id: category.id, name: category.name, ...(counts.get(category.name) || { bookCount: 0, videoCount: 0, imageCount: 0 }) }));
   res.json(ListCategoriesResponse.parse(response));
 });
 
@@ -477,7 +480,7 @@ router.post("/categories", async (req, res): Promise<void> => {
   }
 
   const [category] = await db.insert(categoriesTable).values({ name }).returning();
-  res.status(201).json(CreateCategoryResponse.parse({ id: category.id, name: category.name, bookCount: 0, videoCount: 0 }));
+  res.status(201).json(CreateCategoryResponse.parse({ id: category.id, name: category.name, bookCount: 0, videoCount: 0, imageCount: 0 }));
 });
 
 router.delete("/categories/:id", async (req, res): Promise<void> => {
@@ -494,12 +497,13 @@ router.delete("/categories/:id", async (req, res): Promise<void> => {
     return;
   }
 
-  const [bookUsage, videoUsage] = await Promise.all([
+  const [bookUsage, videoUsage, imageUsage] = await Promise.all([
     db.select({ value: count() }).from(booksTable).where(eq(booksTable.category, category.name)),
     db.select({ value: count() }).from(videosTable).where(eq(videosTable.category, category.name)),
+    db.select({ value: count() }).from(imagesTable).where(eq(imagesTable.category, category.name)),
   ]);
-  if (Number(bookUsage[0]?.value ?? 0) + Number(videoUsage[0]?.value ?? 0) > 0) {
-    res.status(409).json({ error: "Move or remove the books and videos in this category before deleting it" });
+  if (Number(bookUsage[0]?.value ?? 0) + Number(videoUsage[0]?.value ?? 0) + Number(imageUsage[0]?.value ?? 0) > 0) {
+    res.status(409).json({ error: "Move or remove the books, videos, and images in this category before deleting it" });
     return;
   }
 
@@ -516,13 +520,13 @@ router.get("/admin/stats", async (req, res) => {
     db.select({ value: sql<number>`coalesce(sum(${booksTable.downloadCount}), 0)` }).from(booksTable),
     db.select({ value: sql<number>`coalesce(sum(${videosTable.viewCount}), 0)` }).from(videosTable),
   ]);
-  const categories = await db.select({ id: categoriesTable.id, name: categoriesTable.name, bookCount: sql<number>`(select count(*) from books where category = ${categoriesTable.name})`, videoCount: sql<number>`(select count(*) from videos where category = ${categoriesTable.name})` }).from(categoriesTable).orderBy(asc(categoriesTable.id));
+  const categories = await db.select({ id: categoriesTable.id, name: categoriesTable.name, bookCount: sql<number>`(select count(*) from books where category = ${categoriesTable.name})`, videoCount: sql<number>`(select count(*) from videos where category = ${categoriesTable.name})`, imageCount: sql<number>`(select count(*) from images where category = ${categoriesTable.name})` }).from(categoriesTable).orderBy(asc(categoriesTable.id));
   res.json({
     bookCount: Number(bookCount[0]?.value ?? 0),
     videoCount: Number(videoCount[0]?.value ?? 0),
     totalDownloads: Number(downloads[0]?.value ?? 0),
     totalViews: Number(views[0]?.value ?? 0),
-    categoryBreakdown: categories.map((category) => ({ id: category.id, name: category.name, bookCount: Number(category.bookCount), videoCount: Number(category.videoCount) })),
+    categoryBreakdown: categories.map((category) => ({ id: category.id, name: category.name, bookCount: Number(category.bookCount), videoCount: Number(category.videoCount), imageCount: Number(category.imageCount) })),
   });
 });
 

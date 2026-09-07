@@ -872,7 +872,8 @@ export const ListCategoriesResponseItem = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "bookCount": zod.int(),
-  "videoCount": zod.int()
+  "videoCount": zod.int(),
+  "imageCount": zod.int()
 })
 export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
 
@@ -892,7 +893,8 @@ export const CreateCategoryResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "bookCount": zod.int(),
-  "videoCount": zod.int()
+  "videoCount": zod.int(),
+  "imageCount": zod.int()
 })
 
 
@@ -921,7 +923,8 @@ export const GetAdminStatsResponse = zod.object({
   "id": zod.int(),
   "name": zod.string(),
   "bookCount": zod.int(),
-  "videoCount": zod.int()
+  "videoCount": zod.int(),
+  "imageCount": zod.int()
 }))
 })
 

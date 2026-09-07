@@ -11,4 +11,5 @@ export interface Category {
   name: string;
   bookCount: number;
   videoCount: number;
+  imageCount: number;
 }
