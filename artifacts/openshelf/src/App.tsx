@@ -1146,7 +1146,7 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
   </div>;
 }
 
-function AdminCategories({ categories, books, videos, images, onChanged, onAddBook, onAddVideo, onAddImage, onDeleteContent }: {
+function AdminCategories({ categories, books, videos, images, onChanged, onAddBook, onAddVideo, onAddImage }: {
   categories: Category[];
   books: Book[];
   videos: Video[];
@@ -1169,7 +1169,10 @@ function AdminCategories({ categories, books, videos, images, onChanged, onAddBo
   const updateBook = useUpdateBook();
   const updateVideo = useUpdateVideo();
   const updateImage = useUpdateImage();
-  const busy = createCategory.isPending || deleteCategory.isPending || updateBook.isPending || updateVideo.isPending || updateImage.isPending;
+  const deleteBook = useDeleteBook();
+  const deleteVideo = useDeleteVideo();
+  const deleteImage = useDeleteImage();
+  const busy = createCategory.isPending || deleteCategory.isPending || updateBook.isPending || updateVideo.isPending || updateImage.isPending || deleteBook.isPending || deleteVideo.isPending || deleteImage.isPending;
   const selectedCategory = categories.find(category => category.id === selectedCategoryId) ?? categories[0];
 
   useEffect(() => {
@@ -1186,6 +1189,12 @@ function AdminCategories({ categories, books, videos, images, onChanged, onAddBo
     setMessage(text);
     setMessageType(type);
   };
+
+  const categoryUsage = (categoryName: string) => ({
+    bookCount: books.filter(book => book.category === categoryName).length,
+    videoCount: videos.filter(video => video.category === categoryName).length,
+    imageCount: images.filter(image => image.category === categoryName).length,
+  });
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
@@ -1206,7 +1215,11 @@ function AdminCategories({ categories, books, videos, images, onChanged, onAddBo
   };
 
   const remove = (category: Category) => {
-    if (category.bookCount > 0 || category.videoCount > 0 || category.imageCount > 0) return;
+    const usage = categoryUsage(category.name);
+    if (usage.bookCount > 0 || usage.videoCount > 0 || usage.imageCount > 0) {
+      showMessage(`Mova ou exclua o conteúdo de “${category.name}” antes de eliminar a categoria.`, 'error');
+      return;
+    }
     if (!window.confirm(`Eliminar a categoria “${category.name}”?`)) return;
     setMessage('');
     deleteCategory.mutate({ id: category.id }, {
@@ -1293,6 +1306,19 @@ function AdminCategories({ categories, books, videos, images, onChanged, onAddBo
     }
   };
 
+  const removeContent = (kind: 'book' | 'video' | 'image', id: number) => {
+    const label = kind === 'book' ? 'livro' : kind === 'video' ? 'vídeo' : 'imagem';
+    if (!window.confirm(`Excluir este ${label} do catálogo? Esta ação não pode ser desfeita.`)) return;
+    const onSuccess = () => {
+      showMessage(`${label[0].toUpperCase()}${label.slice(1)} excluído.`, 'success');
+      onChanged();
+    };
+    const onError = (error: unknown) => showMessage(errorMessage(error, `Não foi possível excluir o ${label}.`), 'error');
+    if (kind === 'book') deleteBook.mutate({ id }, { onSuccess, onError });
+    if (kind === 'video') deleteVideo.mutate({ id }, { onSuccess, onError });
+    if (kind === 'image') deleteImage.mutate({ id }, { onSuccess, onError });
+  };
+
   const categoryOptions = categories.filter(category => category.id !== selectedCategory?.id);
   const categoryBooks = selectedCategory ? books.filter(book => book.category === selectedCategory.name) : [];
   const categoryVideos = selectedCategory ? videos.filter(video => video.category === selectedCategory.name) : [];
@@ -1322,7 +1348,7 @@ function AdminCategories({ categories, books, videos, images, onChanged, onAddBo
         <option value={selectedCategory?.name}>Mover para…</option>
         {categoryOptions.map(category => <option key={category.id} value={category.name}>{category.name}</option>)}
       </select>
-      <button type="button" onClick={() => onDeleteContent(kind, item.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" title="Excluir conteúdo do catálogo" aria-label={`Excluir ${title}`}><Trash2 size={16} /></button>
+       <button type="button" onClick={() => removeContent(kind, item.id)} disabled={busy} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))] disabled:cursor-not-allowed disabled:opacity-40" title="Excluir conteúdo do catálogo" aria-label={`Excluir ${title}`}><Trash2 size={16} /></button>
     </div>;
   };
 
@@ -1338,11 +1364,12 @@ function AdminCategories({ categories, books, videos, images, onChanged, onAddBo
     {categories.length === 0 ? <StateMessage title="Nenhuma categoria ainda" body="Adicione a primeira categoria para organizar o catálogo." /> : <div className="grid gap-5 lg:grid-cols-[minmax(250px,.72fr)_minmax(0,1.55fr)]">
       <section className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] shadow-sm">
         <div className="border-b border-[hsl(var(--border))] p-5"><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Suas categorias</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">Selecione uma para gerir o conteúdo.</p></div>
-        <div>{categories.map(category => {
-          const inUse = category.bookCount > 0 || category.videoCount > 0 || category.imageCount > 0;
+         <div>{categories.map(category => {
+           const usage = categoryUsage(category.name);
+           const inUse = usage.bookCount > 0 || usage.videoCount > 0 || usage.imageCount > 0;
           const active = category.id === selectedCategory?.id;
           return <div key={category.id} className={`flex items-center gap-2 border-b border-[hsl(var(--border))] p-3 last:border-0 ${active ? 'bg-[hsl(var(--secondary)/.65)]' : ''}`}>
-            <button type="button" onClick={() => setSelectedCategoryId(category.id)} className="min-w-0 flex-1 rounded-lg px-2 py-2 text-left transition hover:bg-[hsl(var(--secondary)/.7)]" data-testid={`button-select-category-${category.id}`}><p className="truncate text-sm font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{formatCount(category.bookCount + category.videoCount + category.imageCount)} conteúdos</p></button>
+              <button type="button" onClick={() => setSelectedCategoryId(category.id)} className="min-w-0 flex-1 rounded-lg px-2 py-2 text-left transition hover:bg-[hsl(var(--secondary)/.7)]" data-testid={`button-select-category-${category.id}`}><p className="truncate text-sm font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{formatCount(usage.bookCount + usage.videoCount + usage.imageCount)} conteúdos</p></button>
             <button type="button" onClick={() => remove(category)} disabled={busy || inUse} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))] disabled:cursor-not-allowed disabled:opacity-30" title={inUse ? 'Mova ou exclua o conteúdo primeiro' : 'Eliminar categoria'} aria-label={`Eliminar categoria ${category.name}`} data-testid={`button-delete-category-${category.id}`}><Trash2 size={16} /></button>
           </div>;
         })}</div>

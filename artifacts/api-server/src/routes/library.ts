@@ -135,6 +135,7 @@ router.get("/library/summary", async (req, res) => {
 });
 
 router.get("/books", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   await ensureSeedData();
   const parsed = ListBooksQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -302,6 +303,7 @@ router.delete("/books/:id", async (req, res) => {
 });
 
 router.get("/videos", async (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   await ensureSeedData();
   const parsed = ListVideosQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -443,6 +445,7 @@ router.delete("/videos/:id", async (req, res) => {
 });
 
 router.get("/categories", async (_req, res) => {
+  res.setHeader("Cache-Control", "no-store");
   await ensureSeedData();
   const [books, videos, images, categories] = await Promise.all([
     db.select({ name: booksTable.category, value: count() }).from(booksTable).groupBy(booksTable.category),
