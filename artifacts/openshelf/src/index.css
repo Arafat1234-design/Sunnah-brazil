@@ -115,15 +115,6 @@
 .site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
 .site-public { position: relative; width: 100%; max-width: 100%; overflow-x: clip; }
 .site-public > * { position: relative; z-index: 1; }
-.admin-shell {
-  background-image:
-    linear-gradient(120deg, hsl(210 20% 98% / .94), hsl(158 28% 93% / .78)),
-    url('/sunnah-islamic-background.png');
-  background-size: cover;
-  background-position: center top;
-  background-attachment: fixed;
-}
-.admin-shell > * { position: relative; z-index: 1; }
 .reveal-on-scroll {
   opacity: 0;
   transform: translateY(24px);
@@ -221,15 +212,6 @@ button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
 label:has(> input[data-testid="input-editor-cover-upload"]) { display: none; }
 
 @media (max-width: 767px) {
-  .admin-shell {
-    background-image:
-      linear-gradient(120deg, hsl(210 20% 98% / .92), hsl(158 28% 93% / .76)),
-      url('/sunnah-mobile-inner.png');
-    background-size: cover;
-    background-position: center top;
-    background-attachment: fixed;
-  }
-
   .site-public.site-home,
   .site-public.site-inner {
     background-size: cover;

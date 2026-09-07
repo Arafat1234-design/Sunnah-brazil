@@ -1,4 +1,5 @@
 import { Readable } from 'stream';
+import { getAuth } from '@clerk/express';
 import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
@@ -6,8 +7,6 @@ import {
 import { Router, type IRouter, type Request, type Response } from 'express';
 
 import { ObjectPermission } from '../lib/objectAcl';
-import { requireAdmin } from '../lib/adminAuth';
-import { MAX_UPLOAD_BYTES } from '../lib/downloadSafety';
 import {
   ObjectNotFoundError,
   ObjectStorageService,
@@ -15,16 +14,6 @@ import {
 
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
-const allowedUploadExtensions = new Set(['pdf', 'txt', 'epub', 'mobi', 'mp4']);
-const allowedUploadContentTypes = new Set([
-  'application/pdf',
-  'text/plain',
-  'application/epub+zip',
-  'application/zip',
-  'application/x-mobipocket-ebook',
-  'video/mp4',
-  'application/octet-stream',
-]);
 
 /**
  * POST /storage/uploads/request-url
@@ -37,7 +26,11 @@ const allowedUploadContentTypes = new Set([
 router.post(
   '/storage/uploads/request-url',
   async (req: Request, res: Response) => {
-    if (!requireAdmin(req, res)) return;
+    if (!getAuth(req).userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+
+      return;
+    }
 
     const parsed = RequestUploadUrlBody.safeParse(req.body);
     if (!parsed.success) {
@@ -47,21 +40,6 @@ router.post(
 
     try {
       const { name, size, contentType } = parsed.data;
-      const extension = name.split('.').pop()?.toLowerCase() ?? '';
-      if (
-        name.length > 255 ||
-        !allowedUploadExtensions.has(extension) ||
-        !allowedUploadContentTypes.has(contentType.toLowerCase())
-      ) {
-        res.status(400).json({
-          error: 'Only supported PDF, EPUB, MOBI, TXT and MP4 files are accepted',
-        });
-        return;
-      }
-      if (size > MAX_UPLOAD_BYTES) {
-        res.status(400).json({ error: 'Files must be 80 MB or smaller' });
-        return;
-      }
 
       const uploadURL = await objectStorageService.getObjectEntityUploadURL();
       const objectPath =

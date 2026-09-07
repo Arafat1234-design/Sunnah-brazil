@@ -869,46 +869,11 @@ export const DownloadVideoFileResponse = zod.unknown()
  * @summary List content categories
  */
 export const ListCategoriesResponseItem = zod.object({
-  "id": zod.int(),
   "name": zod.string(),
   "bookCount": zod.int(),
-  "videoCount": zod.int(),
-  "imageCount": zod.int()
+  "videoCount": zod.int()
 })
 export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
-
-
-/**
- * @summary Add a content category
- */
-export const createCategoryBodyNameMax = 80;
-
-
-
-export const CreateCategoryBody = zod.object({
-  "name": zod.string().min(1).max(createCategoryBodyNameMax)
-})
-
-export const CreateCategoryResponse = zod.object({
-  "id": zod.int(),
-  "name": zod.string(),
-  "bookCount": zod.int(),
-  "videoCount": zod.int(),
-  "imageCount": zod.int()
-})
-
-
-/**
- * @summary Delete a content category
- */
-
-
-
-export const DeleteCategoryParams = zod.object({
-  "id": zod.coerce.number().int().min(1)
-})
-
-export const DeleteCategoryResponse = zod.void()
 
 
 /**
@@ -920,11 +885,9 @@ export const GetAdminStatsResponse = zod.object({
   "totalDownloads": zod.int(),
   "totalViews": zod.int(),
   "categoryBreakdown": zod.array(zod.object({
-  "id": zod.int(),
   "name": zod.string(),
   "bookCount": zod.int(),
-  "videoCount": zod.int(),
-  "imageCount": zod.int()
+  "videoCount": zod.int()
 }))
 })
 
@@ -1059,14 +1022,13 @@ export const LockAdminAccessResponse = zod.void()
  * @summary Request a presigned upload URL
  */
 
-export const requestUploadUrlBodySizeMax = 83886080;
 
 
 
 
 export const RequestUploadUrlBody = zod.object({
   "name": zod.string().min(1),
-  "size": zod.int().min(1).max(requestUploadUrlBodySizeMax).describe('Maximum 80 MiB'),
+  "size": zod.int().min(1),
   "contentType": zod.string().min(1)
 })
 
@@ -1080,14 +1042,13 @@ export const RequestUploadUrlResponse = zod.object({
  * @summary Request an image upload URL
  */
 
-export const requestImageUploadUrlBodySizeMax = 83886080;
 
 
 
 
 export const RequestImageUploadUrlBody = zod.object({
   "name": zod.string().min(1),
-  "size": zod.int().min(1).max(requestImageUploadUrlBodySizeMax).describe('Maximum 80 MiB'),
+  "size": zod.int().min(1),
   "contentType": zod.string().min(1)
 })
 
