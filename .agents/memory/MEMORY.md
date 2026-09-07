@@ -4,5 +4,5 @@
 - [Events scheduling](events-scheduling.md) — preserve date-only values and derive UTC event instants from the selected IANA timezone.
 - [Production data publishing](production-data-publishing.md) — normal publishes preserve live Admin data; never reinitialize production from development after launch.
 - [Mutable catalog caching](catalog-cache.md) — admin catalog and category list responses must bypass HTTP caching so counts reflect mutations immediately.
-- [Pnpm workspace overrides](pnpm-overrides.md) — overrides declared in pnpm-workspace.yaml must be serialized into pnpm-lock.yaml with the workspace's pnpm version.
+- [Cloudflare pnpm lock compatibility](pnpm-overrides.md) — avoid workspace overrides unless a dependency requires them; clean pnpm 10.11.1 installs must share lock metadata.
 - [Category admin scope](category-admin-scope.md) — the Admin Categories screen is CRUD-only; renaming updates string category references transactionally.
