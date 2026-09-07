@@ -802,6 +802,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
   const createVideo = useCreateVideo();
   const updateVideo = useUpdateVideo();
   const upload = useRequestUploadUrl();
+  const imageUpload = useRequestImageUploadUrl();
   const galleryImages = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const [uploading, setUploading] = useState<'cover' | 'file' | 'video' | 'thumbnail' | null>(null);
   const [uploadError, setUploadError] = useState('');
@@ -825,6 +826,23 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
     return result.objectPath;
   };
 
+  const uploadImageObject = async (file: Blob, name: string, contentType: string) => {
+    const result = await imageUpload.mutateAsync({
+      data: {
+        name,
+        size: file.size,
+        contentType,
+      },
+    });
+    const response = await fetch(result.uploadURL, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: file,
+    });
+    if (!response.ok) throw new Error('Image upload failed');
+    return result.objectPath;
+  };
+
   const uploadFile = async (file: File, field: 'coverUrl' | 'fileUrl' | 'videoUrl' | 'thumbnailUrl') => {
     setUploadError('');
     setUploading(field === 'coverUrl' || field === 'thumbnailUrl' ? 'cover' : field === 'videoUrl' ? 'video' : 'file');
@@ -837,14 +855,17 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
         const videoMetadata = await extractVideoMetadata(file);
         metadata = { ...videoMetadata, description: 'Vídeo para aprendizagem, reflexão e benefício.', category: 'Islam' };
       }
-      const objectPath = await uploadObject(file, file.name, file.type || 'application/octet-stream');
+      const isImage = field === 'coverUrl' || field === 'thumbnailUrl';
+      const objectPath = isImage
+        ? await uploadImageObject(file, file.name, file.type || 'image/jpeg')
+        : await uploadObject(file, file.name, file.type || 'application/octet-stream');
       let coverPath: string | null = null;
       const shouldGenerateCover = field === 'fileUrl' && state.kind === 'book' && !state.coverUrl && metadata?.fileType === 'PDF';
       const shouldGenerateVideoCover = field === 'videoUrl' && state.kind === 'video' && !state.thumbnailUrl;
       if (shouldGenerateCover) {
         try {
           const coverBlob = await renderPdfCover(file);
-          coverPath = await uploadObject(coverBlob, `${file.name}.cover.jpg`, 'image/jpeg');
+          coverPath = await uploadImageObject(coverBlob, `${file.name}.cover.jpg`, 'image/jpeg');
         } catch {
           setUploadError('Arquivo enviado, mas não foi possível gerar a capa automática.');
         }
@@ -852,7 +873,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
       if (shouldGenerateVideoCover) {
         try {
           const coverBlob = await renderVideoCover(file);
-          coverPath = await uploadObject(coverBlob, `${file.name}.cover.jpg`, 'image/jpeg');
+          coverPath = await uploadImageObject(coverBlob, `${file.name}.cover.jpg`, 'image/jpeg');
         } catch {
           setUploadError('Vídeo enviado, mas não foi possível gerar a capa automática. Você pode escolher uma capa da galeria.');
         }
@@ -916,8 +937,8 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
         </div>
          <label className="text-sm font-semibold">Descrição<textarea required rows={4} value={state.description} onChange={e => patch('description', e.target.value)} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-editor-description" /></label>
         {state.kind === 'book' ? <div className="grid gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.35)] p-4 sm:grid-cols-2">
-          <label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Capa do livro</span><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'coverUrl'); }} data-testid="input-editor-cover-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'cover' ? 'Enviando capa…' : state.coverUrl ? 'Capa pronta para salvar' : 'JPG, PNG ou WebP'}</span></label>
-          <label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Arquivo do livro</span><input type="file" accept=".pdf,.epub,.mobi,.txt,application/pdf,application/epub+zip,text/plain" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'fileUrl'); }} data-testid="input-editor-file-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'file' ? 'Enviando arquivo…' : state.fileUrl ? 'Arquivo pronto para salvar' : 'PDF, EPUB, MOBI ou TXT'}</span></label>
+          <label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Arquivo do livro</span><input type="file" accept=".pdf,.epub,.mobi,.txt,application/pdf,application/epub+zip,text/plain" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'fileUrl'); }} data-testid="input-editor-file-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'file' ? 'Enviando arquivo e criando capa…' : state.fileUrl ? 'Arquivo e dados prontos para salvar' : 'Envie um PDF para gerar capa, título e dados automaticamente'}</span></label>
+          <label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Capa personalizada <span className="font-normal text-[hsl(var(--muted-foreground))]">(opcional)</span></span><input type="file" accept="image/jpeg,image/png,image/webp" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'coverUrl'); }} data-testid="input-editor-cover-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'cover' ? 'Enviando capa…' : state.coverUrl ? 'Capa pronta para salvar' : 'A capa do PDF será usada automaticamente'}</span></label>
         </div> : <div className="grid gap-4 rounded-xl border border-[hsl(var(--border))] bg-[hsl(var(--secondary)/.35)] p-4">
            <label className="text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={15} />Arquivo de vídeo</span><input type="file" accept="video/*,.mp4,.webm,.mov" disabled={busy} className="mt-2 block w-full text-xs" onChange={e => { const file = e.target.files?.[0]; e.currentTarget.value = ''; if (file) void uploadFile(file, 'videoUrl'); }} data-testid="input-editor-video-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading === 'video' ? 'Enviando vídeo e criando capa…' : state.videoUrl ? 'Vídeo pronto para salvar' : 'Envie um vídeo para gerar o título e a duração'}</span></label>
           <div className="grid gap-4 sm:grid-cols-2">
