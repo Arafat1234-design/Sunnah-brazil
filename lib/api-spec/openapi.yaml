@@ -550,6 +550,47 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Category"
+    post:
+      operationId: createCategory
+      tags: [admin]
+      summary: Add a content category
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CategoryInput"
+      responses:
+        "201":
+          description: Created category
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "400":
+          description: Invalid category name
+        "403":
+          description: Admin password required
+        "409":
+          description: Category already exists
+  /categories/{name}:
+    delete:
+      operationId: deleteCategory
+      tags: [admin]
+      summary: Remove a content category
+      parameters:
+        - $ref: "#/components/parameters/CategoryName"
+      responses:
+        "204":
+          description: Category removed
+        "400":
+          description: Invalid category name
+        "403":
+          description: Admin password required
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          description: Category is still used by catalog content
   /admin/stats:
     get:
       operationId: getAdminStats
@@ -733,6 +774,14 @@ components:
       schema:
         type: string
         maxLength: 80
+    CategoryName:
+      name: name
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 80
   responses:
     Unauthorized:
       description: Authentication required
@@ -891,6 +940,11 @@ components:
         name: { type: string }
         bookCount: { type: integer }
         videoCount: { type: integer }
+    CategoryInput:
+      type: object
+      required: [name]
+      properties:
+        name: { type: string, minLength: 1, maxLength: 80 }
     DownloadResponse:
       type: object
       required: [url]

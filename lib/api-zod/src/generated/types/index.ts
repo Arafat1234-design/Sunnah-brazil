@@ -21,6 +21,7 @@ export * from './bookInput';
 export * from './bookInputFileType';
 export * from './bookUpdate';
 export * from './category';
+export * from './categoryInput';
 export * from './categoryParameter';
 export * from './downloadAnalytics';
 export * from './downloadLeader';

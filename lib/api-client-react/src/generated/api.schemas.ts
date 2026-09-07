@@ -199,6 +199,14 @@ export interface Category {
   videoCount: number;
 }
 
+export interface CategoryInput {
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  name: string;
+}
+
 export interface DownloadResponse {
   url: string;
 }

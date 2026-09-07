@@ -4,6 +4,9 @@ import { ObjectStorageService } from "../lib/objectStorage";
 import { requireAdmin } from "../lib/adminAuth";
 import {
   CreateBookBody,
+  CreateCategoryBody,
+  CreateCategoryResponse,
+  DeleteCategoryParams,
   CreateVideoBody,
   GetBookDownloadParams,
   GetBookParams,
@@ -481,6 +484,55 @@ router.get("/categories", async (_req, res) => {
   for (const item of books) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), bookCount: Number(item.value) });
   for (const item of videos) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), videoCount: Number(item.value) });
   res.json([...counts.entries()].map(([name, value]) => ({ name, ...value })));
+});
+
+router.post("/categories", async (req, res): Promise<void> => {
+  if (!requireAdmin(req, res)) return;
+  const parsed = CreateCategoryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid category name" });
+    return;
+  }
+  const name = parsed.data.name.trim();
+  if (!name) {
+    res.status(400).json({ error: "Invalid category name" });
+    return;
+  }
+  const [existing] = await db
+    .select({ id: categoriesTable.id })
+    .from(categoriesTable)
+    .where(sql`lower(${categoriesTable.name}) = lower(${name})`);
+  if (existing) {
+    res.status(409).json({ error: "Category already exists" });
+    return;
+  }
+  const [category] = await db.insert(categoriesTable).values({ name }).returning();
+  res.status(201).json(CreateCategoryResponse.parse({ name: category.name, bookCount: 0, videoCount: 0 }));
+});
+
+router.delete("/categories/:name", async (req, res): Promise<void> => {
+  if (!requireAdmin(req, res)) return;
+  const parsed = DeleteCategoryParams.safeParse(req.params);
+  if (!parsed.success) {
+    res.status(400).json({ error: "Invalid category name" });
+    return;
+  }
+  const name = parsed.data.name.trim();
+  const [category] = await db.select({ id: categoriesTable.id }).from(categoriesTable).where(eq(categoriesTable.name, name));
+  if (!category) {
+    res.status(404).json({ error: "Category not found" });
+    return;
+  }
+  const [bookUsage, videoUsage] = await Promise.all([
+    db.select({ value: count() }).from(booksTable).where(eq(booksTable.category, name)),
+    db.select({ value: count() }).from(videosTable).where(eq(videosTable.category, name)),
+  ]);
+  if (Number(bookUsage[0]?.value ?? 0) > 0 || Number(videoUsage[0]?.value ?? 0) > 0) {
+    res.status(409).json({ error: "Category is still used by catalog content" });
+    return;
+  }
+  await db.delete(categoriesTable).where(eq(categoriesTable.id, category.id));
+  res.status(204).send();
 });
 
 router.get("/admin/stats", async (req, res) => {

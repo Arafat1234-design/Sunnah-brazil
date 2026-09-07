@@ -877,6 +877,38 @@ export const ListCategoriesResponse = zod.array(ListCategoriesResponseItem)
 
 
 /**
+ * @summary Add a content category
+ */
+export const createCategoryBodyNameMax = 80;
+
+
+
+export const CreateCategoryBody = zod.object({
+  "name": zod.string().min(1).max(createCategoryBodyNameMax)
+})
+
+export const CreateCategoryResponse = zod.object({
+  "name": zod.string(),
+  "bookCount": zod.int(),
+  "videoCount": zod.int()
+})
+
+
+/**
+ * @summary Remove a content category
+ */
+export const deleteCategoryPathNameMax = 80;
+
+
+
+export const DeleteCategoryParams = zod.object({
+  "name": zod.coerce.string().min(1).max(deleteCategoryPathNameMax)
+})
+
+export const DeleteCategoryResponse = zod.void()
+
+
+/**
  * @summary Get catalog and engagement statistics
  */
 export const GetAdminStatsResponse = zod.object({

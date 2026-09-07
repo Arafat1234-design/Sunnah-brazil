@@ -23,7 +23,7 @@ import {
   getGetLibrarySummaryQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
   getListAdminEventsQueryKey, getListBooksQueryKey, getListCategoriesQueryKey, getListEventsQueryKey, getListImagesQueryKey, getListVideosQueryKey,
   type Book, type BookInput, type Category, type Event as CatalogEvent, type EventInput, type EventUpdate, type Image, type ImageInput, type Video, type VideoInput,
-  useCreateBook, useCreateImage, useCreateVideo, useDeleteBook, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
+  useCreateBook, useCreateCategory, useCreateImage, useCreateVideo, useDeleteBook, useDeleteCategory, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
   useGetBook, useGetBookDownload, useGetLibrarySummary, useGetVideo,
   useGetEvent, useGetVideoDownload, useListAdminEvents, useListBooks, useListCategories, useListEvents, useListImages, useListVideos,
   useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateEvent, useUpdateImage, useUpdateVideo,
@@ -1170,9 +1170,58 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
 }
 
 function AdminCategories({ categories }: { categories: Category[] }) {
+  const [name, setName] = useState('');
+  const [notice, setNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const qc = useQueryClient();
+  const create = useCreateCategory();
+  const remove = useDeleteCategory();
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: getListCategoriesQueryKey() });
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setNotice({ kind: 'error', text: 'Introduza um nome para a categoria.' });
+      return;
+    }
+    setNotice(null);
+    create.mutate({ data: { name: trimmedName } }, {
+      onSuccess: () => {
+        setName('');
+        setNotice({ kind: 'success', text: 'Categoria adicionada.' });
+        refresh();
+      },
+      onError: () => setNotice({ kind: 'error', text: 'Não foi possível adicionar a categoria. Verifique se ela já existe.' }),
+    });
+  };
+
+  const deleteCategory = (category: Category) => {
+    if (category.bookCount > 0 || category.videoCount > 0) {
+      setNotice({ kind: 'error', text: 'Esta categoria ainda está sendo usada. Reclassifique o conteúdo antes de removê-la.' });
+      return;
+    }
+    if (!window.confirm(`Remover a categoria "${category.name}"?`)) return;
+    setNotice(null);
+    remove.mutate({ name: category.name }, {
+      onSuccess: () => {
+        setNotice({ kind: 'success', text: 'Categoria removida.' });
+        refresh();
+      },
+      onError: () => setNotice({ kind: 'error', text: 'Não foi possível remover a categoria.' }),
+    });
+  };
+
   return <div>
-    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Organização</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Categorias</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Visão do conteúdo organizado por categoria.</p></div>
-    {categories.length === 0 ? <StateMessage title="Nenhuma categoria ainda" body="As categorias aparecem quando houver livros ou vídeos publicados." /> : <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{categories.map(category => <div key={category.name} className="flex items-center justify-between gap-4 border-b border-[hsl(var(--border))] p-5 last:border-0"><div><p className="font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">Conteúdo disponível no acervo</p></div><div className="flex gap-5 text-right text-xs text-[hsl(var(--muted-foreground))]"><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.bookCount)}</strong>livros</span><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.videoCount)}</strong>vídeos</span></div></div>)}</div>}
+    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Organização</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Categorias</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Adicione categorias para organizar o acervo. Categorias com conteúdo vinculado não podem ser removidas.</p></div>
+    <form onSubmit={submit} className="mb-6 flex flex-col gap-3 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-4 sm:flex-row sm:items-end">
+      <label className="flex-1 text-sm font-semibold">Nova categoria<input value={name} onChange={event => setName(event.target.value)} maxLength={80} placeholder="Ex.: História islâmica" className="mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-transparent px-3 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="input-admin-category-name" /></label>
+      <Button type="submit" disabled={!name.trim() || create.isPending} dataTestId="button-admin-add-category">{create.isPending ? 'A adicionar…' : 'Adicionar categoria'}</Button>
+    </form>
+    {notice && <p className={`mb-5 rounded-xl px-4 py-3 text-sm ${notice.kind === 'error' ? 'bg-[hsl(var(--destructive)/.1)] text-[hsl(var(--destructive))]' : 'bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]'}`} role="status">{notice.text}</p>}
+    {categories.length === 0 ? <StateMessage title="Nenhuma categoria ainda" body="Adicione a primeira categoria para começar a organizar o acervo." /> : <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{categories.map(category => { const inUse = category.bookCount > 0 || category.videoCount > 0; return <div key={category.name} className="flex flex-col gap-4 border-b border-[hsl(var(--border))] p-5 last:border-0 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{inUse ? 'Conteúdo disponível no acervo' : 'Sem conteúdo vinculado'}</p></div><div className="flex items-center justify-between gap-5 sm:justify-end"><div className="flex gap-5 text-right text-xs text-[hsl(var(--muted-foreground))]"><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.bookCount)}</strong>livros</span><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.videoCount)}</strong>vídeos</span></div><button type="button" onClick={() => deleteCategory(category)} disabled={inUse || remove.isPending} title={inUse ? 'Reclassifique o conteúdo antes de remover' : 'Remover categoria'} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))] disabled:cursor-not-allowed disabled:opacity-35" data-testid={`button-admin-delete-category-${category.name.toLowerCase().replace(/\s+/g, '-')}`}><Trash2 size={16} /></button></div></div>; })}</div>}
   </div>;
 }
 
