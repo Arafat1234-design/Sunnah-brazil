@@ -1124,10 +1124,10 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
     </div>
 
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-      <button onClick={onAddBook} className="flex items-center justify-center gap-2 rounded-xl bg-[#19383b] py-3.5 text-sm font-semibold text-white transition-all hover:brightness-110"><BookOpen size={16} /> Adicionar livro</button>
-      <button onClick={onAddVideo} className="flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-white py-3.5 text-sm font-semibold text-[hsl(var(--foreground))] transition-all hover:bg-[hsl(var(--secondary)/.5)]"><PlayCircle size={16} /> Adicionar vídeo</button>
-      <button onClick={onAddImage} className="flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-white py-3.5 text-sm font-semibold text-[hsl(var(--foreground))] transition-all hover:bg-[hsl(var(--secondary)/.5)]"><Images size={16} /> Adicionar imagem</button>
-      <button onClick={onAddEvent} className="flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-white py-3.5 text-sm font-semibold text-[hsl(var(--foreground))] transition-all hover:bg-[hsl(var(--secondary)/.5)]"><CalendarDays size={16} /> Adicionar evento</button>
+      <button type="button" onClick={onAddBook} className="flex items-center justify-center gap-2 rounded-xl bg-[#19383b] py-3.5 text-sm font-semibold text-white transition-all hover:brightness-110" data-testid="button-overview-add-book"><BookOpen size={16} /> Adicionar livro</button>
+      <button type="button" onClick={onAddVideo} className="flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-white py-3.5 text-sm font-semibold text-[hsl(var(--foreground))] transition-all hover:bg-[hsl(var(--secondary)/.5)]" data-testid="button-overview-add-video"><PlayCircle size={16} /> Adicionar vídeo</button>
+      <button type="button" onClick={onAddImage} className="flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-white py-3.5 text-sm font-semibold text-[hsl(var(--foreground))] transition-all hover:bg-[hsl(var(--secondary)/.5)]" data-testid="button-overview-add-image"><Images size={16} /> Adicionar imagem</button>
+      <button type="button" onClick={onAddEvent} className="flex items-center justify-center gap-2 rounded-xl border border-[hsl(var(--border))] bg-white py-3.5 text-sm font-semibold text-[hsl(var(--foreground))] transition-all hover:bg-[hsl(var(--secondary)/.5)]" data-testid="button-overview-add-event"><CalendarDays size={16} /> Adicionar evento</button>
     </div>
 
     {analytics.isLoading ? <AnalyticsSkeleton /> : analytics.isError ? <StateMessage error title="Não foi possível carregar as análises" body="Tente novamente em alguns instantes." retry={analytics.refetch} /> : data ? <>
