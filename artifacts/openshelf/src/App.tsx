@@ -34,6 +34,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 
 const queryClient = new QueryClient();
 const teal = 'text-[hsl(var(--primary))]';
+const savedBooksStorageKey = 'nur-al-sunnah:saved-books';
 const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -112,9 +113,9 @@ const clerkAppearance = {
   },
 };
 
-function Button({ children, onClick, href, variant = 'primary', className = '', disabled = false, type = 'button' }: {
+function Button({ children, onClick, href, variant = 'primary', className = '', disabled = false, type = 'button', ariaLabel, ariaPressed, dataTestId }: {
   children: ReactNode; onClick?: () => void; href?: string; variant?: 'primary' | 'soft' | 'ghost' | 'outline' | 'danger';
-  className?: string; disabled?: boolean; type?: 'button' | 'submit';
+  className?: string; disabled?: boolean; type?: 'button' | 'submit'; ariaLabel?: string; ariaPressed?: boolean; dataTestId?: string;
 }) {
   const styles = {
     primary: 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))] hover:brightness-110',
@@ -125,7 +126,7 @@ function Button({ children, onClick, href, variant = 'primary', className = '', 
   };
   const cls = `inline-flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${styles[variant]} ${className}`;
   return href ? <Link href={href} className={cls} data-testid={`link-${href.replace(/\//g, '').replace(':', '-')}`}>{children}</Link> :
-    <button type={type} onClick={onClick} disabled={disabled} className={cls} data-testid="button-action">{children}</button>;
+    <button type={type} onClick={onClick} disabled={disabled} aria-label={ariaLabel} aria-pressed={ariaPressed} className={cls} data-testid={dataTestId ?? 'button-action'}>{children}</button>;
 }
 
 function Logo({ onDark = false }: { onDark?: boolean }) {
@@ -512,17 +513,37 @@ function EventDetail() {
 }
 
 function BookDetail() {
-  const { id } = useParams<{ id: string }>(); const bookId = Number(id); const q = useGetBook(bookId); const [requested, setRequested] = useState(false); const dl = useGetBookDownload(bookId, { query: { enabled: requested, queryKey: getGetBookDownloadQueryKey(bookId) } });
+  const { id } = useParams<{ id: string }>(); const bookId = Number(id); const q = useGetBook(bookId); const [requested, setRequested] = useState(false); const [saved, setSaved] = useState(false); const dl = useGetBookDownload(bookId, { query: { enabled: requested, queryKey: getGetBookDownloadQueryKey(bookId) } });
   const book = q.data;
   const downloadableType = book && (book.fileType === 'PDF' || book.fileType === 'TXT') ? 'PDF' : book?.fileType;
   const canDownload = Boolean(book?.fileUrl);
   const download = () => { trackEvent('book_download_started', { content_type: 'book' }); setRequested(true); };
   useEffect(() => {
+    try {
+      const savedBooks = JSON.parse(window.localStorage.getItem(savedBooksStorageKey) ?? '[]');
+      setSaved(Array.isArray(savedBooks) && savedBooks.includes(bookId));
+    } catch {
+      setSaved(false);
+    }
+  }, [bookId]);
+  const toggleSaved = () => {
+    try {
+      const savedBooks = JSON.parse(window.localStorage.getItem(savedBooksStorageKey) ?? '[]');
+      const current = Array.isArray(savedBooks) ? savedBooks.filter((value): value is number => typeof value === 'number') : [];
+      const next = current.includes(bookId) ? current.filter(value => value !== bookId) : [...current, bookId];
+      window.localStorage.setItem(savedBooksStorageKey, JSON.stringify(next));
+      setSaved(next.includes(bookId));
+      trackEvent(next.includes(bookId) ? 'book_saved' : 'book_unsaved', { content_type: 'book', book_id: bookId });
+    } catch {
+      setSaved(value => !value);
+    }
+  };
+  useEffect(() => {
     if (dl.data?.url) window.location.assign(dl.data.url);
   }, [dl.data?.url]);
   if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid /></main></Shell>;
   if (q.isError || !book) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="Este título não está na estante" body="Ele pode ter sido movido ou o link pode estar desatualizado." /></main></Shell>;
-  return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/books" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-books"><ArrowLeft size={15} /> Voltar aos livros</Link><div className="grid gap-10 py-12 md:grid-cols-[280px_1fr] md:gap-16"><Cover book={book} large /><div className="pt-2"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{book.category} · {downloadableType}</p><h1 className="serif mt-4 text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">{book.title}</h1><p className="mt-4 text-lg text-[hsl(var(--muted-foreground))]">Por {book.author}</p><p className="mt-8 max-w-xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{book.description}</p><div className="mt-8 flex flex-wrap items-center gap-3"><Button onClick={download} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'PDF indisponível' : dl.isLoading ? `Preparando ${downloadableType}…` : <><Download size={16} /> Baixar {downloadableType}</>}</Button>{canDownload && <a href={`${basePath}/books/${book.id}/read`} className="inline-flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--secondary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--secondary-foreground))] transition-all duration-200 hover:bg-[hsl(var(--border))]" data-testid="link-book-read"><BookOpen size={16} /> Ler</a>}<Button variant="soft"><Heart size={16} /> Guardar para depois</Button></div>{dl.isError && <p className="mt-3 text-sm text-[hsl(var(--destructive))]">Não foi possível preparar o download. Tente novamente.</p>}{!canDownload && <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">Este livro ainda não possui um arquivo disponível.</p>}<div className="mt-8 flex gap-6 border-t border-[hsl(var(--border))] pt-5 text-xs text-[hsl(var(--muted-foreground))]"><span>{book.fileSize ? `${(book.fileSize / 1024 / 1024).toFixed(1)} MB` : 'Arquivo digital'}</span><span>{book.downloadCount.toLocaleString()} downloads</span></div></div></div></main></Shell>;
+  return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/books" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-books"><ArrowLeft size={15} /> Voltar aos livros</Link><div className="grid gap-10 py-12 md:grid-cols-[280px_1fr] md:gap-16"><Cover book={book} large /><div className="pt-2"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{book.category} · {downloadableType}</p><h1 className="serif mt-4 text-5xl leading-[.98] tracking-[-.04em] md:text-6xl">{book.title}</h1><p className="mt-4 text-lg text-[hsl(var(--muted-foreground))]">Por {book.author}</p><p className="mt-8 max-w-xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{book.description}</p><div className="mt-8 flex flex-wrap items-center gap-3"><Button onClick={download} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'PDF indisponível' : dl.isLoading ? `Preparando ${downloadableType}…` : <><Download size={16} /> Baixar {downloadableType}</>}</Button>{canDownload && <a href={`${basePath}/books/${book.id}/read`} className="inline-flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--secondary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--secondary-foreground))] transition-all duration-200 hover:bg-[hsl(var(--border))]" data-testid="link-book-read"><BookOpen size={16} /> Ler</a>}<Button onClick={toggleSaved} variant="soft" ariaLabel={saved ? 'Remover dos itens guardados' : 'Guardar para depois'} ariaPressed={saved} dataTestId="button-save-book"><Heart size={16} fill={saved ? 'currentColor' : 'none'} /> {saved ? 'Guardado' : 'Guardar para depois'}</Button></div>{dl.isError && <p className="mt-3 text-sm text-[hsl(var(--destructive))]">Não foi possível preparar o download. Tente novamente.</p>}{!canDownload && <p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">Este livro ainda não possui um arquivo disponível.</p>}<div className="mt-8 flex gap-6 border-t border-[hsl(var(--border))] pt-5 text-xs text-[hsl(var(--muted-foreground))]"><span>{book.fileSize ? `${(book.fileSize / 1024 / 1024).toFixed(1)} MB` : 'Arquivo digital'}</span><span>{book.downloadCount.toLocaleString()} downloads</span></div></div></div></main></Shell>;
 }
 
 function PdfReader({ url, title }: { url: string; title: string }) {
