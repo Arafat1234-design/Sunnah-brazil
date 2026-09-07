@@ -112,8 +112,7 @@
 .skeleton { background: linear-gradient(100deg, hsl(var(--muted)) 30%, hsl(var(--card)) 50%, hsl(var(--muted)) 70%); background-size: 200% 100%; animation: shimmer 1.4s infinite; }
 .serif { font-family: var(--app-font-serif); }
 .mono { font-family: var(--app-font-mono); }
-.site-grain { position: relative; isolation: isolate; }
-.site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 0; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
+.site-grain::after { content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .025; z-index: 20; background-image: radial-gradient(hsl(var(--foreground) / .45) .5px, transparent .5px); background-size: 5px 5px; }
 .site-public { position: relative; width: 100%; max-width: 100%; overflow-x: clip; }
 .site-public > * { position: relative; z-index: 1; }
 .admin-shell {

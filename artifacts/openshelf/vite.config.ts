@@ -5,82 +5,77 @@ import { defineConfig } from 'vite';
 
 import runtimeErrorOverlay from '@replit/vite-plugin-runtime-error-modal';
 
-const replitPlugins =
-  process.env.NODE_ENV !== 'production' && process.env.REPL_ID !== undefined
-    ? [
-        await import('@replit/vite-plugin-cartographer').then((m) =>
-          m.cartographer({
-            root: path.resolve(import.meta.dirname, '..'),
-          }),
-        ),
-        await import('@replit/vite-plugin-dev-banner').then((m) =>
-          m.devBanner(),
-        ),
-      ]
-    : [];
+const rawPort = process.env.PORT;
 
-export default defineConfig(({ command }) => {
-  const isBuild = command === 'build';
-  const rawPort = process.env.PORT ?? (isBuild ? '5173' : undefined);
+if (!rawPort) {
+  throw new Error(
+    'PORT environment variable is required but was not provided.',
+  );
+}
 
-  if (!rawPort) {
-    throw new Error(
-      'PORT environment variable is required when running the dev server.',
-    );
-  }
+const port = Number(rawPort);
 
-  const port = Number(rawPort);
+if (Number.isNaN(port) || port <= 0) {
+  throw new Error(`Invalid PORT value: "${rawPort}"`);
+}
 
-  if (Number.isNaN(port) || port <= 0) {
-    throw new Error(`Invalid PORT value: "${rawPort}"`);
-  }
+const basePath = process.env.BASE_PATH;
 
-  const basePath = process.env.BASE_PATH ?? (isBuild ? '/' : undefined);
+if (!basePath) {
+  throw new Error(
+    'BASE_PATH environment variable is required but was not provided.',
+  );
+}
 
-  if (!basePath) {
-    throw new Error(
-      'BASE_PATH environment variable is required when running the dev server.',
-    );
-  }
-
-  return {
-    base: basePath,
-    plugins: [
-      react(),
-      tailwindcss({ optimize: false }),
-      runtimeErrorOverlay(),
-      ...replitPlugins,
-    ],
-    resolve: {
-      alias: {
-        '@': path.resolve(import.meta.dirname, 'src'),
-        '@assets': path.resolve(
-          import.meta.dirname,
-          '..',
-          '..',
-          'attached_assets',
-        ),
-      },
-      dedupe: ['react', 'react-dom'],
+export default defineConfig({
+  base: basePath,
+  plugins: [
+    react(),
+    tailwindcss({ optimize: false }),
+    runtimeErrorOverlay(),
+    ...(process.env.NODE_ENV !== 'production' &&
+    process.env.REPL_ID !== undefined
+      ? [
+          await import('@replit/vite-plugin-cartographer').then((m) =>
+            m.cartographer({
+              root: path.resolve(import.meta.dirname, '..'),
+            }),
+          ),
+          await import('@replit/vite-plugin-dev-banner').then((m) =>
+            m.devBanner(),
+          ),
+        ]
+      : []),
+  ],
+  resolve: {
+    alias: {
+      '@': path.resolve(import.meta.dirname, 'src'),
+      '@assets': path.resolve(
+        import.meta.dirname,
+        '..',
+        '..',
+        'attached_assets',
+      ),
     },
-    root: path.resolve(import.meta.dirname),
-    build: {
-      outDir: path.resolve(import.meta.dirname, 'dist/public'),
-      emptyOutDir: true,
+    dedupe: ['react', 'react-dom'],
+  },
+  root: path.resolve(import.meta.dirname),
+  build: {
+    outDir: path.resolve(import.meta.dirname, 'dist/public'),
+    emptyOutDir: true,
+  },
+  server: {
+    port,
+    strictPort: true,
+    host: '0.0.0.0',
+    allowedHosts: true,
+    fs: {
+      strict: true,
     },
-    server: {
-      port,
-      strictPort: true,
-      host: '0.0.0.0',
-      allowedHosts: true,
-      fs: {
-        strict: true,
-      },
-    },
-    preview: {
-      port,
-      host: '0.0.0.0',
-      allowedHosts: true,
-    },
-  };
+  },
+  preview: {
+    port,
+    host: '0.0.0.0',
+    allowedHosts: true,
+  },
 });

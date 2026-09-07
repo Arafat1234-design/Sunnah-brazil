@@ -899,33 +899,6 @@ export const CreateCategoryResponse = zod.object({
 
 
 /**
- * @summary Rename a content category
- */
-
-
-
-export const UpdateCategoryParams = zod.object({
-  "id": zod.coerce.number().int().min(1)
-})
-
-export const updateCategoryBodyNameMax = 80;
-
-
-
-export const UpdateCategoryBody = zod.object({
-  "name": zod.string().min(1).max(updateCategoryBodyNameMax)
-})
-
-export const UpdateCategoryResponse = zod.object({
-  "id": zod.int(),
-  "name": zod.string(),
-  "bookCount": zod.int(),
-  "videoCount": zod.int(),
-  "imageCount": zod.int()
-})
-
-
-/**
  * @summary Delete a content category
  */
 
