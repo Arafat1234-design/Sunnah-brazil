@@ -23,7 +23,7 @@ import {
   getGetLibrarySummaryQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
   getListAdminEventsQueryKey, getListBooksQueryKey, getListCategoriesQueryKey, getListEventsQueryKey, getListImagesQueryKey, getListVideosQueryKey,
   type Book, type BookInput, type Category, type Event as CatalogEvent, type EventInput, type EventUpdate, type Image, type ImageInput, type Video, type VideoInput,
-  useCreateBook, useCreateImage, useCreateVideo, useDeleteBook, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
+  useCreateBook, useCreateCategory, useCreateImage, useCreateVideo, useDeleteBook, useDeleteCategory, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
   useGetBook, useGetBookDownload, useGetLibrarySummary, useGetVideo,
   useGetEvent, useGetVideoDownload, useListAdminEvents, useListBooks, useListCategories, useListEvents, useListImages, useListVideos,
   useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateEvent, useUpdateImage, useUpdateVideo,
@@ -1146,10 +1146,62 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
   </div>;
 }
 
-function AdminCategories({ categories }: { categories: Category[] }) {
+function AdminCategories({ categories, onChanged }: { categories: Category[]; onChanged: () => void }) {
+  const [name, setName] = useState('');
+  const [message, setMessage] = useState('');
+  const createCategory = useCreateCategory();
+  const deleteCategory = useDeleteCategory();
+  const busy = createCategory.isPending || deleteCategory.isPending;
+
+  const errorMessage = (error: unknown, fallback: string) => {
+    const data = (error as { data?: { error?: string } } | null)?.data;
+    return data?.error || fallback;
+  };
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    setMessage('');
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setMessage('Digite o nome da categoria.');
+      return;
+    }
+    createCategory.mutate({ data: { name: trimmedName } }, {
+      onSuccess: () => {
+        setName('');
+        setMessage('Categoria adicionada.');
+        onChanged();
+      },
+      onError: error => setMessage(errorMessage(error, 'Não foi possível adicionar a categoria.')),
+    });
+  };
+
+  const remove = (category: Category) => {
+    if (category.bookCount > 0 || category.videoCount > 0) return;
+    if (!window.confirm(`Eliminar a categoria “${category.name}”?`)) return;
+    setMessage('');
+    deleteCategory.mutate({ id: category.id }, {
+      onSuccess: () => {
+        setMessage('Categoria eliminada.');
+        onChanged();
+      },
+      onError: error => setMessage(errorMessage(error, 'Não foi possível eliminar a categoria.')),
+    });
+  };
+
   return <div>
-    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Organização</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Categorias</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Visão do conteúdo organizado por categoria.</p></div>
-    {categories.length === 0 ? <StateMessage title="Nenhuma categoria ainda" body="As categorias aparecem quando houver livros ou vídeos publicados." /> : <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{categories.map(category => <div key={category.name} className="flex items-center justify-between gap-4 border-b border-[hsl(var(--border))] p-5 last:border-0"><div><p className="font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">Conteúdo disponível no acervo</p></div><div className="flex gap-5 text-right text-xs text-[hsl(var(--muted-foreground))]"><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.bookCount)}</strong>livros</span><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.videoCount)}</strong>vídeos</span></div></div>)}</div>}
+    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Organização</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Categorias</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Adicione categorias novas e elimine as que ainda não têm conteúdo associado.</p></div>
+    <section className="mb-6 rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-5 shadow-sm">
+      <form onSubmit={submit} className="flex flex-col gap-3 sm:flex-row sm:items-end">
+        <label className="min-w-0 flex-1 text-xs font-semibold text-[hsl(var(--muted-foreground))]">Nova categoria<input value={name} onChange={event => setName(event.target.value)} maxLength={80} placeholder="Ex.: História Islâmica" className="mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-white px-3 text-sm font-normal text-[hsl(var(--foreground))] outline-none transition focus:border-[hsl(var(--primary))]" disabled={busy} /></label>
+        <Button type="submit" disabled={busy}>{createCategory.isPending ? 'Adicionando…' : <><Plus size={16} /> Adicionar categoria</>}</Button>
+      </form>
+      {message && <p className={`mt-3 text-sm ${message.endsWith('.') && !message.startsWith('Não') && !message.startsWith('Digite') ? 'text-[hsl(var(--primary))]' : 'text-[hsl(var(--destructive))]'}`}>{message}</p>}
+    </section>
+    {categories.length === 0 ? <StateMessage title="Nenhuma categoria ainda" body="Adicione a primeira categoria para organizar livros e vídeos." /> : <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{categories.map(category => {
+      const inUse = category.bookCount > 0 || category.videoCount > 0;
+      return <div key={category.id} className="flex flex-col gap-4 border-b border-[hsl(var(--border))] p-5 last:border-0 sm:flex-row sm:items-center sm:justify-between"><div><p className="font-semibold">{category.name}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{inUse ? 'Remova ou mova o conteúdo antes de eliminar.' : 'Sem conteúdo associado.'}</p></div><div className="flex items-center justify-between gap-5 sm:justify-end"><div className="flex gap-5 text-right text-xs text-[hsl(var(--muted-foreground))]"><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.bookCount)}</strong>livros</span><span><strong className="mono block text-sm text-[hsl(var(--foreground))]">{formatCount(category.videoCount)}</strong>vídeos</span></div><button onClick={() => remove(category)} disabled={busy || inUse} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))] disabled:cursor-not-allowed disabled:opacity-30" title={inUse ? 'Categoria em uso' : 'Eliminar categoria'} aria-label={`Eliminar categoria ${category.name}`} data-testid={`button-delete-category-${category.id}`}><Trash2 size={16} /></button></div></div>;
+    })}</div>}
   </div>;
 }
 
@@ -1219,7 +1271,7 @@ function Admin() {
   const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'events' ? 'Eventos' : tab === 'categories' ? 'Categorias' : 'Configurações';
   const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'events', label: 'Eventos', icon: <CalendarDays size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
   const renderNav = (mobile = false) => navItems.map(item => <button key={item.key} onClick={() => setTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
-  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
+  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} onChanged={refresh} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
 }
 
 function CatalogList({ tab, books, videos, onAdd, onEdit, onDelete }: { tab: 'books' | 'videos'; books: Book[]; videos: Video[]; onAdd: () => void; onEdit: (item: Book | Video) => void; onDelete: (id: number) => void }) {

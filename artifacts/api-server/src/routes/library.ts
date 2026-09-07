@@ -11,12 +11,16 @@ import {
   UnsafeDownloadError,
 } from "../lib/downloadSafety";
 import {
+  CreateCategoryBody,
+  CreateCategoryResponse,
   CreateBookBody,
   CreateVideoBody,
+  DeleteCategoryParams,
   GetBookDownloadParams,
   GetBookParams,
   GetVideoDownloadParams,
   GetVideoParams,
+  ListCategoriesResponse,
   ListBooksQueryParams,
   ListVideosQueryParams,
   UpdateBookBody,
@@ -448,7 +452,59 @@ router.get("/categories", async (_req, res) => {
   for (const category of categories) counts.set(category.name, { bookCount: 0, videoCount: 0 });
   for (const item of books) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), bookCount: Number(item.value) });
   for (const item of videos) counts.set(item.name, { ...(counts.get(item.name) || { bookCount: 0, videoCount: 0 }), videoCount: Number(item.value) });
-  res.json([...counts.entries()].map(([name, value]) => ({ name, ...value })));
+  const response = categories.map(category => ({ id: category.id, name: category.name, ...(counts.get(category.name) || { bookCount: 0, videoCount: 0 }) }));
+  res.json(ListCategoriesResponse.parse(response));
+});
+
+router.post("/categories", async (req, res): Promise<void> => {
+  if (!requireAdmin(req, res)) return;
+  const parsed = CreateCategoryBody.safeParse(req.body);
+  if (!parsed.success) {
+    res.status(400).json({ error: parsed.error.message });
+    return;
+  }
+
+  const name = parsed.data.name.trim();
+  if (!name) {
+    res.status(400).json({ error: "Category name is required" });
+    return;
+  }
+
+  const [existing] = await db.select({ id: categoriesTable.id }).from(categoriesTable).where(eq(categoriesTable.name, name));
+  if (existing) {
+    res.status(409).json({ error: "A category with this name already exists" });
+    return;
+  }
+
+  const [category] = await db.insert(categoriesTable).values({ name }).returning();
+  res.status(201).json(CreateCategoryResponse.parse({ id: category.id, name: category.name, bookCount: 0, videoCount: 0 }));
+});
+
+router.delete("/categories/:id", async (req, res): Promise<void> => {
+  if (!requireAdmin(req, res)) return;
+  const params = DeleteCategoryParams.safeParse(req.params);
+  if (!params.success) {
+    res.status(400).json({ error: params.error.message });
+    return;
+  }
+
+  const [category] = await db.select().from(categoriesTable).where(eq(categoriesTable.id, params.data.id));
+  if (!category) {
+    res.status(404).json({ error: "Category not found" });
+    return;
+  }
+
+  const [bookUsage, videoUsage] = await Promise.all([
+    db.select({ value: count() }).from(booksTable).where(eq(booksTable.category, category.name)),
+    db.select({ value: count() }).from(videosTable).where(eq(videosTable.category, category.name)),
+  ]);
+  if (Number(bookUsage[0]?.value ?? 0) + Number(videoUsage[0]?.value ?? 0) > 0) {
+    res.status(409).json({ error: "Move or remove the books and videos in this category before deleting it" });
+    return;
+  }
+
+  await db.delete(categoriesTable).where(eq(categoriesTable.id, category.id));
+  res.status(204).send();
 });
 
 router.get("/admin/stats", async (req, res) => {
@@ -460,13 +516,13 @@ router.get("/admin/stats", async (req, res) => {
     db.select({ value: sql<number>`coalesce(sum(${booksTable.downloadCount}), 0)` }).from(booksTable),
     db.select({ value: sql<number>`coalesce(sum(${videosTable.viewCount}), 0)` }).from(videosTable),
   ]);
-  const categories = await db.select({ name: categoriesTable.name, bookCount: sql<number>`(select count(*) from books where category = ${categoriesTable.name})`, videoCount: sql<number>`(select count(*) from videos where category = ${categoriesTable.name})` }).from(categoriesTable).orderBy(asc(categoriesTable.id));
+  const categories = await db.select({ id: categoriesTable.id, name: categoriesTable.name, bookCount: sql<number>`(select count(*) from books where category = ${categoriesTable.name})`, videoCount: sql<number>`(select count(*) from videos where category = ${categoriesTable.name})` }).from(categoriesTable).orderBy(asc(categoriesTable.id));
   res.json({
     bookCount: Number(bookCount[0]?.value ?? 0),
     videoCount: Number(videoCount[0]?.value ?? 0),
     totalDownloads: Number(downloads[0]?.value ?? 0),
     totalViews: Number(views[0]?.value ?? 0),
-    categoryBreakdown: categories.map((category) => ({ name: category.name, bookCount: Number(category.bookCount), videoCount: Number(category.videoCount) })),
+    categoryBreakdown: categories.map((category) => ({ id: category.id, name: category.name, bookCount: Number(category.bookCount), videoCount: Number(category.videoCount) })),
   });
 });
 
