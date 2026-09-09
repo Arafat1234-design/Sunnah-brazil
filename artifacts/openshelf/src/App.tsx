@@ -1139,16 +1139,8 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
   };
 
   return <div className="min-w-0 max-w-full space-y-6">
-    <div className="flex flex-col gap-4 rounded-xl border border-[hsl(var(--border))] bg-white p-2 pl-6 md:flex-row md:items-center shadow-[var(--shadow-sm)]">
-      <div className="flex-1 py-4">
-        <p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--primary))]">Bem-vindo de volta</p>
-        <h2 className="serif mt-2 text-3xl font-medium tracking-[-.02em]">A biblioteca, em contexto.</h2>
-        <p className="mt-1 text-sm text-[hsl(var(--muted-foreground))]">Leitura objetiva do acervo e do uso público, sem identificar visitantes.</p>
-      </div>
-      <div className="hidden h-[90px] w-64 items-center justify-center rounded-lg bg-[url('/sunnah-islamic-background.png')] bg-cover bg-center bg-no-repeat px-5 opacity-80 md:flex">
-        <p className="serif text-sm italic text-[#19383b]">"O conhecimento é uma luz."</p>
-      </div>
-      <div className="flex flex-col gap-2 p-4 md:border-l border-[hsl(var(--border))] md:pl-6">
+    <div className="flex justify-end rounded-xl border border-[hsl(var(--border))] bg-white p-4 shadow-[var(--shadow-sm)]">
+      <div className="flex flex-col gap-2">
         <label className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">
           Período
           <select aria-label="Selecionar período das análises" value={period} onChange={event => setPeriod(event.target.value as AnalyticsPeriodKey)} className="mt-1 block h-9 w-full rounded-md border border-[hsl(var(--border))] bg-white px-3 text-sm outline-none focus:border-[hsl(var(--primary))] sm:w-44"><option value="today">Hoje</option><option value="7d">Últimos 7 dias</option><option value="30d">Últimos 30 dias</option><option value="90d">Últimos 90 dias</option><option value="12m">Últimos 12 meses</option><option value="custom">Personalizado</option></select>
