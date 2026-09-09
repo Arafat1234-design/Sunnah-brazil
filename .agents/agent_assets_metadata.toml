@@ -14,3 +14,17 @@ mtime_ms = 1788958151486
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:161a3e81-c2e9-4dfc-aff6-0dfd3201df01/389c9dfe-357a-4901-a741-20657be88362/cc1444bd-578e-44a0-aa9e-ec75962b6ca7"
 storage_version_token = "1788958157027419"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "C-eV5vwqc7QUv-zZyKfsV"
+uri = "file://exports/nur-al-sunnah-cloudflare-source.zip"
+type = "unspecified"
+title = "Nur Al-Sunnah — código completo para Cloudflare"
+description = "ZIP atualizado com frontend, API, bibliotecas partilhadas e configurações. Não inclui dependências, builds temporários, PDFs de teste nem segredos."
+logical_id = "94fe060f-d8ab-4dbf-9b8e-02722a779886"
+content_hash = "sha256:a9bc381537e072767e97e9f5af14895551af031044c1fa1937b186aa64531277"
+size = 6290661
+mtime_ms = 1788960150937
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:161a3e81-c2e9-4dfc-aff6-0dfd3201df01/94fe060f-d8ab-4dbf-9b8e-02722a779886/df980fdb-542b-4d89-ba15-d2303fc980e1"
+storage_version_token = "1788960158653511"
+content_type = "application/octet-stream"
