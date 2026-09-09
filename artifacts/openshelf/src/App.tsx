@@ -750,13 +750,28 @@ const bookTitleFromFilename = (name: string) => {
   return title || 'Livro sem título';
 };
 
+const cleanExtractedLine = (line: string) => line.replace(/\s+/g, ' ').replace(/[|.;,\s]+$/, '').trim();
+
+const titleFromFirstPage = (text: string) => {
+  const lines = text.split(/\r?\n/).map(cleanExtractedLine).filter(Boolean);
+  const labeledTitle = /^(?:t[ií]tulo|title)\s*[:\-–—]\s*(.+)$/i;
+  const ignoredLine = /^(?:autor(?:a)?|author|por|by|escrito|escrita|isbn|edi[cç][aã]o|edition|editora|publisher|tradu[cç][aã]o|translated|copyright|www\.|https?:\/\/)/i;
+  for (const line of lines) {
+    const match = line.match(labeledTitle);
+    const title = cleanExtractedLine(match?.[1] ?? '');
+    if (title && title.length >= 2 && title.length <= 160) return title;
+  }
+  const firstMeaningfulLine = lines.find(line => line.length >= 4 && line.length <= 160 && !ignoredLine.test(line) && !/^\d[\d\s./-]*$/.test(line));
+  return firstMeaningfulLine ?? '';
+};
+
 const authorFromFirstPage = (text: string) => {
-  const lines = text.split(/\r?\n/).map(line => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const lines = text.split(/\r?\n/).map(cleanExtractedLine).filter(Boolean);
   const authorPattern = /^(?:autor(?:a)?|author|por|by)\s*[:\-–—]\s*(.+)$/i;
   const writtenByPattern = /^(?:escrito|escrita)\s+por\s+(.+)$/i;
   for (const line of lines) {
     const match = line.match(authorPattern) ?? line.match(writtenByPattern);
-    const author = match?.[1]?.replace(/[|.;,\s]+$/, '').trim();
+    const author = cleanExtractedLine(match?.[1] ?? '');
     if (author && author.length >= 2 && author.length <= 120) return author;
   }
   return '';
@@ -796,7 +811,7 @@ const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title
     }
     return {
       ...defaults,
-      title: title || defaults.title,
+      title: title || titleFromFirstPage(firstPageText) || defaults.title,
       author: author || authorFromFirstPage(firstPageText) || defaults.author,
       description: subject || defaults.description,
     };
