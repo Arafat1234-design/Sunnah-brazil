@@ -8,7 +8,7 @@ import { ptBR } from '@clerk/localizations';
 import { getDocument, GlobalWorkerOptions, type PDFDocumentProxy, type PDFPageProxy } from 'pdfjs-dist/legacy/build/pdf.mjs';
 import pdfWorker from 'pdfjs-dist/legacy/build/pdf.worker.min.mjs?url';
 import {
-  ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound,
+  ArrowLeft, ArrowRight, BarChart3, BookOpen, Check, ChevronDown, CircleUserRound, Mail,
   Download, FileText, Film, Headphones, Heart, Info,
   Menu, Play, Plus, Search, Send, Settings2, ShieldCheck, SlidersHorizontal,
   Sparkles, Trash2, UploadCloud, X, Youtube, GraduationCap, Globe2,
@@ -22,12 +22,12 @@ import {
   getGetBookDownloadQueryKey, getGetBookQueryKey,
   getGetLibrarySummaryQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
   getListAdminEventsQueryKey, getListBooksQueryKey, getListCategoriesQueryKey, getListEventsQueryKey, getListImagesQueryKey, getListVideosQueryKey,
-  type Book, type BookInput, type Category, type Event as CatalogEvent, type EventInput, type EventUpdate, type Image, type ImageInput, type Video, type VideoInput,
+  type Book, type BookInput, type Category, type ContactMessage, type Event as CatalogEvent, type EventInput, type EventUpdate, type Image, type ImageInput, type Video, type VideoInput,
   useCreateBook, useCreateCategory, useCreateImage, useCreateVideo, useDeleteBook, useDeleteCategory, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
   useGetBook, useGetBookDownload, useGetLibrarySummary, useGetVideo,
-  useGetEvent, useGetVideoDownload, useListAdminEvents, useListBooks, useListCategories, useListEvents, useListImages, useListVideos,
+  useCreateContactMessage, useGetEvent, useGetVideoDownload, useListAdminContactMessages, useListAdminEvents, useListBooks, useListCategories, useListEvents, useListImages, useListVideos,
   useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateEvent, useUpdateImage, useUpdateVideo,
-  useCreateEvent, useDeleteEvent, useDuplicateEvent,
+  useCreateEvent, useDeleteEvent, useDuplicateEvent, useUpdateAdminContactMessage,
 } from '@workspace/api-client-react';
 import NotFound from '@/pages/not-found';
 import { ErrorBoundary } from '@/components/error-boundary';
@@ -39,6 +39,12 @@ const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
 GlobalWorkerOptions.workerSrc = pdfWorker;
+
+function appUrl(value: string | null | undefined): string | undefined {
+  if (!value) return undefined;
+  if (/^https?:\/\//i.test(value)) return value;
+  return value.startsWith('/') ? `${basePath}${value}` : value;
+}
 
 type AnalyticsData = Record<string, string | number | boolean>;
 
@@ -233,12 +239,12 @@ function resetDepthPointer(event: ReactPointerEvent<HTMLElement>) {
 
 function Cover({ book, large = false }: { book: Book; large?: boolean }) {
   return <div className={`book-cover ${large ? 'aspect-[3/4] max-w-[280px] rounded-2xl' : 'aspect-[3/4] rounded-[14px]'} shadow-sm`}>
-    {book.coverUrl ? <img src={book.coverUrl} alt={book.title} className="relative z-[1] h-full w-full object-cover" /> : <div className="relative z-[1] flex h-full flex-col justify-between p-5 text-[hsl(var(--primary-foreground))]"><span className="mono text-[10px] uppercase tracking-[.15em] opacity-75">Edição Nur Al-Sunnah</span><div><h3 className={`serif leading-[1.02] ${large ? 'text-3xl' : 'text-xl'}`}>{book.title}</h3><p className="mt-2 text-xs opacity-75">{book.author}</p></div></div>}
+    {book.coverUrl ? <img src={appUrl(book.coverUrl)} alt={book.title} className="relative z-[1] h-full w-full object-cover" /> : <div className="relative z-[1] flex h-full flex-col justify-between p-5 text-[hsl(var(--primary-foreground))]"><span className="mono text-[10px] uppercase tracking-[.15em] opacity-75">Edição Nur Al-Sunnah</span><div><h3 className={`serif leading-[1.02] ${large ? 'text-3xl' : 'text-xl'}`}>{book.title}</h3><p className="mt-2 text-xs opacity-75">{book.author}</p></div></div>}
   </div>;
 }
 
 function VideoThumb({ video, large = false }: { video: Video; large?: boolean }) {
-  return <div className={`relative overflow-hidden rounded-[14px] bg-[hsl(190_27%_22%)] ${large ? 'aspect-video' : 'aspect-video'}`}>{video.thumbnailUrl ? <img src={video.thumbnailUrl} alt={video.title} className="h-full w-full object-cover" /> : <div className="flex h-full flex-col justify-between bg-[radial-gradient(circle_at_78%_18%,hsl(10_57%_62%/.8),transparent_32%),linear-gradient(135deg,hsl(190_27%_22%),hsl(174_37%_31%))] p-4 text-[hsl(var(--primary-foreground))]"><Youtube className="opacity-80" size={24} /><span className="serif text-xl leading-tight">{video.title}</span></div>}<span className="absolute bottom-3 right-3 rounded bg-[hsl(193_25%_19%/.78)] px-2 py-1 mono text-[10px] text-white">{video.duration}</span><span className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[hsl(var(--accent))] text-white shadow-md transition-transform group-hover:scale-110"><Play size={17} fill="currentColor" /></span></div>;
+  return <div className={`relative overflow-hidden rounded-[14px] bg-[hsl(190_27%_22%)] ${large ? 'aspect-video' : 'aspect-video'}`}>{video.thumbnailUrl ? <img src={appUrl(video.thumbnailUrl)} alt={video.title} className="h-full w-full object-cover" /> : <div className="flex h-full flex-col justify-between bg-[radial-gradient(circle_at_78%_18%,hsl(10_57%_62%/.8),transparent_32%),linear-gradient(135deg,hsl(190_27%_22%),hsl(174_37%_31%))] p-4 text-[hsl(var(--primary-foreground))]"><Youtube className="opacity-80" size={24} /><span className="serif text-xl leading-tight">{video.title}</span></div>}<span className="absolute bottom-3 right-3 rounded bg-[hsl(193_25%_19%/.78)] px-2 py-1 mono text-[10px] text-white">{video.duration}</span><span className="absolute left-1/2 top-1/2 grid h-11 w-11 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-[hsl(var(--accent))] text-white shadow-md transition-transform group-hover:scale-110"><Play size={17} fill="currentColor" /></span></div>;
 }
 
 function BookCard({ book }: { book: Book }) {
@@ -296,7 +302,7 @@ function Countdown({ target, compact = false, transparent = false }: { target: s
 
 function EventImage({ event, className = '' }: { event: CatalogEvent; className?: string }) {
   return <div className={`overflow-hidden bg-[hsl(var(--secondary))] ${className}`}>
-    {event.imageUrl ? <img src={event.imageUrl} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full min-h-40 items-center justify-center bg-[radial-gradient(circle_at_72%_18%,hsl(10_57%_62%/.5),transparent_32%),linear-gradient(135deg,hsl(190_27%_22%),hsl(174_37%_31%))] text-white"><CalendarDays size={42} strokeWidth={1.3} /></div>}
+    {event.imageUrl ? <img src={appUrl(event.imageUrl)} alt="" className="h-full w-full object-cover" /> : <div className="flex h-full min-h-40 items-center justify-center bg-[radial-gradient(circle_at_72%_18%,hsl(10_57%_62%/.5),transparent_32%),linear-gradient(135deg,hsl(190_27%_22%),hsl(174_37%_31%))] text-white"><CalendarDays size={42} strokeWidth={1.3} /></div>}
   </div>;
 }
 
@@ -417,7 +423,7 @@ function GalleryPage() {
     title: image.title,
     description: image.description,
     category: image.category,
-    src: image.imageUrl,
+    src: appUrl(image.imageUrl) ?? image.imageUrl,
     alt: image.alt,
   })), [imagesQuery.data]);
   const categories = ['Todos', ...Array.from(new Set(galleryItems.map(item => item.category)))];
@@ -539,7 +545,7 @@ function BookDetail() {
     }
   };
   useEffect(() => {
-    if (dl.data?.url) window.location.assign(dl.data.url);
+    if (dl.data?.url) window.location.assign(appUrl(dl.data.url) ?? dl.data.url);
   }, [dl.data?.url]);
   if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid /></main></Shell>;
   if (q.isError || !book) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="Este título não está na estante" body="Ele pode ter sido movido ou o link pode estar desatualizado." /></main></Shell>;
@@ -640,20 +646,20 @@ function BookReader() {
   const canRead = Boolean(book?.fileUrl && (book.fileType === 'PDF' || book.fileType === 'TXT'));
   if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid /></main></Shell>;
   if (q.isError || !book) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="Este título não está na estante" body="Ele pode ter sido movido ou o link pode estar desatualizado." /></main></Shell>;
-  const readerUrl = `/api/books/${book.id}/read/file`;
-  const downloadUrl = `/api/books/${book.id}/download/file`;
+  const readerUrl = `${basePath}/api/books/${book.id}/read/file`;
+  const downloadUrl = `${basePath}/api/books/${book.id}/download/file`;
   return <Shell><main className="mx-auto max-w-[1180px] px-5 pb-16 pt-8 lg:px-8"><div className="flex flex-wrap items-center justify-between gap-4"><Link href={`/books/${book.id}`} className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))]" data-testid="link-back-book-detail"><ArrowLeft size={15} /> Voltar ao livro</Link><div className="flex flex-wrap items-center gap-2"><Button href={`/books/${book.id}`} variant="soft"><Info size={15} /> Detalhes</Button>{book.fileUrl && <a href={downloadUrl} download className="inline-flex items-center justify-center gap-2 rounded-full bg-[hsl(var(--primary))] px-4 py-2.5 text-sm font-semibold text-[hsl(var(--primary-foreground))] transition-all duration-200 hover:brightness-110" data-testid="link-reader-download"><Download size={15} /> Baixar PDF</a>}</div></div><div className="py-8"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Leitor digital · {book.category}</p><h1 className="serif mt-3 max-w-4xl text-4xl leading-tight tracking-[-.04em] md:text-5xl">{book.title}</h1><p className="mt-3 text-sm text-[hsl(var(--muted-foreground))]">Por {book.author}</p></div>{canRead ? <PdfReader url={readerUrl} title={book.title} /> : <StateMessage title="Leitura indisponível" body="Este livro ainda não possui um arquivo compatível para leitura no app." />}</main></Shell>;
 }
 
 function VideoDetail() {
   const { id } = useParams<{ id: string }>(); const videoId = Number(id); const q = useGetVideo(videoId); const [requested, setRequested] = useState(false); const dl = useGetVideoDownload(videoId, { query: { enabled: requested, queryKey: getGetVideoDownloadQueryKey(videoId) } }); const video = q.data;
   useEffect(() => {
-    if (dl.data?.url) window.location.assign(dl.data.url);
+    if (dl.data?.url) window.location.assign(appUrl(dl.data.url) ?? dl.data.url);
   }, [dl.data?.url]);
   if (q.isLoading) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><LoadingGrid kind="video" /></main></Shell>;
   if (q.isError || !video) return <Shell><main className="mx-auto max-w-5xl px-5 py-20"><StateMessage error title="Este vídeo não está disponível" body="Ele pode ter sido movido ou o link pode estar desatualizado." /></main></Shell>;
   const canDownload = Boolean(video.downloadEnabled && video.videoUrl);
-  return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/videos" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]" data-testid="link-back-videos"><ArrowLeft size={15} /> Voltar aos vídeos</Link><div className="pt-10"><div className="relative overflow-hidden rounded-2xl bg-[hsl(190_27%_22%)]">{video.videoUrl ? <video src={video.videoUrl} controls poster={video.thumbnailUrl ?? undefined} className="aspect-video w-full" /> : <VideoThumb video={video} large />}</div><div className="grid gap-8 py-9 md:grid-cols-[1fr_260px]"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{video.category} · {video.duration}</p><h1 className="serif mt-3 text-4xl leading-tight md:text-5xl">{video.title}</h1><p className="mt-5 max-w-2xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{video.description}</p></div><div className="rounded-2xl bg-[hsl(var(--secondary)/.6)] p-5"><p className="text-sm font-semibold">Disponibilidade</p><Button variant="outline" className="mt-5 w-full" onClick={() => { trackEvent('video_download_started', { content_type: 'video' }); setRequested(true); }} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'MP4 indisponível' : dl.isLoading ? 'Preparando MP4…' : <><Download size={15} /> Baixar MP4</>}</Button>{dl.isError && <p className="mt-3 text-xs leading-5 text-[hsl(var(--destructive))]">Não foi possível preparar o MP4. Tente novamente.</p>}</div></div></div></main></Shell>;
+  return <Shell><main className="mx-auto max-w-[1060px] px-5 pb-16 pt-10 lg:px-8"><Link href="/videos" className="inline-flex items-center gap-2 text-sm text-[hsl(var(--muted-foreground))]" data-testid="link-back-videos"><ArrowLeft size={15} /> Voltar aos vídeos</Link><div className="pt-10"><div className="relative overflow-hidden rounded-2xl bg-[hsl(190_27%_22%)]">{video.videoUrl ? <video src={appUrl(video.videoUrl)} controls poster={appUrl(video.thumbnailUrl)} className="aspect-video w-full" /> : <VideoThumb video={video} large />}</div><div className="grid gap-8 py-9 md:grid-cols-[1fr_260px]"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{video.category} · {video.duration}</p><h1 className="serif mt-3 text-4xl leading-tight md:text-5xl">{video.title}</h1><p className="mt-5 max-w-2xl text-[15px] leading-8 text-[hsl(var(--muted-foreground))]">{video.description}</p></div><div className="rounded-2xl bg-[hsl(var(--secondary)/.6)] p-5"><p className="text-sm font-semibold">Disponibilidade</p><Button variant="outline" className="mt-5 w-full" onClick={() => { trackEvent('video_download_started', { content_type: 'video' }); setRequested(true); }} disabled={!canDownload || dl.isLoading}>{!canDownload ? 'MP4 indisponível' : dl.isLoading ? 'Preparando MP4…' : <><Download size={15} /> Baixar MP4</>}</Button>{dl.isError && <p className="mt-3 text-xs leading-5 text-[hsl(var(--destructive))]">Não foi possível preparar o MP4. Tente novamente.</p>}</div></div></div></main></Shell>;
 }
 
 function Categories() {
@@ -678,7 +684,27 @@ function About() {
 
   function LegalPage({ type }: { type: 'terms' | 'policy' }) { const policy = type === 'policy'; return <Shell><main className="mx-auto max-w-[900px] px-5 pb-16 pt-16 lg:px-8"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">{policy ? 'Direitos autorais e distribuição' : 'Informações legais'}</p><h1 className="serif mt-4 text-6xl tracking-[-.04em]">{policy ? 'Política de conteúdo' : 'Termos de uso'}</h1><p className="mt-4 text-sm text-[hsl(var(--muted-foreground))]">Última atualização: 14 de fevereiro de 2024</p><div className="prose prose-stone mt-12 max-w-none prose-headings:font-[var(--app-font-serif)] prose-headings:font-medium prose-p:text-[hsl(var(--muted-foreground))] prose-p:leading-8"><h2>{policy ? 'Em resumo' : 'Bem-vindo à plataforma Nur Al-Sunnah'}</h2><p>{policy ? 'A plataforma Nur Al-Sunnah é uma camada de descoberta e acesso a materiais que podem ser compartilhados legalmente. Não somos um espaço para hospedagem indiscriminada de arquivos e não disponibilizamos conscientemente obras protegidas por direitos autorais sem autorização.' : 'A plataforma Nur Al-Sunnah é uma biblioteca digital selecionada e mantida como um projeto de interesse público. Ao utilizar o site, você concorda em usar os materiais de forma legal e respeitar os direitos de autores, cineastas, editoras e colaboradores.'}</p><h2>{policy ? 'O que aceitamos' : 'Uso da coleção'}</h2><p>{policy ? 'Obras em domínio público, obras com licença Creative Commons ou outras licenças abertas e materiais fornecidos pelo titular dos direitos ou por um representante autorizado. Registramos a fonte e os termos de distribuição quando um item é adicionado.' : 'Você pode navegar, assistir e baixar materiais de acordo com as permissões associadas a cada item. Não redistribua, venda ou altere uma obra quando a licença não permitir essas ações.'}</p><h2>{policy ? 'Tem uma preocupação sobre um item?' : 'Nossas responsabilidades'}</h2><p>{policy ? 'Envie um relato com o título, a URL específica, sua relação com a obra e uma explicação objetiva. Analisamos relatos completos com agilidade e podemos restringir o acesso enquanto investigamos.' : 'Trabalhamos para manter as descrições corretas e os links funcionais, mas a coleção é fornecida no estado em que se encontra. Se encontrar um erro, link quebrado ou preocupação relacionada a direitos, entre em contato com a equipe da biblioteca.'}</p><h2>Contato</h2><p>Para relatar uma questão de direitos autorais ou tirar dúvidas sobre estes termos, acesse a página de contato. Não envie senhas nem informações de pagamento.</p></div></main></Shell>; }
 
-function Contact() { const [sent, setSent] = useState(false); return <Shell><main className="mx-auto grid max-w-[1000px] gap-14 px-5 pb-16 pt-16 md:grid-cols-[.85fr_1fr] lg:px-8"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Fale conosco</p><h1 className="serif mt-4 text-6xl leading-[.95] tracking-[-.05em]">Uma estante sempre correta.</h1><p className="mt-6 text-[hsl(var(--muted-foreground))]">Encontrou um link quebrado, quer sugerir uma obra ou precisa relatar uma preocupação com direitos autorais? Use o formulário ao lado para enviar sua mensagem.</p><div className="mt-10 border-t border-[hsl(var(--border))] pt-5 text-sm"><p className="font-semibold">Direitos autorais</p><p className="mt-1 text-[hsl(var(--muted-foreground))]">Use o formulário ao lado para enviar uma mensagem sobre direitos autorais, sugestões ou links quebrados.</p></div></div><form onSubmit={e => { e.preventDefault(); setSent(true); }} className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 md:p-8">{sent ? <div className="py-12 text-center"><Check className="mx-auto text-[hsl(var(--primary))]" size={30} /><h2 className="serif mt-5 text-3xl">Obrigado pelo contato.</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Agradecemos por ajudar a manter este espaço útil.</p><Button onClick={() => setSent(false)} variant="soft" className="mt-6">Enviar outra</Button></div> : <><label className="text-sm font-semibold">Seu e-mail<input required type="email" className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="input-contact-email" /></label><label className="mt-5 block text-sm font-semibold">Como podemos ajudar?<select className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm outline-none" data-testid="select-contact-type"><option>Relato de direitos autorais</option><option>Sugerir um livro ou vídeo</option><option>Link quebrado ou metadados</option><option>Outro assunto</option></select></label><label className="mt-5 block text-sm font-semibold">Sua mensagem<textarea required rows={5} className="mt-2 w-full resize-none rounded-lg border bg-transparent p-3 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="textarea-contact-message" /></label><Button type="submit" className="mt-6 w-full">Enviar mensagem <Send size={15} /></Button></>}</form></main></Shell>; }
+function Contact() {
+  const [sent, setSent] = useState(false);
+  const [email, setEmail] = useState('');
+  const [topic, setTopic] = useState('Relato de direitos autorais');
+  const [message, setMessage] = useState('');
+  const submitMessage = useCreateContactMessage();
+
+  const submit = (event: FormEvent) => {
+    event.preventDefault();
+    submitMessage.mutate({ data: { email, topic, message } }, {
+      onSuccess: () => {
+        setEmail('');
+        setTopic('Relato de direitos autorais');
+        setMessage('');
+        setSent(true);
+      },
+    });
+  };
+
+  return <Shell><main className="mx-auto grid max-w-[1000px] gap-14 px-5 pb-16 pt-16 md:grid-cols-[.85fr_1fr] lg:px-8"><div><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">Fale conosco</p><h1 className="serif mt-4 text-6xl leading-[.95] tracking-[-.05em]">Uma estante sempre correta.</h1><p className="mt-6 text-[hsl(var(--muted-foreground))]">Encontrou um link quebrado, quer sugerir uma obra ou precisa relatar uma preocupação com direitos autorais? Use o formulário ao lado para enviar sua mensagem.</p><div className="mt-10 border-t border-[hsl(var(--border))] pt-5 text-sm"><p className="font-semibold">Direitos autorais</p><p className="mt-1 text-[hsl(var(--muted-foreground))]">Use o formulário ao lado para enviar uma mensagem sobre direitos autorais, sugestões ou links quebrados.</p></div></div><form onSubmit={submit} className="rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))] p-6 md:p-8">{sent ? <div className="py-12 text-center"><Check className="mx-auto text-[hsl(var(--primary))]" size={30} /><h2 className="serif mt-5 text-3xl">Obrigado pelo contato.</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">A sua mensagem foi recebida pela equipe da biblioteca.</p><Button onClick={() => setSent(false)} variant="soft" className="mt-6">Enviar outra</Button></div> : <><label className="text-sm font-semibold">Seu e-mail<input required type="email" value={email} onChange={event => setEmail(event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="input-contact-email" /></label><label className="mt-5 block text-sm font-semibold">Como podemos ajudar?<select value={topic} onChange={event => setTopic(event.target.value)} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm outline-none" data-testid="select-contact-type"><option>Relato de direitos autorais</option><option>Sugerir um livro ou vídeo</option><option>Link quebrado ou metadados</option><option>Outro assunto</option></select></label><label className="mt-5 block text-sm font-semibold">Sua mensagem<textarea required rows={5} value={message} onChange={event => setMessage(event.target.value)} className="mt-2 w-full resize-none rounded-lg border bg-transparent p-3 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="textarea-contact-message" /></label>{submitMessage.isError && <p className="mt-4 text-sm text-[hsl(var(--destructive))]" role="alert">Não foi possível enviar a mensagem. Tente novamente.</p>}<Button type="submit" disabled={submitMessage.isPending} className="mt-6 w-full">{submitMessage.isPending ? 'Enviando…' : <>Enviar mensagem <Send size={15} /></>}</Button></>}</form></main></Shell>;
+}
 
 function AuthPage({ signUp = false }: { signUp?: boolean }) {
   const [submitted, setSubmitted] = useState(false);
@@ -828,6 +854,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
   const galleryImages = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const [uploading, setUploading] = useState<'cover' | 'file' | 'video' | 'thumbnail' | null>(null);
   const [uploadError, setUploadError] = useState('');
+  const [saveError, setSaveError] = useState('');
 
   const patch = (key: keyof EditorState, value: string | boolean) => setState(current => ({ ...current, [key]: value }));
 
@@ -896,6 +923,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
+    setSaveError('');
     if (state.kind === 'book') {
       const data: BookInput = {
         title: state.title,
@@ -909,7 +937,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
         featured: state.featured,
       };
       const done = () => { refresh(); close(); };
-      state.id ? updateBook.mutate({ id: state.id, data }, { onSuccess: done }) : createBook.mutate({ data }, { onSuccess: done });
+      state.id ? updateBook.mutate({ id: state.id, data }, { onSuccess: done, onError: () => setSaveError('Não foi possível atualizar o livro. Verifique os campos e tente novamente.') }) : createBook.mutate({ data }, { onSuccess: done, onError: () => setSaveError('Não foi possível criar o livro. Verifique os campos e tente novamente.') });
     } else {
       const data: VideoInput = {
         title: state.title,
@@ -922,7 +950,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
         featured: state.featured,
       };
       const done = () => { refresh(); close(); };
-      state.id ? updateVideo.mutate({ id: state.id, data }, { onSuccess: done }) : createVideo.mutate({ data }, { onSuccess: done });
+      state.id ? updateVideo.mutate({ id: state.id, data }, { onSuccess: done, onError: () => setSaveError('Não foi possível atualizar o vídeo. Verifique os campos e tente novamente.') }) : createVideo.mutate({ data }, { onSuccess: done, onError: () => setSaveError('Não foi possível criar o vídeo. Verifique os campos e tente novamente.') });
     }
   };
 
@@ -949,7 +977,7 @@ function CatalogEditor({ state, setState, close, refresh }: { state: EditorState
           </div>
            {state.thumbnailUrl && <img src={state.thumbnailUrl} alt="Pré-visualização da capa do vídeo" className="max-h-48 w-full rounded-xl object-contain bg-[hsl(var(--secondary))]" />}
         </div>}
-        {uploadError && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{uploadError}</p>}
+          {(uploadError || saveError) && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{saveError || uploadError}</p>}
          <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={state.featured ?? false} onChange={e => patch('featured', e.target.checked)} data-testid="checkbox-editor-featured" /> Destacar este item</label>
          {state.kind === 'video' && <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={state.downloadEnabled ?? false} onChange={e => patch('downloadEnabled', e.target.checked)} data-testid="checkbox-editor-download" /> Permitir downloads</label>}
       </div>
@@ -993,11 +1021,11 @@ function ImageEditor({ image, close, refresh }: { image?: Image; close: () => vo
     }
     const data: ImageInput = { title: draft.title, description: draft.description, category: draft.category || 'Islam', imageUrl: draft.imageUrl, alt: draft.alt || draft.title, featured: draft.featured };
     const done = () => { refresh(); close(); };
-    draft.id ? update.mutate({ id: draft.id, data }, { onSuccess: done }) : create.mutate({ data }, { onSuccess: done });
+    draft.id ? update.mutate({ id: draft.id, data }, { onSuccess: done, onError: () => setError('Não foi possível atualizar a imagem. Verifique os campos e tente novamente.') }) : create.mutate({ data }, { onSuccess: done, onError: () => setError('Não foi possível criar a imagem. Verifique os campos e tente novamente.') });
   };
 
   const busy = uploading || create.isPending || update.isPending;
-   return <div className="fixed inset-0 z-50 grid place-items-center bg-[hsl(193_25%_19%/.52)] p-4"><form onSubmit={submit} className="max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[hsl(var(--card))] p-6 shadow-xl"><div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">{draft.id ? 'Editar imagem' : 'Nova imagem'}</p><h2 className="serif mt-1 text-3xl">Adicionar à galeria</h2></div><button type="button" onClick={close} data-testid="button-close-image-editor"><X size={20} /></button></div><label className="mt-6 block rounded-xl border border-dashed border-[hsl(var(--primary)/.45)] bg-[hsl(var(--secondary)/.35)] p-5 text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={16} />Enviar arquivo de imagem</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} className="mt-3 block w-full text-xs" onChange={event => { const file = event.target.files?.[0]; event.currentTarget.value = ''; if (file) void chooseFile(file); }} data-testid="input-editor-gallery-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading ? 'Enviando e gerando metadados…' : draft.imageUrl ? 'Imagem pronta — título e detalhes gerados a partir do nome do arquivo.' : 'JPG, PNG, WebP ou GIF · máximo de 10 MB'}</span></label>{draft.imageUrl && <img src={draft.imageUrl} alt={draft.alt || draft.title} className="mt-4 max-h-56 w-full rounded-xl object-contain bg-[hsl(var(--secondary))]" />}<div className="mt-5 grid gap-4"><label className="text-sm font-semibold">Título<input required value={draft.title} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-title" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Categoria<input required value={draft.category} onChange={event => setDraft(current => ({ ...current, category: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-category" /></label><label className="text-sm font-semibold">Texto alternativo<input required value={draft.alt} onChange={event => setDraft(current => ({ ...current, alt: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-alt" /></label></div><label className="text-sm font-semibold">Descrição<textarea required rows={3} value={draft.description} onChange={event => setDraft(current => ({ ...current, description: event.target.value }))} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-editor-image-description" /></label>{error && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{error}</p>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.featured ?? false} onChange={event => setDraft(current => ({ ...current, featured: event.target.checked }))} data-testid="checkbox-editor-image-featured" /> Destacar esta imagem</label></div><div className="mt-7 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={close}>Cancelar</Button><Button type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar imagem'}</Button></div></form></div>;
+   return <div className="fixed inset-0 z-50 grid place-items-center bg-[hsl(193_25%_19%/.52)] p-4"><form onSubmit={submit} className="max-h-[90dvh] w-full max-w-xl overflow-y-auto rounded-2xl bg-[hsl(var(--card))] p-6 shadow-xl"><div className="flex items-center justify-between"><div><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">{draft.id ? 'Editar imagem' : 'Nova imagem'}</p><h2 className="serif mt-1 text-3xl">Adicionar à galeria</h2></div><button type="button" onClick={close} data-testid="button-close-image-editor"><X size={20} /></button></div><label className="mt-6 block rounded-xl border border-dashed border-[hsl(var(--primary)/.45)] bg-[hsl(var(--secondary)/.35)] p-5 text-sm font-semibold"><span className="flex items-center gap-2"><UploadCloud size={16} />Enviar arquivo de imagem</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif" disabled={busy} className="mt-3 block w-full text-xs" onChange={event => { const file = event.target.files?.[0]; event.currentTarget.value = ''; if (file) void chooseFile(file); }} data-testid="input-editor-gallery-upload" /><span className="mt-2 block text-xs font-normal text-[hsl(var(--muted-foreground))]">{uploading ? 'Enviando e gerando metadados…' : draft.imageUrl ? 'Imagem pronta — título e detalhes gerados a partir do nome do arquivo.' : 'JPG, PNG, WebP ou GIF · máximo de 10 MB'}</span></label>{draft.imageUrl && <img src={appUrl(draft.imageUrl)} alt={draft.alt || draft.title} className="mt-4 max-h-56 w-full rounded-xl object-contain bg-[hsl(var(--secondary))]" />}<div className="mt-5 grid gap-4"><label className="text-sm font-semibold">Título<input required value={draft.title} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-title" /></label><div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Categoria<input required value={draft.category} onChange={event => setDraft(current => ({ ...current, category: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-category" /></label><label className="text-sm font-semibold">Texto alternativo<input required value={draft.alt} onChange={event => setDraft(current => ({ ...current, alt: event.target.value }))} className="mt-2 h-11 w-full rounded-lg border bg-transparent px-3 text-sm" data-testid="input-editor-image-alt" /></label></div><label className="text-sm font-semibold">Descrição<textarea required rows={3} value={draft.description} onChange={event => setDraft(current => ({ ...current, description: event.target.value }))} className="mt-2 w-full rounded-lg border bg-transparent p-3 text-sm" data-testid="textarea-editor-image-description" /></label>{error && <p className="text-sm text-[hsl(var(--destructive))]" role="alert">{error}</p>}<label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={draft.featured ?? false} onChange={event => setDraft(current => ({ ...current, featured: event.target.checked }))} data-testid="checkbox-editor-image-featured" /> Destacar esta imagem</label></div><div className="mt-7 flex justify-end gap-2"><Button type="button" variant="ghost" onClick={close}>Cancelar</Button><Button type="submit" disabled={busy}>{busy ? 'Salvando…' : 'Salvar imagem'}</Button></div></form></div>;
 }
 
 function EventEditor({ event, close, refresh }: { event?: CatalogEvent; close: () => void; refresh: () => void }) {
@@ -1039,7 +1067,7 @@ function EventEditor({ event, close, refresh }: { event?: CatalogEvent; close: (
 }
 
 function ImageList({ images, onAdd, onEdit, onDelete }: { images: Image[]; onAdd: () => void; onEdit: (image: Image) => void; onDelete: (id: number) => void }) {
-   return <div><div className="mb-6 flex items-center justify-between"><p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} imagens na galeria</p><Button onClick={onAdd}><Plus size={16} /> Adicionar imagem</Button></div><div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="Nenhuma imagem ainda" body="Envie a primeira imagem para começar a galeria pública." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={image.imageUrl} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Destacada' : 'Padrão'}</span><button onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div></div>;
+  return <div><div className="mb-6 flex items-center justify-between"><p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} imagens na galeria</p><Button onClick={onAdd}><Plus size={16} /> Adicionar imagem</Button></div><div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="Nenhuma imagem ainda" body="Envie a primeira imagem para começar a galeria pública." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={appUrl(image.imageUrl)} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Destacada' : 'Padrão'}</span><button onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div></div>;
 }
 
 type AnalyticsPeriodKey = 'today' | '7d' | '30d' | '90d' | '12m' | 'custom';
@@ -1150,7 +1178,7 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
         <AnalyticsCard eyebrow="Acesso agora" title={`${formatCount(data.liveVisitors.count)} visitantes ativos`} className="bg-white">
           {hasLiveVisitors ? <div className="mt-5 overflow-x-auto"><table className="w-full min-w-[420px] text-left text-sm"><thead className="border-b border-[hsl(var(--border))] text-[11px] uppercase tracking-wider text-[hsl(var(--muted-foreground))]"><tr><th className="pb-3 font-medium">Página</th><th className="pb-3 font-medium">Dispositivo</th><th className="pb-3 text-right font-medium">Visto</th></tr></thead><tbody>{data.liveVisitors.visitors.slice(0, 8).map((visitor, index) => <tr key={`${visitor.path}-${visitor.lastSeenAt}-${index}`} className="border-b border-[hsl(var(--border)/.7)] last:border-0"><td className="max-w-[170px] truncate py-3">{visitor.path}</td><td className="py-3 text-[hsl(var(--muted-foreground))]">{visitor.device || 'Não informado'}</td><td className="py-3 text-right text-xs text-[hsl(var(--muted-foreground))]">{formatDate(visitor.lastSeenAt, true)}</td></tr>)}</tbody></table><p className="mt-3 text-[11px] text-[hsl(var(--muted-foreground))]">Dados agregados; nenhum nome, endereço ou identificador pessoal é exibido.</p></div> : <div className="mt-5"><EmptyAnalytics label="Não há visitantes ativos neste momento." /></div>}
         </AnalyticsCard>
-        <AnalyticsCard eyebrow="Registro" title="Atividade recente" className="bg-white">{data.recentActivity.length ? <div className="mt-5 divide-y divide-[hsl(var(--border))]">{data.recentActivity.slice(0, 7).map((item, index) => <div key={`${item.createdAt}-${index}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"><div className="flex items-start gap-3 min-w-0"><span className="mt-0.5 text-[hsl(var(--muted-foreground))]">{item.type === 'book' ? <BookOpen size={14}/> : item.type === 'video' ? <PlayCircle size={14}/> : item.type === 'image' ? <Images size={14}/> : <CalendarDays size={14}/>}</span><div className="min-w-0"><p className="truncate text-sm">{item.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{item.type === 'book' ? 'Livro' : item.type === 'video' ? 'Vídeo' : item.type === 'image' ? 'Imagem' : 'Evento'}</p></div></div><div className="flex shrink-0 flex-col items-end gap-1"><span className="text-[11px] text-[hsl(var(--muted-foreground))]">{formatDate(item.createdAt, true)}</span></div></div>)}</div> : <div className="mt-5"><EmptyAnalytics label="Ainda não há atividade recente." /></div>}</AnalyticsCard>
+        <AnalyticsCard eyebrow="Registro" title="Atividade recente" className="bg-white">{data.recentActivity.length ? <div className="mt-5 divide-y divide-[hsl(var(--border))]">{data.recentActivity.slice(0, 7).map((item, index) => <div key={`${item.createdAt}-${index}`} className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"><div className="flex items-start gap-3 min-w-0"><span className="mt-0.5 text-[hsl(var(--muted-foreground))]">{item.type === 'book' ? <BookOpen size={14}/> : item.type === 'video' ? <PlayCircle size={14}/> : item.type === 'image' ? <Images size={14}/> : item.type === 'download' ? <Download size={14}/> : <CalendarDays size={14}/>}</span><div className="min-w-0"><p className="truncate text-sm">{item.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{item.type === 'book' ? 'Livro' : item.type === 'video' ? 'Vídeo' : item.type === 'image' ? 'Imagem' : item.type === 'download' ? 'Download' : 'Evento'}</p></div></div><div className="flex shrink-0 flex-col items-end gap-1"><span className="text-[11px] text-[hsl(var(--muted-foreground))]">{formatDate(item.createdAt, true)}</span></div></div>)}</div> : <div className="mt-5"><EmptyAnalytics label="Ainda não há atividade recente." /></div>}</AnalyticsCard>
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
         <AnalyticsCard eyebrow="Downloads" title="Ritmo de downloads" className="bg-white">
@@ -1236,6 +1264,26 @@ function AdminEvents({ events, onAdd, onEdit, onDelete, onDuplicate, onTogglePub
   </div>;
 }
 
+function AdminMessages() {
+  const messages = useListAdminContactMessages();
+  const update = useUpdateAdminContactMessage();
+  const [error, setError] = useState('');
+  const items = messages.data ?? [];
+  const unread = items.filter(message => !message.read).length;
+
+  const toggleRead = (message: ContactMessage) => {
+    setError('');
+    update.mutate({ id: message.id, data: { read: !message.read } }, {
+      onError: () => setError('Não foi possível atualizar o estado da mensagem.'),
+    });
+  };
+
+  return <div>
+    <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Comunicação</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Mensagens</h2><p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Relatos, sugestões e pedidos enviados pelo formulário público.</p></div>
+    {messages.isLoading ? <div className="space-y-3">{[1, 2, 3].map(item => <div key={item} className="skeleton h-32 rounded-2xl" />)}</div> : messages.isError ? <StateMessage error title="Não foi possível carregar as mensagens" body="Tente novamente em alguns instantes." retry={messages.refetch} /> : <><div className="mb-5 flex items-center gap-2 rounded-xl bg-[hsl(var(--secondary)/.55)] px-4 py-3 text-sm"><Mail size={16} className="text-[hsl(var(--primary))]" /><span>{unread === 0 ? 'Todas as mensagens foram lidas.' : `${formatCount(unread)} ${unread === 1 ? 'mensagem não lida' : 'mensagens não lidas'}.`}</span></div>{error && <p className="mb-5 rounded-xl bg-[hsl(var(--destructive)/.1)] px-4 py-3 text-sm text-[hsl(var(--destructive))]" role="alert">{error}</p>}{items.length === 0 ? <StateMessage title="Nenhuma mensagem ainda" body="As mensagens enviadas pelo contato público aparecerão aqui." /> : <div className="space-y-3">{items.map(message => <article key={message.id} className={`rounded-2xl border bg-[hsl(var(--card))] p-5 ${message.read ? 'border-[hsl(var(--border))]' : 'border-[hsl(var(--primary)/.45)] shadow-sm'}`}><div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><span className="font-semibold">{message.topic}</span>{!message.read && <span className="rounded-full bg-[hsl(var(--secondary))] px-2 py-1 text-[10px] font-semibold text-[hsl(var(--primary))]">Nova</span>}</div><a href={`mailto:${message.email}`} className="mt-1 block truncate text-sm text-[hsl(var(--primary))] hover:underline">{message.email}</a></div><time dateTime={message.createdAt} className="shrink-0 text-xs text-[hsl(var(--muted-foreground))]">{formatDate(message.createdAt, true)}</time></div><p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[hsl(var(--muted-foreground))]">{message.message}</p><div className="mt-4 flex justify-end"><Button variant="ghost" onClick={() => toggleRead(message)} disabled={update.isPending}>{message.read ? 'Marcar como não lida' : 'Marcar como lida'}</Button></div></article>)}</div>}</>}
+  </div>;
+}
+
 function AdminSettings() {
   return <div>
     <div className="mb-6"><p className="mono text-[10px] uppercase tracking-[.18em] text-[hsl(var(--accent))]">Espaço privado</p><h2 className="serif mt-2 text-4xl tracking-[-.04em]">Configurações</h2><p className="mt-2 max-w-xl text-sm leading-6 text-[hsl(var(--muted-foreground))]">Informações do painel e princípios de privacidade da biblioteca.</p></div>
@@ -1247,7 +1295,7 @@ function AdminSettings() {
 }
 
 function Admin() {
-  const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images' | 'events' | 'categories' | 'settings'>('overview');
+  const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images' | 'events' | 'categories' | 'messages' | 'settings'>('overview');
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [imageEditor, setImageEditor] = useState<Image | 'new' | null>(null);
   const [eventEditor, setEventEditor] = useState<CatalogEvent | 'new' | null>(null);
@@ -1257,12 +1305,14 @@ function Admin() {
   const images = useListImages(undefined, { query: { queryKey: getListImagesQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   const events = useListAdminEvents();
   const categories = useListCategories();
+  const messages = useListAdminContactMessages();
   const delBook = useDeleteBook();
   const delVideo = useDeleteVideo();
   const delImage = useDeleteImage();
   const delEvent = useDeleteEvent();
   const duplicateEvent = useDuplicateEvent();
   const updateEvent = useUpdateEvent();
+  const [notice, setNotice] = useState('');
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: getListBooksQueryKey() });
@@ -1276,22 +1326,28 @@ function Admin() {
 
   const confirmDelete = (kind: 'book' | 'video' | 'image' | 'event', id: number) => {
     if (!window.confirm(kind === 'image' ? 'Remover esta imagem da galeria pública?' : kind === 'event' ? 'Excluir este evento? Esta ação não pode ser desfeita.' : 'Remover este item do catálogo?')) return;
-    if (kind === 'book') delBook.mutate({ id }, { onSuccess: refresh });
-    if (kind === 'video') delVideo.mutate({ id }, { onSuccess: refresh });
-    if (kind === 'image') delImage.mutate({ id }, { onSuccess: refresh });
-    if (kind === 'event') delEvent.mutate({ id }, { onSuccess: refresh });
+    setNotice('');
+    const onError = () => setNotice('Não foi possível remover este item. Tente novamente.');
+    if (kind === 'book') delBook.mutate({ id }, { onSuccess: refresh, onError });
+    if (kind === 'video') delVideo.mutate({ id }, { onSuccess: refresh, onError });
+    if (kind === 'image') delImage.mutate({ id }, { onSuccess: refresh, onError });
+    if (kind === 'event') delEvent.mutate({ id }, { onSuccess: refresh, onError });
   };
 
   const togglePublish = (event: CatalogEvent) => {
     const data: EventInput = { title: event.title, shortDescription: event.shortDescription, fullDescription: event.fullDescription, eventDate: event.eventDate, startTime: event.startTime, endTime: event.endTime, timezone: event.timezone, imageId: event.imageId, venue: event.venue, city: event.city, address: event.address, mapsUrl: event.mapsUrl, externalUrl: event.externalUrl, published: !event.published };
-    updateEvent.mutate({ id: event.id, data }, { onSuccess: refresh });
+    setNotice('');
+    updateEvent.mutate({ id: event.id, data }, { onSuccess: refresh, onError: () => setNotice('Não foi possível alterar a publicação do evento.') });
   };
-  const duplicate = (id: number) => duplicateEvent.mutate({ id }, { onSuccess: refresh });
+  const duplicate = (id: number) => {
+    setNotice('');
+    duplicateEvent.mutate({ id }, { onSuccess: refresh, onError: () => setNotice('Não foi possível duplicar o evento.') });
+  };
 
-  const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'events' ? 'Eventos' : tab === 'categories' ? 'Categorias' : 'Configurações';
-  const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'events', label: 'Eventos', icon: <CalendarDays size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
+  const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'events' ? 'Eventos' : tab === 'categories' ? 'Categorias' : tab === 'messages' ? 'Mensagens' : 'Configurações';
+  const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'events', label: 'Eventos', icon: <CalendarDays size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'messages', label: messages.data?.some(message => !message.read) ? 'Mensagens · novas' : 'Mensagens', icon: <Mail size={17} /> }, { key: 'settings', label: 'Configurações', icon: <Settings2 size={17} /> }] as const;
   const renderNav = (mobile = false) => navItems.map(item => <button key={item.key} onClick={() => setTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
-  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
+  return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><p className="mono mb-3 mt-14 px-3 text-[10px] uppercase tracking-[.18em] opacity-50">Espaço privado</p>{renderNav()}<div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><div className="flex items-center gap-2"><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link><span className="grid h-9 w-9 place-items-center rounded-full bg-[hsl(var(--secondary))]"><CircleUserRound size={17} /></span></div></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{notice && <p className="mb-5 rounded-xl bg-[hsl(var(--destructive)/.1)] px-4 py-3 text-sm text-[hsl(var(--destructive))]" role="alert">{notice}</p>}{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'messages' ? <AdminMessages /> : tab === 'settings' ? <AdminSettings /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
 }
 
 function CatalogList({ tab, books, videos, onAdd, onEdit, onDelete }: { tab: 'books' | 'videos'; books: Book[]; videos: Video[]; onAdd: () => void; onEdit: (item: Book | Video) => void; onDelete: (id: number) => void }) {

@@ -30,7 +30,6 @@ import {
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 const DEFAULT_CATEGORIES = [
-  "Education",
   "Islam",
 ];
 

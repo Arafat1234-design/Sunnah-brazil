@@ -23,5 +23,6 @@ export * from "./categories";
 export * from "./events";
 export * from "./catalogEvents";
 export * from "./analytics";
+export * from "./contactMessages";
 export * from "./images";
 export * from "./videos";

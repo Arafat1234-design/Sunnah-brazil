@@ -1021,6 +1021,72 @@ export const GetAdminAnalyticsResponse = zod.object({
 
 
 /**
+ * @summary Send a message to the library team
+ */
+export const createContactMessageBodyEmailMin = 3;
+export const createContactMessageBodyEmailMax = 320;
+
+export const createContactMessageBodyTopicMax = 80;
+
+export const createContactMessageBodyMessageMax = 5000;
+
+
+
+export const CreateContactMessageBody = zod.object({
+  "email": zod.email().min(createContactMessageBodyEmailMin).max(createContactMessageBodyEmailMax),
+  "topic": zod.string().min(1).max(createContactMessageBodyTopicMax),
+  "message": zod.string().min(1).max(createContactMessageBodyMessageMax)
+})
+
+export const CreateContactMessageResponse = zod.object({
+  "id": zod.int(),
+  "email": zod.email(),
+  "topic": zod.string(),
+  "message": zod.string(),
+  "read": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
+ * @summary List contact messages for the Admin inbox
+ */
+export const ListAdminContactMessagesResponseItem = zod.object({
+  "id": zod.int(),
+  "email": zod.email(),
+  "topic": zod.string(),
+  "message": zod.string(),
+  "read": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+export const ListAdminContactMessagesResponse = zod.array(ListAdminContactMessagesResponseItem)
+
+
+/**
+ * @summary Update the read state of a contact message
+ */
+
+
+
+export const UpdateAdminContactMessageParams = zod.object({
+  "id": zod.coerce.number().int().min(1)
+})
+
+export const UpdateAdminContactMessageBody = zod.object({
+  "read": zod.boolean()
+})
+
+export const UpdateAdminContactMessageResponse = zod.object({
+  "id": zod.int(),
+  "email": zod.email(),
+  "topic": zod.string(),
+  "message": zod.string(),
+  "read": zod.boolean(),
+  "createdAt": zod.coerce.date()
+})
+
+
+/**
  * @summary Check the additional Admin password session
  */
 export const GetAdminAccessResponse = zod.object({

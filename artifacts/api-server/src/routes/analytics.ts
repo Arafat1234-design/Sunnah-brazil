@@ -108,11 +108,12 @@ router.get("/admin/analytics", async (req, res) => {
   const { key, start, end } = periodWindow(req);
   const windowFilter = and(gte(analyticsEventsTable.createdAt, start), lt(analyticsEventsTable.createdAt, end));
   const pageviewFilter = and(windowFilter, eq(analyticsEventsTable.eventType, "pageview"));
+  const downloadWindowFilter = and(gte(downloadEventsTable.createdAt, start), lt(downloadEventsTable.createdAt, end));
   const [bookCount, videoCount, imageCount, totalDownloads, totalVisitors, totalPageviews, trafficRows, sourceRows, deviceRows, popularRows] = await Promise.all([
     db.select({ value: count() }).from(booksTable),
     db.select({ value: count() }).from(videosTable),
     db.select({ value: count() }).from(imagesTable),
-    db.select({ value: sql<number>`coalesce((select sum(${booksTable.downloadCount}) from ${booksTable}), 0) + coalesce((select sum(${videosTable.downloadCount}) from ${videosTable}), 0)` }).from(booksTable),
+    db.select({ value: count() }).from(downloadEventsTable).where(downloadWindowFilter),
     db.select({ value: sql<number>`count(distinct ${analyticsEventsTable.sessionHash})` }).from(analyticsEventsTable).where(pageviewFilter),
     db.select({ value: count() }).from(analyticsEventsTable).where(pageviewFilter),
     db.select({
@@ -155,17 +156,19 @@ router.get("/admin/analytics", async (req, res) => {
   ]);
   const bookTitles = new Map(booksForLeaders.map(item => [item.id, item.title]));
   const videoTitles = new Map(videosForLeaders.map(item => [item.id, item.title]));
-  const leaders = bookLeaders
-    .map(item => ({ title: bookTitles.get(item.id) ?? "Livro removido", downloads: Number(item.downloads) }))
+  const leaders = [
+    ...bookLeaders.map(item => ({ title: bookTitles.get(item.id) ?? "Livro removido", downloads: Number(item.downloads) })),
+    ...videoLeaders.map(item => ({ title: videoTitles.get(item.id) ?? "Vídeo removido", downloads: Number(item.downloads) })),
+  ]
     .sort((a, b) => b.downloads - a.downloads)
     .slice(0, 5);
 
   const recentActivity = [
-    ...recentBooks.map(item => ({ type: "Novo livro", title: item.title, createdAt: iso(item.createdAt) })),
-    ...recentVideos.map(item => ({ type: "Novo vídeo", title: item.title, createdAt: iso(item.createdAt) })),
-    ...recentImages.map(item => ({ type: "Nova imagem", title: item.title, createdAt: iso(item.createdAt) })),
+    ...recentBooks.map(item => ({ type: "book", title: item.title, createdAt: iso(item.createdAt) })),
+    ...recentVideos.map(item => ({ type: "video", title: item.title, createdAt: iso(item.createdAt) })),
+    ...recentImages.map(item => ({ type: "image", title: item.title, createdAt: iso(item.createdAt) })),
     ...recentDownloads.map(item => ({
-      type: "Novo download",
+      type: "download",
       title: item.contentType === "book" ? (allBooks.find(book => book.id === item.contentId)?.title ?? "Livro removido") : (allVideos.find(video => video.id === item.contentId)?.title ?? "Vídeo removido"),
       createdAt: iso(item.createdAt),
     })),

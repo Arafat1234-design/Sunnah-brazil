@@ -30,6 +30,9 @@ import type {
   BookUpdate,
   Category,
   CategoryInput,
+  ContactMessage,
+  ContactMessageInput,
+  ContactMessageUpdate,
   DownloadResponse,
   Event,
   EventInput,
@@ -2710,6 +2713,226 @@ export function useGetAdminAnalytics<TData = Awaited<ReturnType<typeof getAdminA
 
 
 
+
+export const getCreateContactMessageUrl = () => {
+
+
+
+
+  return `/api/contact/messages`
+}
+
+/**
+ * @summary Send a message to the library team
+ */
+export const createContactMessage = async (contactMessageInput: ContactMessageInput, options?: Parameters<typeof customFetch>[1]): Promise<ContactMessage> => {
+
+  return customFetch<ContactMessage>(getCreateContactMessageUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contactMessageInput)
+  }
+);}
+
+
+
+
+
+export const getCreateContactMessageMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContactMessage>>, TError,{data: BodyType<ContactMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createContactMessage>>, TError,{data: BodyType<ContactMessageInput>}, TContext> => {
+
+const mutationKey = ['createContactMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createContactMessage>>, {data: BodyType<ContactMessageInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createContactMessage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateContactMessageMutationResult = NonNullable<Awaited<ReturnType<typeof createContactMessage>>>
+    export type CreateContactMessageMutationBody = BodyType<ContactMessageInput>
+    export type CreateContactMessageMutationError = ErrorType<void>
+
+    /**
+ * @summary Send a message to the library team
+ */
+export const useCreateContactMessage = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createContactMessage>>, TError,{data: BodyType<ContactMessageInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createContactMessage>>,
+        TError,
+        {data: BodyType<ContactMessageInput>},
+        TContext
+      > => {
+      return useMutation(getCreateContactMessageMutationOptions(options));
+    }
+
+export const getListAdminContactMessagesUrl = () => {
+
+
+
+
+  return `/api/admin/contact/messages`
+}
+
+/**
+ * @summary List contact messages for the Admin inbox
+ */
+export const listAdminContactMessages = async ( options?: Parameters<typeof customFetch>[1]): Promise<ContactMessage[]> => {
+
+  return customFetch<ContactMessage[]>(getListAdminContactMessagesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListAdminContactMessagesQueryKey = () => {
+    return [
+    `/api/admin/contact/messages`
+    ] as const;
+    }
+
+
+export const getListAdminContactMessagesQueryOptions = <TData = Awaited<ReturnType<typeof listAdminContactMessages>>, TError = ErrorType<UnauthorizedResponse | void>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminContactMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListAdminContactMessagesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listAdminContactMessages>>> = ({ signal }) => listAdminContactMessages({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listAdminContactMessages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListAdminContactMessagesQueryResult = NonNullable<Awaited<ReturnType<typeof listAdminContactMessages>>>
+export type ListAdminContactMessagesQueryError = ErrorType<UnauthorizedResponse | void>
+
+
+/**
+ * @summary List contact messages for the Admin inbox
+ */
+
+export function useListAdminContactMessages<TData = Awaited<ReturnType<typeof listAdminContactMessages>>, TError = ErrorType<UnauthorizedResponse | void>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listAdminContactMessages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListAdminContactMessagesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getUpdateAdminContactMessageUrl = (id: number,) => {
+
+
+
+
+  return `/api/admin/contact/messages/${id}`
+}
+
+/**
+ * @summary Update the read state of a contact message
+ */
+export const updateAdminContactMessage = async (id: number,
+    contactMessageUpdate: ContactMessageUpdate, options?: Parameters<typeof customFetch>[1]): Promise<ContactMessage> => {
+
+  return customFetch<ContactMessage>(getUpdateAdminContactMessageUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(contactMessageUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateAdminContactMessageMutationOptions = <TError = ErrorType<UnauthorizedResponse | void | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminContactMessage>>, TError,{id: number;data: BodyType<ContactMessageUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateAdminContactMessage>>, TError,{id: number;data: BodyType<ContactMessageUpdate>}, TContext> => {
+
+const mutationKey = ['updateAdminContactMessage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateAdminContactMessage>>, {id: number;data: BodyType<ContactMessageUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateAdminContactMessage(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateAdminContactMessageMutationResult = NonNullable<Awaited<ReturnType<typeof updateAdminContactMessage>>>
+    export type UpdateAdminContactMessageMutationBody = BodyType<ContactMessageUpdate>
+    export type UpdateAdminContactMessageMutationError = ErrorType<UnauthorizedResponse | void | NotFoundResponse>
+
+    /**
+ * @summary Update the read state of a contact message
+ */
+export const useUpdateAdminContactMessage = <TError = ErrorType<UnauthorizedResponse | void | NotFoundResponse>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateAdminContactMessage>>, TError,{id: number;data: BodyType<ContactMessageUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateAdminContactMessage>>,
+        TError,
+        {id: number;data: BodyType<ContactMessageUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateAdminContactMessageMutationOptions(options));
+    }
 
 export const getGetAdminAccessUrl = () => {
 

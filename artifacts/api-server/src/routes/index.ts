@@ -6,6 +6,7 @@ import adminAccessRouter from "./adminAccess";
 import libraryRouter from "./library";
 import storageRouter from "./storage";
 import eventsRouter from "./events";
+import contactRouter from "./contact";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(analyticsRouter);
 router.use(adminAccessRouter);
 router.use(storageRouter);
 router.use(eventsRouter);
+router.use(contactRouter);
 
 export default router;

@@ -239,6 +239,37 @@ export interface AdminAccessStatus {
   authorized: boolean;
 }
 
+export interface ContactMessage {
+  id: number;
+  email: string;
+  topic: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface ContactMessageInput {
+  /**
+     * @minLength 3
+     * @maxLength 320
+     */
+  email: string;
+  /**
+     * @minLength 1
+     * @maxLength 80
+     */
+  topic: string;
+  /**
+     * @minLength 1
+     * @maxLength 5000
+     */
+  message: string;
+}
+
+export interface ContactMessageUpdate {
+  read: boolean;
+}
+
 export type AnalyticsEventInputEventType = typeof AnalyticsEventInputEventType[keyof typeof AnalyticsEventInputEventType];
 
 

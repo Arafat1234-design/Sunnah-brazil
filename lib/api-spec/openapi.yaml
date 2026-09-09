@@ -22,6 +22,8 @@ tags:
     description: Content categories
   - name: events
     description: Public events and announcements
+  - name: contact
+    description: Public contact messages
   - name: admin
     description: Protected administration
   - name: storage
@@ -657,6 +659,70 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "403":
           description: Admin access required
+  /contact/messages:
+    post:
+      operationId: createContactMessage
+      tags: [contact]
+      summary: Send a message to the library team
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageInput"
+      responses:
+        "201":
+          description: Message received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+        "400":
+          description: Invalid contact message
+  /admin/contact/messages:
+    get:
+      operationId: listAdminContactMessages
+      tags: [admin]
+      summary: List contact messages for the Admin inbox
+      responses:
+        "200":
+          description: Contact messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContactMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
+  /admin/contact/messages/{id}:
+    patch:
+      operationId: updateAdminContactMessage
+      tags: [admin]
+      summary: Update the read state of a contact message
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactMessageUpdate"
+      responses:
+        "200":
+          description: Updated contact message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ContactMessage"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          description: Admin access required
+        "404":
+          $ref: "#/components/responses/NotFound"
   /admin/access:
     get:
       operationId: getAdminAccess
@@ -989,6 +1055,28 @@ components:
       required: [authorized]
       properties:
         authorized: { type: boolean }
+    ContactMessage:
+      type: object
+      required: [id, email, topic, message, read, createdAt]
+      properties:
+        id: { type: integer }
+        email: { type: string, format: email }
+        topic: { type: string }
+        message: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
+    ContactMessageInput:
+      type: object
+      required: [email, topic, message]
+      properties:
+        email: { type: string, format: email, minLength: 3, maxLength: 320 }
+        topic: { type: string, minLength: 1, maxLength: 80 }
+        message: { type: string, minLength: 1, maxLength: 5000 }
+    ContactMessageUpdate:
+      type: object
+      required: [read]
+      properties:
+        read: { type: boolean }
     AnalyticsEventInput:
       type: object
       required: [visitorId, path]
