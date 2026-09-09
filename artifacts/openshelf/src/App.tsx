@@ -48,24 +48,6 @@ function appUrl(value: string | null | undefined): string | undefined {
   return value.startsWith('/') ? `${basePath}${value}` : value;
 }
 
-const savedBooksChangedEvent = 'nur-al-sunnah:saved-books-changed';
-
-function getSavedBookIds(): number[] {
-  try {
-    const savedBooks = JSON.parse(window.localStorage.getItem(savedBooksStorageKey) ?? '[]');
-    return Array.isArray(savedBooks)
-      ? savedBooks.filter((value): value is number => typeof value === 'number')
-      : [];
-  } catch {
-    return [];
-  }
-}
-
-function setSavedBookIds(ids: number[]) {
-  window.localStorage.setItem(savedBooksStorageKey, JSON.stringify(ids));
-  window.dispatchEvent(new Event(savedBooksChangedEvent));
-}
-
 type AnalyticsData = Record<string, string | number | boolean>;
 
 declare global {
@@ -165,7 +147,7 @@ function Header() {
   const [open, setOpen] = useState(false);
   const [location] = useLocation();
   const [search, setSearch] = useState('');
-   const items = [['Início', '/'], ['Livros', '/books'], ['Guardados', '/guardados'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about']];
+   const items = [['Início', '/'], ['Livros', '/books'], ['Vídeos', '/videos'], ['Imagens', '/images'], ['Eventos', '/events'], ['Categorias', '/categories'], ['Sobre', '/about']];
   const submitSearch = (event: FormEvent) => {
     event.preventDefault();
     window.location.href = `${basePath}/books${search.trim() ? `?search=${encodeURIComponent(search.trim())}` : ''}`;
@@ -421,29 +403,6 @@ function Books() {
   return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-16 pt-14 lg:px-8"><div className="mb-10"><div><h1 className="serif text-5xl tracking-[-.04em] md:text-6xl">A SALA DOS LIVROS</h1></div></div><LibraryToolbar kind="books" search={search} setSearch={setSearch} category={category} setCategory={setCategory} categories={cats.data ?? []} /><div className="mt-8">{q.isLoading ? <LoadingGrid /> : q.isError ? <StateMessage error title="As estantes estão fechadas por um momento" body="Tente novamente daqui a pouco." retry={q.refetch} /> : !q.data?.length ? <StateMessage title="Nenhum título corresponde à busca" body="Tente outra frase ou explore todas as categorias." /> : <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{q.data.map(book => <BookCard key={book.id} book={book} />)}</div>}</div></main></Shell>;
 }
 
-function SavedBooks() {
-  const [savedIds, setSavedIds] = useState<number[]>(getSavedBookIds);
-  const q = useListBooks({});
-  useEffect(() => {
-    const refreshSaved = () => setSavedIds(getSavedBookIds());
-    window.addEventListener(savedBooksChangedEvent, refreshSaved);
-    window.addEventListener('storage', refreshSaved);
-    return () => {
-      window.removeEventListener(savedBooksChangedEvent, refreshSaved);
-      window.removeEventListener('storage', refreshSaved);
-    };
-  }, []);
-  const savedBooks = useMemo(
-    () => (q.data ?? []).filter(book => savedIds.includes(book.id)),
-    [q.data, savedIds],
-  );
-
-  return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-16 pt-14 lg:px-8">
-    <div className="mb-10"><p className="mono text-[10px] uppercase tracking-[.2em] text-[hsl(var(--accent))]">A sua estante pessoal</p><h1 className="serif mt-3 text-5xl tracking-[-.04em] md:text-6xl">Guardados</h1><p className="mt-4 max-w-lg text-[hsl(var(--muted-foreground))]">Livros que você marcou para voltar a ler depois.</p></div>
-    {q.isLoading ? <LoadingGrid /> : q.isError ? <StateMessage error title="Os guardados estão indisponíveis" body="Tente novamente daqui a pouco." retry={q.refetch} /> : !savedBooks.length ? <StateMessage title="Ainda não há livros guardados" body="Abra um livro e escolha “Guardar para depois” para encontrá-lo aqui." /> : <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">{savedBooks.map(book => <BookCard key={book.id} book={book} />)}</div>}
-  </main></Shell>;
-}
-
 function Videos() {
   const [search, setSearch] = useState(''); const [category, setCategory] = useState(() => new URLSearchParams(window.location.search).get('category') ?? '');
   const params = useMemo(() => ({ ...(search ? { search } : {}), ...(category ? { category } : {}) }), [search, category]);
@@ -579,9 +538,10 @@ function BookDetail() {
   }, [bookId]);
   const toggleSaved = () => {
     try {
-       const current = getSavedBookIds();
+      const savedBooks = JSON.parse(window.localStorage.getItem(savedBooksStorageKey) ?? '[]');
+      const current = Array.isArray(savedBooks) ? savedBooks.filter((value): value is number => typeof value === 'number') : [];
       const next = current.includes(bookId) ? current.filter(value => value !== bookId) : [...current, bookId];
-       setSavedBookIds(next);
+      window.localStorage.setItem(savedBooksStorageKey, JSON.stringify(next));
       setSaved(next.includes(bookId));
       trackEvent(next.includes(bookId) ? 'book_saved' : 'book_unsaved', { content_type: 'book', book_id: bookId });
     } catch {
@@ -1637,7 +1597,7 @@ function AdminRoute() {
 function Router() {
   const [location] = useLocation();
   return <ErrorBoundary resetKey={location}><Switch>
-     <Route path="/" component={Home} /><Route path="/books" component={Books} /><Route path="/guardados" component={SavedBooks} /><Route path="/books/:id/read" component={BookReader} /><Route path="/books/:id" component={BookDetail} />
+    <Route path="/" component={Home} /><Route path="/books" component={Books} /><Route path="/books/:id/read" component={BookReader} /><Route path="/books/:id" component={BookDetail} />
     <Route path="/videos" component={Videos} /><Route path="/videos/:id" component={VideoDetail} /><Route path="/images" component={GalleryPage} /><Route path="/events" component={EventsPage} /><Route path="/events/:id" component={EventDetail} /><Route path="/categories" component={Categories} />
     <Route path="/about" component={About} /><Route path="/contact" component={Contact} /><Route path="/terms"><LegalPage type="terms" /></Route><Route path="/content-policy"><LegalPage type="policy" /></Route>
     <Route path="/admin/login" component={AdminLogin} /><Route path="/admin" component={AdminRoute} />
