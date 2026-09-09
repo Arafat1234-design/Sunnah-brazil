@@ -1,0 +1,16 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Su1JV5aX7418TBN7qB0XB"
+uri = "file://exports/nur-al-sunnah-site.zip"
+type = "unspecified"
+title = "Nur Al-Sunnah — código completo"
+description = "ZIP com frontend, API, bibliotecas compartilhadas e configurações do site. Não inclui node_modules, builds temporários, arquivos internos do ambiente nem o PDF de teste anexado."
+logical_id = "389c9dfe-357a-4901-a741-20657be88362"
+content_hash = "sha256:2512a81d3f1aaf4f36dd63577070c0e80dd18dabc7354998b8f6283aa647c82b"
+size = 6155036
+mtime_ms = 1788958151486
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:161a3e81-c2e9-4dfc-aff6-0dfd3201df01/389c9dfe-357a-4901-a741-20657be88362/cc1444bd-578e-44a0-aa9e-ec75962b6ca7"
+storage_version_token = "1788958157027419"
+content_type = "application/octet-stream"
