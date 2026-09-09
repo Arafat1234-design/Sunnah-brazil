@@ -28,3 +28,17 @@ mtime_ms = 1788960150937
 storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:161a3e81-c2e9-4dfc-aff6-0dfd3201df01/94fe060f-d8ab-4dbf-9b8e-02722a779886/df980fdb-542b-4d89-ba15-d2303fc980e1"
 storage_version_token = "1788960158653511"
 content_type = "application/octet-stream"
+
+[[outputs]]
+id = "NUp8xUB6Hti2re7GAbBY5"
+uri = "file://exports/nur-al-sunnah-cloudflare-pages-upload.zip"
+type = "unspecified"
+title = "Nur Al-Sunnah — upload direto no Cloudflare Pages"
+description = "Build de produção do frontend pronta para upload no Cloudflare Pages. Contém index.html, assets, logo, imagens e worker do leitor PDF."
+logical_id = "ec2e02ec-1f97-4984-a5e3-57cf8d1495c3"
+content_hash = "sha256:82b3e1f6f38154608e01035080096a8e0d08e3376699fb0e9c546033f2aa7ed8"
+size = 6530511
+mtime_ms = 1788960787297
+storage_uri = "gcs://replit-rams-assets-janeway/rams/assets/repl:161a3e81-c2e9-4dfc-aff6-0dfd3201df01/ec2e02ec-1f97-4984-a5e3-57cf8d1495c3/33690931-fb68-4460-bd22-d8a88a3fff9f"
+storage_version_token = "1788960795183958"
+content_type = "application/octet-stream"
