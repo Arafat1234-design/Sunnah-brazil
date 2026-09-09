@@ -1,11 +1,11 @@
 import { Readable } from 'stream';
-import { getAuth } from '@clerk/express';
 import {
   RequestUploadUrlBody,
   RequestUploadUrlResponse,
 } from '@workspace/api-zod';
 import { Router, type IRouter, type Request, type Response } from 'express';
 
+import { requireAdmin } from '../lib/adminAuth';
 import { ObjectPermission } from '../lib/objectAcl';
 import {
   ObjectNotFoundError,
@@ -21,16 +21,12 @@ const objectStorageService = new ObjectStorageService();
  * Request a presigned URL for file upload.
  * The client sends JSON metadata (name, size, contentType) — NOT the file.
  * Then uploads the file directly to the returned presigned URL.
- * Requires auth middleware so public callers cannot mint write-capable URLs.
+ * Requires the Admin session so public callers cannot mint write-capable URLs.
  */
 router.post(
   '/storage/uploads/request-url',
   async (req: Request, res: Response) => {
-    if (!getAuth(req).userId) {
-      res.status(401).json({ error: 'Unauthorized' });
-
-      return;
-    }
+    if (!requireAdmin(req, res)) return;
 
     const parsed = RequestUploadUrlBody.safeParse(req.body);
     if (!parsed.success) {
