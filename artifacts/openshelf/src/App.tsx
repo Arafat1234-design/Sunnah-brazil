@@ -750,6 +750,18 @@ const bookTitleFromFilename = (name: string) => {
   return title || 'Livro sem título';
 };
 
+const authorFromFirstPage = (text: string) => {
+  const lines = text.split(/\r?\n/).map(line => line.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  const authorPattern = /^(?:autor(?:a)?|author|por|by)\s*[:\-–—]\s*(.+)$/i;
+  const writtenByPattern = /^(?:escrito|escrita)\s+por\s+(.+)$/i;
+  for (const line of lines) {
+    const match = line.match(authorPattern) ?? line.match(writtenByPattern);
+    const author = match?.[1]?.replace(/[|.;,\s]+$/, '').trim();
+    if (author && author.length >= 2 && author.length <= 120) return author;
+  }
+  return '';
+};
+
 const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType'>> => {
   const defaults = {
     title: bookTitleFromFilename(file.name),
@@ -763,16 +775,29 @@ const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title
 
   try {
     const pdf = await getDocument({ data: await file.arrayBuffer() }).promise;
-    const metadata = await pdf.getMetadata();
-    const info = metadata.info as Record<string, unknown>;
+    let info: Record<string, unknown> = {};
+    try {
+      const metadata = await pdf.getMetadata();
+      info = metadata.info as Record<string, unknown>;
+    } catch {
+      // Continue with the first-page text when PDF metadata is unavailable.
+    }
     const value = (key: string) => typeof info[key] === 'string' && info[key] ? String(info[key]).trim() : '';
     const title = value('Title');
     const author = value('Author');
     const subject = value('Subject');
+    let firstPageText = '';
+    try {
+      const firstPage = await pdf.getPage(1);
+      const textContent = await firstPage.getTextContent();
+      firstPageText = textContent.items.map(item => 'str' in item && typeof item.str === 'string' ? item.str : '').join('\n');
+    } catch {
+      // Scanned or otherwise unreadable first pages keep the normal fallback.
+    }
     return {
       ...defaults,
       title: title || defaults.title,
-      author: author || defaults.author,
+      author: author || authorFromFirstPage(firstPageText) || defaults.author,
       description: subject || defaults.description,
     };
   } catch {
