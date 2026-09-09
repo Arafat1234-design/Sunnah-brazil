@@ -26,3 +26,4 @@ export * from "./analytics";
 export * from "./contactMessages";
 export * from "./images";
 export * from "./videos";
+export * from "./siteSettings";

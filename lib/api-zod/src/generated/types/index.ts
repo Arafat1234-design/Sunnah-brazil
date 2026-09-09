@@ -48,6 +48,8 @@ export * from './notFoundResponse';
 export * from './popularContent';
 export * from './recentActivity';
 export * from './searchParameter';
+export * from './siteSettings';
+export * from './siteSettingsUpdate';
 export * from './trafficPoint';
 export * from './unauthorizedResponse';
 export * from './uploadRequest';

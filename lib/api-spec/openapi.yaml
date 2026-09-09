@@ -54,6 +54,39 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LibrarySummary"
+  /site-settings:
+    get:
+      operationId: getSiteSettings
+      tags: [library]
+      summary: Get public site settings
+      responses:
+        "200":
+          description: Public homepage settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSettings"
+    patch:
+      operationId: updateSiteSettings
+      tags: [admin]
+      summary: Update public site settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SiteSettingsUpdate"
+      responses:
+        "200":
+          description: Updated public homepage settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SiteSettings"
+        "400":
+          description: Invalid site settings
+        "403":
+          description: Admin access required
   /books:
     get:
       operationId: listBooks
@@ -1199,4 +1232,14 @@ components:
       properties:
         uploadURL: { type: string, format: uri }
         objectPath: { type: string }
+    SiteSettings:
+      type: object
+      required: [heroTitle]
+      properties:
+        heroTitle: { type: string, minLength: 1, maxLength: 160 }
+    SiteSettingsUpdate:
+      type: object
+      required: [heroTitle]
+      properties:
+        heroTitle: { type: string, minLength: 1, maxLength: 160 }
 

@@ -20,11 +20,12 @@ import {
 } from 'recharts';
 import {
   getGetBookDownloadQueryKey, getGetBookQueryKey,
-  getGetLibrarySummaryQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
+  getGetLibrarySummaryQueryKey, getGetSiteSettingsQueryKey, getGetVideoDownloadQueryKey, getGetVideoQueryKey,
   getListAdminEventsQueryKey, getListBooksQueryKey, getListCategoriesQueryKey, getListEventsQueryKey, getListImagesQueryKey, getListVideosQueryKey,
   type Book, type BookInput, type Category, type ContactMessage, type Event as CatalogEvent, type EventInput, type EventUpdate, type Image, type ImageInput, type Video, type VideoInput,
   useCreateBook, useCreateCategory, useCreateImage, useCreateVideo, useDeleteBook, useDeleteCategory, useDeleteImage, useDeleteVideo, useGetAdminAnalytics,
   useGetBook, useGetBookDownload, useGetLibrarySummary, useGetVideo,
+  useGetSiteSettings, useUpdateSiteSettings,
   useCreateContactMessage, useGetEvent, useGetVideoDownload, useListAdminContactMessages, useListAdminEvents, useListBooks, useListCategories, useListEvents, useListImages, useListVideos,
   useRequestImageUploadUrl, useRequestUploadUrl, useUpdateBook, useUpdateEvent, useUpdateImage, useUpdateVideo,
   useCreateEvent, useDeleteEvent, useDuplicateEvent, useUpdateAdminContactMessage,
@@ -35,6 +36,7 @@ import { ErrorBoundary } from '@/components/error-boundary';
 const queryClient = new QueryClient();
 const teal = 'text-[hsl(var(--primary))]';
 const savedBooksStorageKey = 'nur-al-sunnah:saved-books';
+const defaultHeroTitle = 'Conhecimento que transforma vidas.';
 const clerkPubKey = publishableKeyFromHost(window.location.hostname, import.meta.env.VITE_CLERK_PUBLISHABLE_KEY);
 const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -337,6 +339,7 @@ function NextEventBanner({ event }: { event: CatalogEvent }) {
 
 function Home() {
   const { data: summary, isLoading, isError, refetch } = useGetLibrarySummary();
+  const siteSettings = useGetSiteSettings();
   const events = useListEvents({ query: { queryKey: getListEventsQueryKey(), refetchOnMount: 'always', refetchOnWindowFocus: true, staleTime: 0 } });
   useScrollReveal();
   const featuredBooks = summary?.featuredBooks ?? [];
@@ -351,13 +354,14 @@ function Home() {
     }).slice(0, 6);
   }, [featuredBooks, featuredVideos, summary?.recentlyAdded]);
   const nextEvent = events.data?.find(event => event.status === 'upcoming');
+  const heroTitle = siteSettings.data?.heroTitle ?? defaultHeroTitle;
   return <Shell><main className="overflow-x-clip">
      {nextEvent && <NextEventBanner event={nextEvent} />}
     <section className="home-hero relative border-b border-[#dbe4e2] bg-transparent">
       <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[48%] bg-[radial-gradient(circle_at_60%_40%,rgba(7,92,69,.09),transparent_55%)] lg:block" />
        <div className="hero-content relative z-10 mx-auto max-w-[1240px] px-5 pb-10 pt-10 md:pb-20 md:pt-16 lg:px-8 lg:pt-20">
         <div className="mx-auto max-w-[780px] text-center">
-           <h1 className="serif rise-in delay-1 mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">Conhecimento que <span className="text-[#075C45]">transforma vidas.</span></h1>
+            <h1 className="serif rise-in delay-1 mx-auto max-w-[780px] text-[clamp(3.2rem,6.2vw,5.8rem)] font-bold leading-[.98] tracking-[-.06em] text-[#071B2C]">{heroTitle}</h1>
            <p className="rise-in delay-2 mx-auto mt-6 max-w-[535px] text-base leading-7 text-[#53666b] md:text-lg">Encontre livros e vídeos gratuitos para aprender, estudar e ampliar seus conhecimentos.</p>
             <div className="rise-in delay-3 mt-7 flex flex-wrap justify-center gap-2 sm:gap-3">
               <Button href="/books" className="depth-button whitespace-nowrap bg-[#075C45] px-4 py-2.5 text-[13px] sm:px-5 sm:text-sm">Explorar livros</Button>
@@ -1129,6 +1133,11 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
   }), [period, start, end]);
   const analytics = useGetAdminAnalytics(params);
   const adminEvents = useListAdminEvents();
+  const siteSettings = useGetSiteSettings({ query: { queryKey: getGetSiteSettingsQueryKey(), staleTime: 0, refetchOnMount: 'always', refetchOnWindowFocus: true } });
+  const updateSiteSettings = useUpdateSiteSettings();
+  const queryClient = useQueryClient();
+  const [heroTitleDraft, setHeroTitleDraft] = useState(defaultHeroTitle);
+  const [settingsNotice, setSettingsNotice] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
   const data = analytics.data;
   const hasTraffic = Boolean(data?.traffic.length);
   const hasLiveVisitors = Boolean(data?.liveVisitors.visitors.length);
@@ -1136,6 +1145,26 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
   const openEditor = (action: () => void) => (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     action();
+  };
+  useEffect(() => {
+    if (siteSettings.data?.heroTitle) setHeroTitleDraft(siteSettings.data.heroTitle);
+  }, [siteSettings.data?.heroTitle]);
+  const saveHeroTitle = (event: FormEvent) => {
+    event.preventDefault();
+    const heroTitle = heroTitleDraft.trim();
+    if (!heroTitle) {
+      setSettingsNotice({ kind: 'error', text: 'Escreva um título para a página inicial.' });
+      return;
+    }
+    setSettingsNotice(null);
+    updateSiteSettings.mutate({ data: { heroTitle } }, {
+      onSuccess: updated => {
+        setHeroTitleDraft(updated.heroTitle);
+        queryClient.setQueryData(getGetSiteSettingsQueryKey(), updated);
+        setSettingsNotice({ kind: 'success', text: 'Título da página inicial atualizado.' });
+      },
+      onError: () => setSettingsNotice({ kind: 'error', text: 'Não foi possível atualizar o título. Tente novamente.' }),
+    });
   };
 
   return <div className="min-w-0 max-w-full space-y-6">
@@ -1148,6 +1177,22 @@ function Overview({ onAddBook, onAddVideo, onAddImage, onAddEvent }: { onAddBook
         {period === 'custom' && <div className="flex gap-2"><label className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">De<input aria-label="Data inicial" type="date" value={start} onChange={event => setStart(event.target.value)} className="mt-1 block h-9 rounded-md border border-[hsl(var(--border))] bg-white px-2 text-xs outline-none focus:border-[hsl(var(--primary))]" /></label><label className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(var(--muted-foreground))]">Até<input aria-label="Data final" type="date" value={end} onChange={event => setEnd(event.target.value)} className="mt-1 block h-9 rounded-md border border-[hsl(var(--border))] bg-white px-2 text-xs outline-none focus:border-[hsl(var(--primary))]" /></label></div>}
       </div>
     </div>
+
+    <form onSubmit={saveHeroTitle} className="rounded-xl border border-[hsl(var(--border))] bg-white p-5 shadow-[var(--shadow-sm)] md:p-6">
+      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+        <div className="min-w-0 flex-1">
+          <p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--primary))]">Página inicial</p>
+          <h2 className="serif mt-1 text-xl font-medium tracking-[-.02em]">Mensagem principal</h2>
+          <p className="mt-2 text-sm text-[hsl(var(--muted-foreground))]">Escolha o título exibido no destaque da página inicial.</p>
+          <label className="mt-4 block text-sm font-semibold">Título principal
+            <input required maxLength={160} value={heroTitleDraft} onChange={event => setHeroTitleDraft(event.target.value)} className="mt-2 h-11 w-full rounded-lg border border-[hsl(var(--border))] bg-transparent px-3 text-sm outline-none focus:border-[hsl(var(--primary))]" data-testid="input-admin-hero-title" />
+          </label>
+          <p className="mt-2 text-right text-[11px] text-[hsl(var(--muted-foreground))]">{heroTitleDraft.length}/160</p>
+        </div>
+        <Button type="submit" disabled={updateSiteSettings.isPending || siteSettings.isLoading} dataTestId="button-admin-save-hero-title">{updateSiteSettings.isPending ? 'A guardar…' : 'Guardar título'}</Button>
+      </div>
+      {settingsNotice && <p className={`mt-4 rounded-xl px-4 py-3 text-sm ${settingsNotice.kind === 'error' ? 'bg-[hsl(var(--destructive)/.1)] text-[hsl(var(--destructive))]' : 'bg-[hsl(var(--secondary))] text-[hsl(var(--primary))]'}`} role="status">{settingsNotice.text}</p>}
+    </form>
 
     <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
       <button type="button" onClick={openEditor(onAddBook)} className="flex items-center justify-center gap-2 rounded-xl bg-[#19383b] py-3.5 text-sm font-semibold text-white transition-all hover:brightness-110" data-testid="button-overview-add-book"><BookOpen size={16} /> Adicionar livro</button>

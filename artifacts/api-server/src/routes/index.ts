@@ -7,6 +7,7 @@ import libraryRouter from "./library";
 import storageRouter from "./storage";
 import eventsRouter from "./events";
 import contactRouter from "./contact";
+import siteSettingsRouter from "./siteSettings";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(adminAccessRouter);
 router.use(storageRouter);
 router.use(eventsRouter);
 router.use(contactRouter);
+router.use(siteSettingsRouter);
 
 export default router;

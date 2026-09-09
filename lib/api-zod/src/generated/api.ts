@@ -82,6 +82,38 @@ export const GetLibrarySummaryResponse = zod.object({
 
 
 /**
+ * @summary Get public site settings
+ */
+export const getSiteSettingsResponseHeroTitleMax = 160;
+
+
+
+export const GetSiteSettingsResponse = zod.object({
+  "heroTitle": zod.string().min(1).max(getSiteSettingsResponseHeroTitleMax)
+})
+
+
+/**
+ * @summary Update public site settings
+ */
+export const updateSiteSettingsBodyHeroTitleMax = 160;
+
+
+
+export const UpdateSiteSettingsBody = zod.object({
+  "heroTitle": zod.string().min(1).max(updateSiteSettingsBodyHeroTitleMax)
+})
+
+export const updateSiteSettingsResponseHeroTitleMax = 160;
+
+
+
+export const UpdateSiteSettingsResponse = zod.object({
+  "heroTitle": zod.string().min(1).max(updateSiteSettingsResponseHeroTitleMax)
+})
+
+
+/**
  * @summary Search and filter books
  */
 export const listBooksQuerySearchMax = 100;

@@ -386,6 +386,22 @@ export interface UploadResponse {
   objectPath: string;
 }
 
+export interface SiteSettings {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  heroTitle: string;
+}
+
+export interface SiteSettingsUpdate {
+  /**
+     * @minLength 1
+     * @maxLength 160
+     */
+  heroTitle: string;
+}
+
 /**
  * Authentication required
  */
