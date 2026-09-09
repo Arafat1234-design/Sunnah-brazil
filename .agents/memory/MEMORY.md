@@ -4,3 +4,4 @@
 - [Events scheduling](events-scheduling.md) — preserve date-only values and derive UTC event instants from the selected IANA timezone.
 - [Production data publishing](production-data-publishing.md) — normal publishes preserve live Admin data; never reinitialize production from development after launch.
 - [Category lifecycle](category-management.md) — block category deletion while books or videos still reference it, avoiding orphaned catalog metadata.
+- [PDF metadata extraction](pdf-metadata-extraction.md) — first-page author detection must exclude translator, editor, reviewer, and adaptation credits.

@@ -769,10 +769,32 @@ const authorFromFirstPage = (text: string) => {
   const lines = text.split(/\r?\n/).map(cleanExtractedLine).filter(Boolean);
   const authorPattern = /^(?:autor(?:a)?|author|por|by)\s*[:\-–—]\s*(.+)$/i;
   const writtenByPattern = /^(?:escrito|escrita)\s+por\s+(.+)$/i;
-  for (const line of lines) {
+  const authorLabelOnly = /^(?:autor(?:a)?|author|por|by)\s*[:\-–—]?$/i;
+  const nonAuthorLine = /^(?:tradu[cç][aã]o|tradutor|translated|editado|editor|revis[aã]o|adapta[cç][aã]o|pref[aá]cio|organizado|publicado|copyright|isbn|[0-9]+\s*a?\s*edi[cç][aã]o)/i;
+  const knownNamePrefix = /^(?:dr\.?|sheikh|imam|juma|abu|ibn|muhammad|mohamed|mohammed|ustadh|prof\.?)\b/i;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
     const match = line.match(authorPattern) ?? line.match(writtenByPattern);
     const author = cleanExtractedLine(match?.[1] ?? '');
     if (author && author.length >= 2 && author.length <= 120) return author;
+    if (authorLabelOnly.test(line)) {
+      const nextLine = cleanExtractedLine(lines[index + 1] ?? '');
+      if (nextLine && nextLine.length >= 2 && nextLine.length <= 120) return nextLine;
+    }
+  }
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (nonAuthorLine.test(line)) {
+      if (/[ :：]$/.test(line)) index += 1;
+      continue;
+    }
+    if (line.length < 5 || line.length > 90 || /^\d[\d\s./-]*$/.test(line)) continue;
+    const words = line.split(/\s+/);
+    const lowercaseConnectorCount = words.filter(word => /^(?:a|as|ao|aos|da|das|de|do|dos|e|em|na|nas|no|nos|o|os|para|por|seu|sua|um|uma)$/i.test(word)).length;
+    const capitalizedWordCount = words.filter(word => /^[A-ZÀ-Ý]/.test(word) || /^[A-ZÀ-Ý]{2,}/.test(word)).length;
+    const nameParticlesOnly = words.every(word => /^[A-ZÀ-Ý][A-Za-zÀ-ÿ.'-]*$/.test(word) || /^(?:al|bin|ibn|el)$/i.test(word));
+    const looksLikeName = knownNamePrefix.test(line) || (words.length >= 3 && words.length <= 8 && lowercaseConnectorCount === 0 && capitalizedWordCount >= 2 && nameParticlesOnly);
+    if (looksLikeName) return line;
   }
   return '';
 };
