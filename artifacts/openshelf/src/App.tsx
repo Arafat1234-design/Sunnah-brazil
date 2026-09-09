@@ -735,7 +735,7 @@ function StatCard({ label, value, icon }: { label: string; value: number | strin
 }
 
 type EditorState = { kind: 'book' | 'video'; id?: number; title: string; author?: string; description: string; category: string; coverUrl?: string; fileUrl?: string; fileType?: BookInput['fileType']; fileSize?: number; duration?: string; thumbnailUrl?: string; videoUrl?: string; downloadEnabled?: boolean; featured?: boolean };
-const emptyBook: EditorState = { kind: 'book', title: '', author: 'Autor não informado', description: 'Livro digital para leitura e estudo.', category: 'Islam', coverUrl: '', fileUrl: '', fileType: 'PDF', fileSize: 0, featured: false };
+const emptyBook: EditorState = { kind: 'book', title: '', author: '', description: 'Livro digital para leitura e estudo.', category: 'Islam', coverUrl: '', fileUrl: '', fileType: 'PDF', fileSize: 0, featured: false };
 const emptyVideo: EditorState = { kind: 'video', title: '', description: '', category: '', thumbnailUrl: '', videoUrl: '', duration: '', downloadEnabled: false, featured: false };
 type EventDraft = { id?: number; title: string; shortDescription: string; fullDescription: string; eventDate: string; startTime: string; endTime: string; timezone: string; imageId: number | null; venue: string; city: string; address: string; mapsUrl: string; externalUrl: string; published: boolean };
 const emptyEvent: EventDraft = { title: '', shortDescription: '', fullDescription: '', eventDate: '', startTime: '18:00', endTime: '20:00', timezone: 'Africa/Maputo', imageId: null, venue: '', city: '', address: '', mapsUrl: '', externalUrl: '', published: false };
@@ -751,6 +751,26 @@ const bookTitleFromFilename = (name: string) => {
 };
 
 const cleanExtractedLine = (line: string) => line.replace(/\s+/g, ' ').replace(/[|.;,\s]+$/, '').trim();
+
+const normalizePdfTextItem = (value: string) => {
+  const tokens = value.trim().split(/\s+/).filter(Boolean);
+  const spacedCharacterCount = tokens.filter(token => /^[A-Za-zÀ-ÿ]$/.test(token)).length;
+  if (spacedCharacterCount < 3) return value;
+
+  const words: string[] = [];
+  let current = '';
+  for (const token of tokens) {
+    const startsNewWord = /^[A-ZÀ-Ý]$/.test(token) && current && !/[ :：-]$/.test(current);
+    if (startsNewWord) {
+      words.push(current);
+      current = token;
+    } else {
+      current += token;
+    }
+  }
+  if (current) words.push(current);
+  return words.join(' ');
+};
 
 const titleFromFirstPage = (text: string) => {
   const lines = text.split(/\r?\n/).map(cleanExtractedLine).filter(Boolean);
@@ -802,7 +822,7 @@ const authorFromFirstPage = (text: string) => {
 const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title' | 'author' | 'description' | 'category' | 'fileType'>> => {
   const defaults = {
     title: bookTitleFromFilename(file.name),
-    author: 'Autor não informado',
+    author: '',
     description: 'Livro digital para leitura e estudo.',
     category: 'Islam',
     fileType: bookFileType(file.name),
@@ -827,7 +847,7 @@ const extractBookMetadata = async (file: File): Promise<Pick<EditorState, 'title
     try {
       const firstPage = await pdf.getPage(1);
       const textContent = await firstPage.getTextContent();
-      firstPageText = textContent.items.map(item => 'str' in item && typeof item.str === 'string' ? item.str : '').join('\n');
+      firstPageText = textContent.items.map(item => 'str' in item && typeof item.str === 'string' ? normalizePdfTextItem(item.str) : '').join('\n');
     } catch {
       // Scanned or otherwise unreadable first pages keep the normal fallback.
     }
