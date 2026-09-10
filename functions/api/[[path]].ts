@@ -58,13 +58,17 @@ export async function onRequest({
   headers.delete("host");
 
   try {
+    const requestInit = {
+      method: request.method,
+      headers,
+      body: bodylessMethods.has(request.method) ? undefined : request.body,
+      redirect: "manual" as RequestRedirect,
+      // Node's Fetch implementation requires this for streamed request bodies.
+      ...(!bodylessMethods.has(request.method) ? { duplex: "half" as const } : {}),
+    } as RequestInit;
+
     const upstreamResponse = await fetch(
-      new Request(targetUrl, {
-        method: request.method,
-        headers,
-        body: bodylessMethods.has(request.method) ? undefined : request.body,
-        redirect: "manual",
-      }),
+      new Request(targetUrl, requestInit),
     );
 
     return new Response(upstreamResponse.body, {
