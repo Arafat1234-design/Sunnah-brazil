@@ -5,3 +5,4 @@
 - [Production data publishing](production-data-publishing.md) — normal publishes preserve live Admin data; never reinitialize production from development after launch.
 - [Category lifecycle](category-management.md) — block category deletion while books or videos still reference it, avoiding orphaned catalog metadata.
 - [PDF metadata extraction](pdf-metadata-extraction.md) — first-page author detection must exclude translator, editor, reviewer, and adaptation credits.
+- [Viewport-bound overlays](viewport-overlays.md) — render fixed modals through document.body when page containers can interfere with viewport positioning.
