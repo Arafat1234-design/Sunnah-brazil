@@ -1155,13 +1155,15 @@ function EventEditor({ event, close, refresh }: { event?: CatalogEvent; close: (
 function ImageList({ images, onAdd, onEdit, onDelete }: { images: Image[]; onAdd: () => void; onEdit: (image: Image) => void; onDelete: (id: number) => void }) {
   const close = () => window.dispatchEvent(new Event('admin-images-close'));
 
-  return <div className="fixed inset-0 z-40 overflow-y-auto bg-[hsl(193_25%_19%/.52)] p-4 md:p-8">
+  return <div className="fixed inset-0 z-40 overflow-y-auto bg-[hsl(193_25%_19%/.52)] p-4 md:p-8" role="dialog" aria-modal="true" aria-labelledby="admin-images-title">
     <div className="mx-auto min-h-full max-w-[1200px] rounded-2xl bg-[hsl(var(--background))] p-5 shadow-xl lg:p-10">
       <div className="mb-6 flex items-center justify-between">
-        <p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} imagens na galeria</p>
-        <button type="button" onClick={close} aria-label="Fechar imagens" data-testid="button-close-images-panel" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--foreground))]"><X size={20} /></button>
+        <p id="admin-images-title" className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} imagens na galeria</p>
+        <div className="flex items-center gap-2">
+          <Button onClick={onAdd}><Plus size={16} /> Adicionar imagem</Button>
+          <button type="button" onClick={close} aria-label="Fechar imagens" data-testid="button-close-images-panel" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--foreground))]"><X size={20} /></button>
+        </div>
       </div>
-      <div className="mb-6 flex justify-end"><Button onClick={onAdd}><Plus size={16} /> Adicionar imagem</Button></div>
       <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="Nenhuma imagem ainda" body="Envie a primeira imagem para começar a galeria pública." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={appUrl(image.imageUrl)} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Destacada' : 'Padrão'}</span><button type="button" onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button type="button" onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div>
     </div>
   </div>;
