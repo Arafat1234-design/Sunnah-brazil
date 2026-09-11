@@ -1153,7 +1153,18 @@ function EventEditor({ event, close, refresh }: { event?: CatalogEvent; close: (
 }
 
 function ImageList({ images, onAdd, onEdit, onDelete }: { images: Image[]; onAdd: () => void; onEdit: (image: Image) => void; onDelete: (id: number) => void }) {
-  return <div><div className="mb-6 flex items-center justify-between"><p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} imagens na galeria</p><Button onClick={onAdd}><Plus size={16} /> Adicionar imagem</Button></div><div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="Nenhuma imagem ainda" body="Envie a primeira imagem para começar a galeria pública." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={appUrl(image.imageUrl)} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Destacada' : 'Padrão'}</span><button type="button" onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button type="button" onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div></div>;
+  const close = () => window.dispatchEvent(new Event('admin-images-close'));
+
+  return <div className="fixed inset-0 z-40 overflow-y-auto bg-[hsl(193_25%_19%/.52)] p-4 md:p-8">
+    <div className="mx-auto min-h-full max-w-[1200px] rounded-2xl bg-[hsl(var(--background))] p-5 shadow-xl lg:p-10">
+      <div className="mb-6 flex items-center justify-between">
+        <p className="text-sm text-[hsl(var(--muted-foreground))]">{images.length} imagens na galeria</p>
+        <button type="button" onClick={close} aria-label="Fechar imagens" data-testid="button-close-images-panel" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] transition hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--foreground))]"><X size={20} /></button>
+      </div>
+      <div className="mb-6 flex justify-end"><Button onClick={onAdd}><Plus size={16} /> Adicionar imagem</Button></div>
+      <div className="overflow-hidden rounded-2xl border border-[hsl(var(--border))] bg-[hsl(var(--card))]">{images.length === 0 ? <StateMessage title="Nenhuma imagem ainda" body="Envie a primeira imagem para começar a galeria pública." /> : images.map(image => <div key={image.id} className="flex items-center gap-3 border-b border-[hsl(var(--border))] p-4 last:border-0"><img src={appUrl(image.imageUrl)} alt={image.alt} className="h-12 w-16 shrink-0 rounded-lg object-cover" /><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{image.title}</p><p className="mt-1 text-xs text-[hsl(var(--muted-foreground))]">{image.category}</p></div><span className="hidden rounded-full bg-[hsl(var(--secondary))] px-2 py-1 mono text-[10px] sm:inline">{image.featured ? 'Destacada' : 'Padrão'}</span><button type="button" onClick={() => onEdit(image)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))]" data-testid={`button-edit-images-${image.id}`}><Settings2 size={16} /></button><button type="button" onClick={() => onDelete(image.id)} className="rounded-full p-2 text-[hsl(var(--muted-foreground))] hover:bg-[hsl(var(--secondary))] hover:text-[hsl(var(--destructive))]" data-testid={`button-delete-images-${image.id}`}><Trash2 size={16} /></button></div>)}</div>
+    </div>
+  </div>;
 }
 
 type AnalyticsPeriodKey = 'today' | '7d' | '30d' | '90d' | '12m' | 'custom';
@@ -1417,6 +1428,8 @@ function Admin() {
   const [tab, setTab] = useState<'overview' | 'books' | 'videos' | 'images' | 'events' | 'categories' | 'messages'>('overview');
   const [editor, setEditor] = useState<EditorState | null>(null);
   const [imageEditor, setImageEditor] = useState<Image | 'new' | null>(null);
+  const [imageSectionOpen, setImageSectionOpen] = useState(false);
+  const [previousTab, setPreviousTab] = useState<typeof tab>('overview');
   const [eventEditor, setEventEditor] = useState<CatalogEvent | 'new' | null>(null);
   const qc = useQueryClient();
   const books = useListBooks();
@@ -1462,10 +1475,28 @@ function Admin() {
     setNotice('');
     duplicateEvent.mutate({ id }, { onSuccess: refresh, onError: () => setNotice('Não foi possível duplicar o evento.') });
   };
+  const selectTab = (nextTab: typeof tab) => {
+    setImageSectionOpen(false);
+    setTab(nextTab);
+  };
+  const openImages = () => {
+    if (tab !== 'images') setPreviousTab(tab);
+    setImageSectionOpen(true);
+    setTab('images');
+  };
+  const closeImages = () => {
+    setImageSectionOpen(false);
+    setTab(previousTab);
+  };
+  useEffect(() => {
+    const handleCloseImages = () => closeImages();
+    window.addEventListener('admin-images-close', handleCloseImages);
+    return () => window.removeEventListener('admin-images-close', handleCloseImages);
+  }, [previousTab]);
 
   const heading = tab === 'overview' ? 'Visão geral' : tab === 'books' ? 'Livros' : tab === 'videos' ? 'Vídeos' : tab === 'images' ? 'Imagens' : tab === 'events' ? 'Eventos' : tab === 'categories' ? 'Categorias' : 'Mensagens';
   const navItems = [{ key: 'overview', label: 'Visão geral', icon: <BarChart3 size={17} /> }, { key: 'books', label: 'Livros', icon: <BookOpen size={17} /> }, { key: 'videos', label: 'Vídeos', icon: <Film size={17} /> }, { key: 'images', label: 'Imagens', icon: <Images size={17} /> }, { key: 'events', label: 'Eventos', icon: <CalendarDays size={17} /> }, { key: 'categories', label: 'Categorias', icon: <BookMarked size={17} /> }, { key: 'messages', label: messages.data?.some(message => !message.read) ? 'Mensagens · novas' : 'Mensagens', icon: <Mail size={17} /> }] as const;
-  const renderNav = (mobile = false) => navItems.map(item => <button type="button" key={item.key} onClick={() => setTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
+  const renderNav = (mobile = false) => navItems.map(item => <button type="button" key={item.key} onClick={() => item.key === 'images' ? openImages() : selectTab(item.key)} className={mobile ? `shrink-0 rounded-full px-3 py-2 text-xs ${tab === item.key || (item.key === 'images' && imageSectionOpen) ? 'bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'bg-[hsl(var(--secondary))]'}` : `flex items-center gap-3 rounded-lg px-3 py-3 text-sm ${tab === item.key || (item.key === 'images' && imageSectionOpen) ? 'bg-[hsl(var(--sidebar-accent))]' : 'opacity-70 hover:opacity-100'}`} data-testid={`button-admin-${item.key}`}>{item.icon}{item.label}</button>);
   return <Shell admin><div className="flex min-h-[100dvh]"><aside className="hidden w-[245px] shrink-0 flex-col bg-[hsl(var(--sidebar))] p-5 text-[hsl(var(--sidebar-foreground))] md:flex"><Logo /><div className="mt-12">{renderNav()}</div><div className="mt-auto"><Link href="/" className="flex items-center gap-3 px-3 py-3 text-sm opacity-65 hover:opacity-100" data-testid="link-admin-library"><ArrowLeft size={17} /> Biblioteca pública</Link></div></aside><div className="min-w-0 flex-1 overflow-x-hidden"><div className="flex h-[72px] items-center justify-between border-b border-[hsl(var(--border))] px-5 lg:px-10"><div><p className="mono text-[10px] uppercase tracking-[.16em] text-[hsl(var(--accent))]">Painel administrativo</p><h1 className="serif text-2xl">{heading}</h1></div><Link href="/" className="rounded-full p-2 text-[hsl(var(--muted-foreground))] md:hidden" data-testid="link-mobile-admin-library"><ArrowLeft size={18} /></Link></div><nav className="flex max-w-[100vw] gap-1 overflow-x-auto border-b border-[hsl(var(--border))] px-5 py-2 md:hidden" aria-label="Seções administrativas">{renderNav(true)}</nav><main className="mx-auto w-full min-w-0 max-w-[1200px] p-5 lg:p-10">{notice && <p className="mb-5 rounded-xl bg-[hsl(var(--destructive)/.1)] px-4 py-3 text-sm text-[hsl(var(--destructive))]" role="alert">{notice}</p>}{tab === 'overview' ? <Overview onAddBook={() => setEditor({ ...emptyBook })} onAddVideo={() => setEditor({ ...emptyVideo })} onAddImage={() => setImageEditor('new')} onAddEvent={() => setEventEditor('new')} /> : tab === 'images' ? <ImageList images={images.data ?? []} onAdd={() => setImageEditor('new')} onEdit={image => setImageEditor(image)} onDelete={id => confirmDelete('image', id)} /> : tab === 'events' ? <AdminEvents events={events.data ?? []} onAdd={() => setEventEditor('new')} onEdit={event => setEventEditor(event)} onDelete={id => confirmDelete('event', id)} onDuplicate={duplicate} onTogglePublish={togglePublish} /> : tab === 'categories' ? <AdminCategories categories={categories.data ?? []} /> : tab === 'messages' ? <AdminMessages /> : <CatalogList tab={tab} books={books.data ?? []} videos={videos.data ?? []} onAdd={() => setEditor(tab === 'books' ? { ...emptyBook } : { ...emptyVideo })} onEdit={(item) => setEditor(tab === 'books' ? { kind: 'book', id: item.id, title: item.title, author: (item as Book).author, description: item.description, category: item.category, coverUrl: (item as Book).coverUrl ?? '', fileUrl: (item as Book).fileUrl ?? '', fileType: (item as Book).fileType as BookInput['fileType'], fileSize: (item as Book).fileSize, featured: item.featured } : { kind: 'video', id: item.id, title: item.title, description: item.description, category: item.category, thumbnailUrl: (item as Video).thumbnailUrl ?? '', videoUrl: (item as Video).videoUrl ?? '', duration: (item as Video).duration, downloadEnabled: (item as Video).downloadEnabled, featured: item.featured })} onDelete={id => confirmDelete(tab === 'books' ? 'book' : 'video', id)} />}</main></div></div>{editor && <CatalogEditor state={editor} setState={setEditor} close={() => setEditor(null)} refresh={refresh} />}{imageEditor && <ImageEditor image={imageEditor === 'new' ? undefined : imageEditor} close={() => setImageEditor(null)} refresh={refresh} />}{eventEditor && <EventEditor event={eventEditor === 'new' ? undefined : eventEditor} close={() => setEventEditor(null)} refresh={refresh} />}</Shell>;
 }
 
