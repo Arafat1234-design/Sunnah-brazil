@@ -442,9 +442,14 @@ function GalleryPage() {
 
   useEffect(() => {
     if (!selected) return;
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
     const closeOnEscape = (event: KeyboardEvent) => { if (event.key === 'Escape') setSelected(null); };
     document.addEventListener('keydown', closeOnEscape);
-    return () => document.removeEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('keydown', closeOnEscape);
+      document.body.style.overflow = previousBodyOverflow;
+    };
   }, [selected]);
 
   return <Shell><main className="mx-auto max-w-[1240px] px-5 pb-20 pt-14 lg:px-8">
@@ -476,11 +481,11 @@ function GalleryPage() {
       </div>}
     </section>
   </main>
-  {selected && <div className="fixed inset-0 z-50 grid place-items-center bg-[#071b2c]/75 p-4 backdrop-blur-sm" role="presentation" onClick={() => setSelected(null)}>
-    <div role="dialog" aria-modal="true" aria-labelledby="gallery-dialog-title" aria-describedby="gallery-dialog-description" className="relative grid max-h-[92dvh] w-full max-w-4xl overflow-hidden rounded-2xl bg-[#fffdf8] shadow-2xl md:grid-cols-[1.2fr_.8fr]" onClick={event => event.stopPropagation()}>
+  {selected && <div className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto bg-[#071b2c]/85 p-3 backdrop-blur-sm sm:p-6" role="presentation" onClick={() => setSelected(null)}>
+    <div role="dialog" aria-modal="true" aria-labelledby="gallery-dialog-title" aria-describedby="gallery-dialog-description" className="relative grid h-[min(94dvh,920px)] w-full max-w-6xl grid-rows-[minmax(0,1fr)_auto] overflow-hidden rounded-2xl bg-[#fffdf8] shadow-2xl md:grid-cols-[1.35fr_.65fr] md:grid-rows-none" onClick={event => event.stopPropagation()}>
       <button type="button" onClick={() => setSelected(null)} aria-label="Fechar imagem" data-testid="button-images-close-lightbox" className="absolute right-3 top-3 z-10 grid h-10 w-10 place-items-center rounded-full bg-[#fffdf8]/90 text-[#071B2C] shadow-sm transition hover:bg-white"><X size={20} /></button>
-      <div className="min-h-[280px] bg-[#e7f0eb] md:min-h-[520px]"><img src={selected.src} alt={selected.alt} className="h-full w-full object-cover" /></div>
-      <div className="flex flex-col justify-center p-7 md:p-10"><span className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">{selected.category}</span><h2 id="gallery-dialog-title" className="serif mt-3 text-4xl leading-tight tracking-[-.04em] text-[#071B2C] md:text-5xl">{selected.title}</h2><p id="gallery-dialog-description" className="mt-4 text-sm leading-7 text-[#607274]">{selected.description}</p><p className="mt-8 border-t border-[#dbe4e2] pt-5 text-xs leading-5 text-[#607274]">Abra espaço para uma pausa. Às vezes, uma imagem é o começo de uma reflexão.</p><div className="mt-7 flex flex-wrap gap-3"><a href={selected.src} download={downloadName(selected)} onClick={() => trackEvent('image_downloaded', { content_type: 'image' })} data-testid="link-images-download" className="inline-flex items-center gap-2 rounded-full bg-[#075C45] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"><Download size={16} /> Baixar imagem</a><button type="button" onClick={() => setSelected(null)} data-testid="button-images-lightbox-done" className="inline-flex items-center gap-2 rounded-full border border-[#dbe4e2] px-4 py-2.5 text-sm font-semibold text-[#075C45] transition hover:border-[#075C45]">Voltar à galeria <ArrowLeft size={15} /></button></div></div>
+      <div className="min-h-0 bg-[#071b2c] md:min-h-full"><img src={selected.src} alt={selected.alt} className="h-full w-full object-contain" /></div>
+      <div className="max-h-[38dvh] overflow-y-auto p-6 md:max-h-none md:p-10"><span className="mono text-[10px] uppercase tracking-[.2em] text-[#075C45]">{selected.category}</span><h2 id="gallery-dialog-title" className="serif mt-3 text-4xl leading-tight tracking-[-.04em] text-[#071B2C] md:text-5xl">{selected.title}</h2><p id="gallery-dialog-description" className="mt-4 text-sm leading-7 text-[#607274]">{selected.description}</p><p className="mt-8 border-t border-[#dbe4e2] pt-5 text-xs leading-5 text-[#607274]">Abra espaço para uma pausa. Às vezes, uma imagem é o começo de uma reflexão.</p><div className="mt-7 flex flex-wrap gap-3"><a href={selected.src} download={downloadName(selected)} onClick={() => trackEvent('image_downloaded', { content_type: 'image' })} data-testid="link-images-download" className="inline-flex items-center gap-2 rounded-full bg-[#075C45] px-4 py-2.5 text-sm font-semibold text-white transition hover:brightness-110"><Download size={16} /> Baixar imagem</a><button type="button" onClick={() => setSelected(null)} data-testid="button-images-lightbox-done" className="inline-flex items-center gap-2 rounded-full border border-[#dbe4e2] px-4 py-2.5 text-sm font-semibold text-[#075C45] transition hover:border-[#075C45]">Voltar à galeria <ArrowLeft size={15} /></button></div></div>
     </div>
   </div>}
   </Shell>;
