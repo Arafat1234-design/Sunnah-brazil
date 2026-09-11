@@ -37,7 +37,8 @@ type LibraryContent = typeof booksTable.$inferSelect | typeof videosTable.$infer
 
 function contentUrl(value: string | null, req: Request): string | null {
   if (!value) return null;
-  if (value.startsWith("/objects/")) return `/api/storage${value}`;
+  const normalizedPath = objectStorageService.normalizeObjectEntityPath(value);
+  if (normalizedPath.startsWith("/objects/")) return `/api/storage${normalizedPath}`;
   return value;
 }
 
@@ -67,8 +68,9 @@ function parseId(value: unknown): number | null {
 const MAX_DOWNLOAD_BYTES = 80 * 1024 * 1024;
 
 async function readContent(value: string): Promise<Buffer> {
-  if (value.startsWith("/objects/")) {
-    const file = await objectStorageService.getObjectEntityFile(value);
+  const normalizedPath = objectStorageService.normalizeObjectEntityPath(value);
+  if (normalizedPath.startsWith("/objects/")) {
+    const file = await objectStorageService.getObjectEntityFile(normalizedPath);
     const chunks: Buffer[] = [];
     let total = 0;
     for await (const chunk of file.createReadStream()) {

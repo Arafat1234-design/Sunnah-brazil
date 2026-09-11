@@ -160,6 +160,11 @@ export class ObjectStorageService {
   }
 
   normalizeObjectEntityPath(rawPath: string): string {
+    const relativeObjectPath = normalizeRelativeObjectEntityPath(rawPath);
+    if (relativeObjectPath) {
+      return relativeObjectPath;
+    }
+
     if (!rawPath.startsWith('https://storage.googleapis.com/')) {
       return rawPath;
     }
@@ -209,6 +214,39 @@ export class ObjectStorageService {
       requestedPermission: requestedPermission ?? ObjectPermission.READ,
     });
   }
+}
+
+function normalizeRelativeObjectEntityPath(rawPath: string): string | null {
+  const trimmedPath = rawPath.trim();
+  if (!trimmedPath) {
+    return null;
+  }
+
+  let path = trimmedPath;
+  try {
+    path = new URL(trimmedPath).pathname;
+  } catch {
+    // Relative paths are handled directly below.
+  }
+
+  const pathWithoutQuery = path.split(/[?#]/, 1)[0];
+  if (pathWithoutQuery.startsWith('/objects/')) {
+    return pathWithoutQuery;
+  }
+
+  const storageObjectsMarker = '/storage/objects/';
+  const markerIndex = pathWithoutQuery.indexOf(storageObjectsMarker);
+  if (markerIndex >= 0) {
+    const entityId = pathWithoutQuery.slice(markerIndex + storageObjectsMarker.length);
+    return entityId ? `/objects/${entityId}` : null;
+  }
+
+  if (pathWithoutQuery.startsWith('storage/objects/')) {
+    const entityId = pathWithoutQuery.slice('storage/objects/'.length);
+    return entityId ? `/objects/${entityId}` : null;
+  }
+
+  return null;
 }
 
 function parseObjectPath(path: string): {
